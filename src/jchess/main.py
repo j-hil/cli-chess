@@ -1,24 +1,11 @@
-"""
-Initial drafting file.
-
-
-##  ##  ##  ##
-  ##  ##  ##  ##
-##  ##  ##  ##         CLI CHESS :) - coming soon, maybe
-  ##  ##  ##  ##
-##  ##  ##  ##
-  ##  ##  ##  ##
-##  ##  ##  ##
-  ##  ##  ##  ##
-"""
-
+"""Initial drafting file."""
 from msvcrt import getch
+
 
 def get_one_key_input():
     char1 = getch().decode()
     char2 = getch().decode() if char1 == "\x00" else ""
     return char1 + char2
-
 
 
 def main():
@@ -45,4 +32,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    from state import GameState
+
+    # TODO: implement different colors/styles for different consoles
+    from colorama import init
+
+    init()
+    game = GameState()
+    print(game)

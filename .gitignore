@@ -1,4 +1,12 @@
+# virtual environment
 .venv/
+
+# editor related files
 .vscode/
+
+# build related files
 dist/
 jchess.egg-info/
+
+# python generated files
+__pycache__/
