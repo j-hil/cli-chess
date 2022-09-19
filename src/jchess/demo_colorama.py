@@ -8,7 +8,6 @@ Originally written by Jonathon Hartley 2013. See here:
 """
 from colorama import init, Fore, Back, Style
 
-init()
 BASE_COLORS = ["BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE"]
 LIGHT_COLORS = [f"LIGHT{color}_EX" for color in BASE_COLORS]
 
@@ -43,7 +42,7 @@ output = (
                     + " || "
                     + back
                 )
-                for fore in [getattr(Fore, color) for color in ["BLACK", "WHITE", "LIGHTBLACK_EX", "LIGHTWHITE_EX"]]
+                for fore in FORES
             )
             + Style.RESET_ALL
             + "\n"
@@ -53,6 +52,7 @@ output = (
 )
 
 # BLACK AND WHITE ON BLACK AND MAGENTA seems to be only good combo
+init()
 print(output)
 
 

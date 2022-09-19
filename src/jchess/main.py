@@ -1,5 +1,7 @@
 """Initial drafting file."""
 from msvcrt import getch
+from state import GameState
+import os
 
 
 def get_one_key_input():
@@ -8,7 +10,7 @@ def get_one_key_input():
     return char1 + char2
 
 
-def main():
+def main(game: GameState):
     """Enter the main game-play loop."""
 
     keys = []
@@ -17,26 +19,32 @@ def main():
 
         if x == "\x00H":
             keys.append("↑")
+            game.cursor.y -= 1
         elif x == "\x00P":
             keys.append("↓")
+            game.cursor.y += 1
         elif x == "\x00K":
             keys.append("←")
+            game.cursor.x -= 1
         elif x == "\x00M":
             keys.append("→")
-        elif x == "q":
+            game.cursor.x += 1
+        elif x.lower() == "q":
             break
         else:
             keys.append(x)
-
-    print(" ".join(keys))
+        os.system("cls")
+        print(game)
 
 
 if __name__ == "__main__":
-    from state import GameState
 
     # TODO: implement different colors/styles for different consoles
-    from colorama import init
+    from colorama import init, Style
 
     init()
+    print(Style.BRIGHT)
     game = GameState()
     print(game)
+
+    main(game)
