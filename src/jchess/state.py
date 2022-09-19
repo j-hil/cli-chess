@@ -6,7 +6,7 @@ from colorama import Fore, Style, Back
 BACK_ROW = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
 
 @dataclass
-class Cursor:
+class Coord:
     x: int | None = None
     y: int | None = None
     # color: str | None = None
@@ -21,7 +21,8 @@ class GameState:
             *[Pawn((1, i), Color.W) for i in range(8)],
             *[Piece((0, i), Color.W) for Piece, i in zip(BACK_ROW, range(8))],
         ]
-        self.cursor = Cursor(4, 5)
+        self.cursor: Coord | None = Coord(4, 5)
+        self.selected: Coord | None = None
 
     @property
     def board(self) -> list[list[Piece | None]]:
@@ -30,6 +31,15 @@ class GameState:
             x, y = piece.coord
             result[y][x] = piece
         return result
+
+    def valid_selection(self):
+        # TODO: currently just a placeholder
+        return True
+
+    def valid_move(self):
+        # TODO: placeholder
+        return True
+
 
     def __str__(self):
         row_strings = []
@@ -45,6 +55,8 @@ class GameState:
                 piece = self.board[i][j]
                 if (j, i) == (self.cursor.x, self.cursor.y):
                     square_color = Back.YELLOW
+                elif self.selected is not None and (j, i) == (self.selected.x, self.selected.y):
+                    square_color = Back.RED
                 elif (i+j) % 2 == 0:
                     square_color = Back.MAGENTA
                 else:

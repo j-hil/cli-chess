@@ -22,6 +22,7 @@ class Piece(ABC):
         self.color = color
 
     def __repr__(self):
+        # TODO: coloring should be decided by GameState
         if self.color == Color.B:
             return Fore.BLACK + self.ICON + Fore.RESET
         if self.color == Color.W:

@@ -1,7 +1,9 @@
 """Initial drafting file."""
 from msvcrt import getch
 from state import GameState
+from pieces import Piece
 import os
+from copy import deepcopy
 
 
 def get_one_key_input():
@@ -15,7 +17,30 @@ def main(game: GameState):
 
     keys = []
     while True:
+        os.system("cls")
+        print(game)
         x = get_one_key_input()
+
+        if x == "\r" and game.selected is None and game.valid_selection():
+            game.selected = deepcopy(game.cursor)
+            continue
+
+        if x == "\r" and game.selected is not None and game.valid_move():
+            x0, y0 = game.selected.x, game.selected.y
+            x1, y1 = game.cursor.x, game.cursor.y
+
+            piece0: Piece | None = game.board[y0][x0]
+            piece1: Piece | None = game.board[y1][x1]
+
+            # TODO: decided what the convention for 'taken' pieces (eg send to -1, -1)
+            piece0.coord = x1, y1
+
+            if piece1 is not None:
+                piece1.coord = (-1, -1)
+
+            game.selected = None
+            game.cursor.x, game.cursor.y = 0, 0
+            continue
 
         if x == "\x00H":
             keys.append("↑")
@@ -33,8 +58,6 @@ def main(game: GameState):
             break
         else:
             keys.append(x)
-        os.system("cls")
-        print(game)
 
 
 if __name__ == "__main__":
@@ -45,6 +68,4 @@ if __name__ == "__main__":
     init()
     print(Style.BRIGHT)
     game = GameState()
-    print(game)
-
     main(game)
