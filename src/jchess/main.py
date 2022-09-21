@@ -21,11 +21,11 @@ def main(game: GameState):
         print(game)
         x = get_one_key_input()
 
-        if x == "\r" and game.selected is None and game.valid_selection():
+        if x == " " and game.selected is None and game.valid_selection():
             game.selected = deepcopy(game.cursor)
             continue
 
-        if x == "\r" and game.selected is not None and game.valid_move():
+        if x == " " and game.selected is not None and game.valid_move():
             x0, y0 = game.selected.x, game.selected.y
             x1, y1 = game.cursor.x, game.cursor.y
 
@@ -42,19 +42,20 @@ def main(game: GameState):
             game.cursor.x, game.cursor.y = 0, 0
             continue
 
-        if x == "\x00H":
+        if x == "\x00H" and game.cursor.y - 1 >= 0:
             keys.append("↑")
             game.cursor.y -= 1
-        elif x == "\x00P":
+        elif x == "\x00P" and game.cursor.y + 1 <= 7:
             keys.append("↓")
             game.cursor.y += 1
-        elif x == "\x00K":
+        elif x == "\x00K" and game.cursor.x - 1 >= 0:
             keys.append("←")
             game.cursor.x -= 1
-        elif x == "\x00M":
+        elif x == "\x00M" and game.cursor.x + 1 <= 7:
             keys.append("→")
             game.cursor.x += 1
-        elif x.lower() == "q":
+        elif x in ["\x1b", "q", "Q"]:
+            print(keys)
             break
         else:
             keys.append(x)

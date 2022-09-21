@@ -33,12 +33,14 @@ class GameState:
         return result
 
     def valid_selection(self):
-        # TODO: currently just a placeholder
-        return True
+        x, y = self.cursor.x, self.cursor.y
+        piece: Piece | None = self.board[y][x]
+        return piece is not None and piece.accessible_coords(self)
 
     def valid_move(self):
-        # TODO: placeholder
-        return True
+        # TODO: don't know why explicit typing necessary here
+        piece: Piece = self.board[self.selected.y][self.selected.x]
+        return (self.cursor.x, self.cursor.y) in piece.accessible_coords(self)
 
 
     def __str__(self):
@@ -57,6 +59,8 @@ class GameState:
                     square_color = Back.YELLOW
                 elif self.selected is not None and (j, i) == (self.selected.x, self.selected.y):
                     square_color = Back.RED
+                elif self.selected is not None and (j, i) in self.board[self.selected.y][self.selected.x].accessible_coords(self):
+                    square_color = Back.GREEN
                 elif (i+j) % 2 == 0:
                     square_color = Back.MAGENTA
                 else:
