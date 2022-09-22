@@ -1,10 +1,21 @@
 from dataclasses import dataclass
 from colorama import Fore, Style, Back
-from jchess.pieces import Player
+from jchess.pieces import Player, Role
+
+_STANDARD_SYMBOLS = {
+    Role.KING: "K",
+    Role.QUEEN: "Q",
+    Role.ROOK: "H",
+    Role.BISHOP: "I",
+    Role.KNIGHT: "J",
+    Role.PAWN: "i",
+    Role.NULL: " "
+}
 
 
 @dataclass
 class Config:
+    role_symbol: dict[Role, str]
     player_color: dict[Player, str]
     board_color: dict[int, str]
     cursor_color: str
@@ -13,6 +24,7 @@ class Config:
 
 
 VS_CODE_CONFIG = Config(
+    role_symbol=_STANDARD_SYMBOLS,
     player_color={
         Player.ONE: Style.BRIGHT + Fore.WHITE,
         Player.TWO: Style.BRIGHT + Fore.BLACK,
@@ -25,6 +37,7 @@ VS_CODE_CONFIG = Config(
 )
 
 POWERSHELL_CONFIG = Config(
+    role_symbol=_STANDARD_SYMBOLS,
     player_color={
         Player.ONE: Style.BRIGHT + Fore.WHITE,
         Player.TWO: Style.NORMAL + Fore.BLACK,
