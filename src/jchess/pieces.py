@@ -1,9 +1,10 @@
 from abc import ABC, abstractclassmethod, abstractmethod
+from copy import deepcopy
 from enum import Enum
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from state import GameState
+    from jchess.state import GameState
 
 class Player(Enum):
     ONE = "White"
@@ -19,7 +20,8 @@ class Piece(ABC):
 
     def __init__(self, coord: tuple[int, int], player: Player) -> None:
         super().__init__()
-        self.coord = self._start_coord = coord
+        self.coord = coord
+        self._start_coord = deepcopy(coord)
         self.player = player
 
     @property
@@ -33,6 +35,12 @@ class Piece(ABC):
     def __repr__(self):
         return self.ICON
 
+class Null(Piece):
+    ICON = " "
+
+    def accessible_coords(self, state: "GameState") -> list[tuple[int, int]]:
+        return []
+
 
 class King(Piece):
     ICON = "K"
@@ -44,11 +52,12 @@ class King(Piece):
         x, y = self.coord
         result = []
         for dx, dy in deltas:
-            target: Piece | None = state.board[y+dy][x+dx]
-            if target is not None and target.player != self.player:
-                result.append((x + dx, y + dy))
-            if target is None:
-                result.append((x + dx, y + dy))
+            if y+dy in range(8) and x+dx in range(8):
+                target = state.board[y+dy][x+dx]
+                if not isinstance(target, Null) and target.player != self.player:
+                    result.append((x + dx, y + dy))
+                if isinstance(target, Null):
+                    result.append((x + dx, y + dy))
         return result
 
 class Queen(Piece):
@@ -69,10 +78,10 @@ class Bishop(Piece):
             for dx in range(1, 8):
                 xt, yt = x+s2*dx, y+s1*dx
                 if y+s1*dx in range(8) and x+s2*dx in range(8):
-                    target: Piece | None = state.board[y+s1*dx][x+s2*dx]
-                    if target is not None and target.player == self.player:
+                    target = state.board[y+s1*dx][x+s2*dx]
+                    if not isinstance(target, Null) and target.player == self.player:
                         break
-                    if target is not None and target.player != self.player:
+                    if not isinstance(target, Null) and target.player != self.player:
                         result.append((xt, yt))
                         break
                     result.append((xt, yt))
@@ -90,10 +99,10 @@ class Knight(Piece):
         result = []
         for dx, dy in deltas:
             if x + dx in range(8) and y + dy in range(8):
-                target: Piece | None = state.board[y+dy][x+dx]
-                if target is not None and target.player != self.player:
+                target = state.board[y+dy][x+dx]
+                if not isinstance(target, Null) and target.player != self.player:
                     result.append((x + dx, y + dy))
-                if target is None:
+                if isinstance(target, Null):
                     result.append((x + dx, y + dy))
         return result
 
@@ -104,45 +113,26 @@ class Rook(Piece):
         x, y = self.coord
         result = []
 
-        for dx in range(1, 8):
-            if (x + dx) in range(8):
-                target_square: Piece | None = state.board[y][x+dx]
-                if target_square is not None and target_square.player == self.player:
-                    break
-                if target_square is not None and target_square.player != self.player:
-                    result.append((x + dx, y))
-                    break
-                result.append((x + dx, y))
+        for s in [1, -1]:
+            for dx in range(1, 8):
+                if (x + s*dx) in range(8):
+                    target= state.board[y][x+s*dx]
+                    if not isinstance(target, Null) and target.player == self.player:
+                        break
+                    if not isinstance(target, Null) and target.player != self.player:
+                        result.append((x + s*dx, y))
+                        break
+                    result.append((x + s*dx, y))
 
-        for dy in range(1, 8):
-            if (y + dy) in range(8):
-                target_square: Piece | None = state.board[y+dy][x]
-                if target_square is not None and target_square.player == self.player:
-                    break
-                if target_square is not None and target_square.player != self.player:
-                    result.append((x, y+dy))
-                    break
-                result.append((x, y+dy))
-
-        for dx in range(1, 8):
-            if (x - dx) in range(8):
-                target_square: Piece | None = state.board[y][x-dx]
-                if target_square is not None and target_square.player == self.player:
-                    break
-                if target_square is not None and target_square.player != self.player:
-                    result.append((x - dx, y))
-                    break
-                result.append((x - dx, y))
-
-        for dy in range(1, 8):
-            if (y - dy) in range(8):
-                target_square: Piece | None = state.board[y-dy][x]
-                if target_square is not None and target_square.player == self.player:
-                    break
-                if target_square is not None and target_square.player != self.player:
-                    result.append((x, y-dy))
-                    break
-                result.append((x, y-dy))
+            for dy in range(1, 8):
+                if (y + dy) in range(8):
+                    target = state.board[y+s*dy][x]
+                    if not isinstance(target, Null) and target.player == self.player:
+                        break
+                    if not isinstance(target, Null) and target.player != self.player:
+                        result.append((x, y+s*dy))
+                        break
+                    result.append((x, y+s*dy))
 
         return result
 
@@ -166,9 +156,9 @@ class Pawn(Piece):
         board = state.board
         target1 = board[y + 1][x + s]
         target2 = board[y - 1][x + s]
-        if target1 is not None and target1.player != self.player:
+        if not isinstance(target1, Null) and target1.player != self.player:
             result.append(target1.coord)
-        if target2 is not None and target2.player != self.player:
+        if not isinstance(target2, Null) and target2.player != self.player:
             result.append(target2.coord)
 
         return result

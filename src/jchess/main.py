@@ -1,7 +1,6 @@
 """Initial drafting file."""
 from msvcrt import getch
-from state import GameState
-from pieces import Piece
+from jchess.state import GameState
 import os
 from copy import deepcopy
 
@@ -15,7 +14,6 @@ def get_one_key_input():
 def main(game: GameState):
     """Enter the main game-play loop."""
 
-    keys = []
     while True:
 
         os.system("cls")
@@ -31,8 +29,8 @@ def main(game: GameState):
         if key == " " and game.selected is not None and game.valid_move():
             x0, y0 = game.selected
 
-            piece0: Piece | None = game.board[y0][x0]
-            piece1: Piece | None = game.board[y][x]
+            piece0 = game.board[y0][x0]
+            piece1 = game.board[y][x]
 
             # TODO: decided what the convention for 'taken' pieces (eg send to -1, -1)
             piece0.coord = x, y
@@ -45,22 +43,15 @@ def main(game: GameState):
             continue
 
         if key == "\x00H" and y - 1 >= 0:
-            keys.append("↑")
             game.cursor = (x, y - 1)
         elif key == "\x00P" and y + 1 <= 7:
-            keys.append("↓")
             game.cursor = (x, y + 1)
         elif key == "\x00K" and x - 1 >= 0:
-            keys.append("←")
             game.cursor = (x - 1, y)
         elif key == "\x00M" and x + 1 <= 7:
-            keys.append("→")
             game.cursor = (x + 1, y)
         elif key in ["\x1b", "q", "Q"]:
-            print(keys)
             break
-        else:
-            keys.append(key)
 
 
 if __name__ == "__main__":
