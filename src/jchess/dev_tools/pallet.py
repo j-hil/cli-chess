@@ -34,7 +34,8 @@ output = (
             + "".join(
                 (
                     fore
-                    + "".join(style + " X" for style in STYLES) + " "
+                    + "".join(style + " X" for style in STYLES)
+                    + " "
                     + Style.RESET_ALL
                     + " || "
                     + back
@@ -51,6 +52,3 @@ output = (
 # BLACK AND WHITE ON BLACK AND MAGENTA seems to be only good combo
 init()
 print(output)
-
-
-

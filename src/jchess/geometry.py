@@ -1,3 +1,5 @@
+"""Simple Vector class to facilitate easy coordinate translation."""
+
 from typing import Union
 from dataclasses import dataclass
 
@@ -6,6 +8,8 @@ VectorLike = Union["Vector", tuple[int, int]]
 
 @dataclass
 class Vector:
+    """Represents 2D mathematical vector."""
+
     x: int
     y: int
 
@@ -15,4 +19,5 @@ class Vector:
         return Vector(self.x + other.x, self.y + other.y)
 
     def in_bounds(self) -> bool:
+        """Check if instance is on the chess board."""
         return self.x in range(8) and self.y in range(8)

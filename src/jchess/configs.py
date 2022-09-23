@@ -1,3 +1,5 @@
+"""Contains display settings for different consoles."""
+
 from dataclasses import dataclass
 from colorama import Fore, Style, Back
 from jchess.pieces import Player, Role
@@ -15,6 +17,8 @@ _STANDARD_SYMBOLS = {
 
 @dataclass
 class Config:
+    """Represents display settings."""
+
     role_symbol: dict[Role, str]
     player_color: dict[Player, str]
     board_color: dict[int, str]

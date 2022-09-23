@@ -1,66 +1,64 @@
+"""Creates a class containing the bulk of the logic and complexity of the game."""
+from copy import deepcopy
 from colorama import Style
 
 from jchess.geometry import Vector, VectorLike
 from jchess.pieces import Piece, Role, Player
 from jchess.configs import Config, VS_CODE_CONFIG
-from jchess.constants import STANDARD_CHESS_BOARD, DELTAS, LINES
+from jchess.constants import STANDARD_CHESS_BOARD, DELTAS, LINES, INPUT_DELTAS
 
 
 class GameState:
+    """Represents the state of the game, and controls the game logic."""
+
     def __init__(self, config: Config = VS_CODE_CONFIG):
-        self.board = STANDARD_CHESS_BOARD
-        self.config = config
+        self._board = STANDARD_CHESS_BOARD
+        self._config = config
 
-        self.cursor_coord = Vector(0, 4)
-        self.attacker_coord: Vector | None = None
-        self.active = Player.ONE
-        self.inactive = Player.TWO
+        self._cursor_coord = Vector(0, 4)
+        self._selected_coord: Vector | None = None
+        self._active = Player.ONE
+        self._inactive = Player.TWO
+        self.quitting = False
 
     @property
-    def attacker(self):
-        if self.attacker_coord is None:
+    def selected(self) -> Piece | None:
+        """Square currently selected by the active player, if any."""
+        if self._selected_coord is None:
             return None
-        return self[self.attacker_coord]
+        return self[self._selected_coord]
 
     @property
-    def highlighted(self):
-        return self[self.cursor_coord]
-
-    def can_select_attacker(self) -> bool:
-        highlighted = self.highlighted
-        return (
-            self.attacker_coord is None
-            and highlighted.role is not Role.NULL
-            and highlighted.player is self.active
-            and len(self.defending_coords(self.cursor_coord)) > 0  # check non-empty
-        )
+    def highlighted(self) -> Piece:
+        """Square which the game cursor is currently highlighting."""
+        piece = self[self._cursor_coord]
+        if piece is None:
+            raise RuntimeError("`_cursor_coord` should always be in bounds.")
+        return piece
 
     def is_defending(self, coord: VectorLike) -> bool:
+        """Check if the square at the input coord is defending against the attacker."""
         if isinstance(coord, tuple):
             coord = Vector(*coord)
-        return coord in self.defending_coords(self.attacker_coord)
+        return coord in self.defending_coords(self._selected_coord)
 
     def defending_coords(self, attacker_coord: Vector | None) -> list[Vector]:
-        if attacker_coord is None:
-            return []
-
+        """All coordinates defending against the current attacker."""
         attacker = self[attacker_coord]
-
-        if attacker is None:
+        if attacker is None or attacker_coord is None:
             return []
 
         result = []
-
         if attacker.role in [Role.BISHOP, Role.ROOK, Role.QUEEN]:
             for line in LINES[attacker.role]:
                 for delta in line:
                     defender_coord = attacker_coord + delta
                     defender = self[defender_coord]
                     if defender is not None:
-                        if defender.player is self.inactive:
+                        if defender.player is self._inactive:
                             result.append(defender_coord)
                             break
-                        if defender.player is self.active:
+                        if defender.player is self._active:
                             break
                         result.append(defender_coord)
 
@@ -68,7 +66,7 @@ class GameState:
             for delta in DELTAS[attacker.role]:
                 defender_coord = attacker_coord + delta
                 defender = self[defender_coord]
-                if defender is not None and defender.player != self.active:
+                if defender is not None and defender.player != self._active:
                     result.append(defender_coord)
 
         if attacker.role is Role.PAWN:
@@ -84,15 +82,11 @@ class GameState:
             if defender is not None and defender.role is Role.NULL:
                 result.append(defender_coord)
 
-            defender_coord = attacker_coord + (direction, 1)
-            defender = self[defender_coord]
-            if defender is not None and defender.player == self.inactive:
-                result.append(defender_coord)
-
-            defender_coord = attacker_coord + (direction, -1)
-            defender = self[defender_coord]
-            if defender is not None and defender.player == self.inactive:
-                result.append(defender_coord)
+            for dy in [1, -1]:
+                defender_coord = attacker_coord + (direction, dy)
+                defender = self[defender_coord]
+                if defender is not None and defender.player == self._inactive:
+                    result.append(defender_coord)
 
             defender_coord = attacker_coord + (2 * direction, 0)
             if attacker_coord.x == x_start:
@@ -101,19 +95,19 @@ class GameState:
         return result
 
     def make_move(self):
-        self[self.cursor_coord] = self[self.attacker_coord]
-        self[self.attacker_coord] = Piece(Role.NULL, Player.NULL)
+        """Execute a move of the attacker to the current highlighted square."""
+        self[self._cursor_coord] = self[self._selected_coord]
+        self[self._selected_coord] = Piece(Role.NULL, Player.NULL)
+        self._active, self._inactive = self._inactive, self._active
+        self._selected_coord = None
 
-        self.active, self.inactive = self.inactive, self.active
-        self.attacker_coord = None
-
-    def __getitem__(self, key: Vector) -> Piece | None:
-        if key.in_bounds():
-            return self.board[key.y][key.x]
-        return None
+    def __getitem__(self, key: Vector | None) -> Piece | None:
+        if key is None or not key.in_bounds():
+            return None
+        return self._board[key.y][key.x]
 
     def __setitem__(self, key: Vector, value: Piece):
-        self.board[key.y][key.x] = value
+        self._board[key.y][key.x] = value
 
     def __str__(self):
         row_strings = [
@@ -124,18 +118,18 @@ class GameState:
         for i in range(8):
             current_row = f":  {i} |"
             for j in range(8):
-                if Vector(j, i) == self.cursor_coord:
-                    current_row += self.config.cursor_color
-                elif Vector(j, i) == self.attacker_coord:
-                    current_row += self.config.selected_color
-                elif self.attacker is not None and self.is_defending((j, i)):
-                    current_row += self.config.valid_color
+                if Vector(j, i) == self._cursor_coord:
+                    current_row += self._config.cursor_color
+                elif Vector(j, i) == self._selected_coord:
+                    current_row += self._config.selected_color
+                elif self.selected is not None and self.is_defending((j, i)):
+                    current_row += self._config.valid_color
                 else:
-                    current_row += self.config.board_color[(i + j) % 2]
+                    current_row += self._config.board_color[(i + j) % 2]
 
-                piece = self.board[i][j]
-                fore_color = self.config.player_color[piece.player]
-                symbol = self.config.role_symbol[piece.role]
+                piece = self._board[i][j]
+                fore_color = self._config.player_color[piece.player]
+                symbol = self._config.role_symbol[piece.role]
                 current_row += fore_color + f" {symbol} " + Style.RESET_ALL + "|"
             current_row += f" {i}"
 
@@ -145,3 +139,23 @@ class GameState:
         row_strings.append(":      a   b   c   d   e   f   g   h  ")
         row_strings.append(Style.NORMAL)
         return "\n".join(row_strings)
+
+    def process_input_key(self, input_key):
+        """Take a read key and evolve the game state as appropriate."""
+        can_use_highlighted = (
+            self.selected is None
+            and self.highlighted.role is not Role.NULL
+            and self.highlighted.player is self._active
+            and len(self.defending_coords(self._cursor_coord)) > 0
+        )
+
+        if input_key == " " and can_use_highlighted:
+            self._selected_coord = deepcopy(self._cursor_coord)
+        elif input_key == " " and self.is_defending(self._cursor_coord):
+            self.make_move()
+        elif input_key in ["\x1b", "q", "Q"]:
+            self.quitting = True
+        else:
+            next_cursor_coord = self._cursor_coord + INPUT_DELTAS.get(input_key, (0, 0))
+            if next_cursor_coord.in_bounds():
+                self._cursor_coord = next_cursor_coord

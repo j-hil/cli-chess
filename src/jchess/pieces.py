@@ -1,8 +1,11 @@
+"""Creates representation of a chess piece."""
 from dataclasses import dataclass
 from enum import Enum, auto
 
 
 class Role(Enum):
+    """Each type chess piece and a `Null` for empty squares."""
+
     KING = auto()
     QUEEN = auto()
     ROOK = auto()
@@ -13,6 +16,8 @@ class Role(Enum):
 
 
 class Player(Enum):
+    """Which player (if any) that a square or turn belongs to."""
+
     ONE = auto()
     TWO = auto()
     NULL = auto()
@@ -20,5 +25,7 @@ class Player(Enum):
 
 @dataclass
 class Piece:
+    """Representation any square on the board."""
+
     role: Role
     player: Player
