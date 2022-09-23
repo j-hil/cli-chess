@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 VectorLike = Union["Vector", tuple[int, int]]
 
+
 @dataclass
 class Vector:
     x: int

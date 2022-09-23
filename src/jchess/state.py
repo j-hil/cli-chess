@@ -1,10 +1,9 @@
-
 from colorama import Style
 
 from jchess.geometry import Vector, VectorLike
 from jchess.pieces import Piece, Role, Player
 from jchess.configs import Config, VS_CODE_CONFIG
-from constants import STANDARD_CHESS_BOARD, DELTAS, LINES
+from jchess.constants import STANDARD_CHESS_BOARD, DELTAS, LINES
 
 
 class GameState:
@@ -32,8 +31,8 @@ class GameState:
         return (
             self.attacker_coord is None
             and highlighted.role is not Role.NULL
-            and highlighted.player == self.active
-            and self.defending_coords(self.cursor_coord)  # check non-empty
+            and highlighted.player is self.active
+            and len(self.defending_coords(self.cursor_coord)) > 0  # check non-empty
         )
 
     def is_defending(self, coord: VectorLike) -> bool:
@@ -76,7 +75,7 @@ class GameState:
             if attacker.player is Player.ONE:
                 direction = 1
                 x_start = 1
-            else: # player is TWO
+            else:  # player is TWO
                 direction = -1
                 x_start = 6
 
@@ -103,7 +102,7 @@ class GameState:
 
     def make_move(self):
         self[self.cursor_coord] = self[self.attacker_coord]
-        self[self.attacker_coord]  = Piece(Role.NULL, Player.NULL)
+        self[self.attacker_coord] = Piece(Role.NULL, Player.NULL)
 
         self.active, self.inactive = self.inactive, self.active
         self.attacker_coord = None

@@ -1,9 +1,9 @@
-"""Initial drafting file."""
-from msvcrt import getch
-from jchess.state import GameState
 import os
+from msvcrt import getch
 from copy import deepcopy
 from colorama import init
+
+from jchess.state import GameState
 
 
 def get_one_key_input():

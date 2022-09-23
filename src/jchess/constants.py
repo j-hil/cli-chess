@@ -29,8 +29,6 @@ DELTAS: dict[Role, list[tuple[int, int]]] = {
     ),
 }
 
-attacker_coord = ""
-
 _ROOK_LINES = [
     [(s * d, t * d) for d in range(1, 8)] for s, t in [(0, 1), (1, 0), (-1, 0), (0, -1)]
 ]

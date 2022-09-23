@@ -9,7 +9,7 @@ _STANDARD_SYMBOLS = {
     Role.BISHOP: "I",
     Role.KNIGHT: "J",
     Role.PAWN: "i",
-    Role.NULL: " "
+    Role.NULL: " ",
 }
 
 

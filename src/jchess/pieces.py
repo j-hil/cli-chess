@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, auto
 
+
 class Role(Enum):
     KING = auto()
     QUEEN = auto()
@@ -10,10 +11,12 @@ class Role(Enum):
     PAWN = auto()
     NULL = auto()
 
+
 class Player(Enum):
     ONE = auto()
     TWO = auto()
     NULL = auto()
+
 
 @dataclass
 class Piece:
