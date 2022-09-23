@@ -41,7 +41,7 @@ def main():
 
         if key == " " and game.can_select_attacker():
             game.attacker_coord = deepcopy(game.cursor_coord)
-        elif key == " " and game.cursor_coord in game.defending_coords(game.attacker_coord):
+        elif key == " " and game.is_defending(game.cursor_coord):
             game.make_move()
         elif key == "\x00H" and y - 1 >= 0:
             game.cursor_coord += (0, -1)
@@ -58,4 +58,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
