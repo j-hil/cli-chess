@@ -3,7 +3,7 @@
 from copy import deepcopy
 
 from jchess.geometry import Vector, VectorLike
-from jchess.squares import Square, Role, Player
+from jchess.squares import NULL_SQUARE, Square, Role, Player
 from jchess.configs import Config, VS_CODE_CONFIG
 from jchess.constants import STANDARD_CHESS_BOARD, DELTAS, LINES, INPUT_DELTAS
 from jchess.display import generate_board
@@ -22,7 +22,7 @@ class GameState:
         self.inactive = Player.TWO
         self.quitting = False
 
-        self.taken_pieces = {Player.ONE: [], Player.TWO: []}
+        self.taken_pieces: dict[Player, list[Square]] = {Player.ONE: [], Player.TWO: []}
 
     @property
     def selected(self) -> Square | None:
@@ -31,6 +31,17 @@ class GameState:
             return None
         return self[self.selected_coord]
 
+    @selected.setter
+    def selected(self, value: Square | None):
+        if value is None:
+            self.selected_coord = None
+            return
+
+        if self.selected_coord is None:
+            raise RuntimeError("`selected` can't be a Square as selected_coord=None.")
+
+        self[self.selected_coord] = value
+
     @property
     def highlighted(self) -> Square:
         """Square which the game cursor is currently highlighting."""
@@ -38,6 +49,10 @@ class GameState:
         if piece is None:
             raise RuntimeError("`_cursor_coord` should always be in bounds.")
         return piece
+
+    @highlighted.setter
+    def highlighted(self, value: Square):
+        self[self.highlighted_coord] = value
 
     def is_defending(self, coord: VectorLike) -> bool:
         """Check if the square at the input coord is defending against the attacker."""
@@ -99,8 +114,10 @@ class GameState:
 
     def make_move(self):
         """Execute a move of the attacker to the current highlighted square."""
-        self[self.highlighted_coord] = self[self.selected_coord]
-        self[self.selected_coord] = Square(Role.NULL, Player.NULL)
+        self.taken_pieces[self.active].append(self.highlighted)
+
+        self.highlighted = self.selected
+        self.selected = NULL_SQUARE
         self.active, self.inactive = self.inactive, self.active
         self.selected_coord = None
 

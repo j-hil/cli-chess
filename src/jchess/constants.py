@@ -1,10 +1,10 @@
 """Various constants used throughout the project.
 
-Purely exists for aesthetic purposes; each constant is only used within `state.py`.
+Purely exists for aesthetic purposes; each constant is only used within one file.
 """
 
 from itertools import product
-from jchess.squares import Square, Player, Role
+from jchess.squares import Square, Player, Role, NULL_SQUARE
 
 _BACK_ROW = [
     Role.ROOK,
@@ -20,7 +20,7 @@ _BACK_ROW = [
 _TRANSPOSED_BOARD = [
     [Square(role, Player.ONE) for role in _BACK_ROW],
     [Square(Role.PAWN, Player.ONE) for _ in range(8)],
-    *[[Square(Role.NULL, Player.NULL) for _ in range(8)] for _ in range(4)],
+    *[[NULL_SQUARE for _ in range(8)] for _ in range(4)],
     [Square(Role.PAWN, Player.TWO) for _ in range(8)],
     [Square(role, Player.TWO) for role in _BACK_ROW],
 ]
