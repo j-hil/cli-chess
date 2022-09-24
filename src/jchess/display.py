@@ -9,17 +9,32 @@ I think a lot of the manipulations of the display could probably be simplified w
 built in `curses` module which I was unaware of when I begin this project.
 """
 
+from dataclasses import dataclass
 import os
 from typing import TYPE_CHECKING
 
 from colorama import Style
 
 from jchess.geometry import Vector, VectorLike
-from jchess.constants import BOARD_TEMPLATE, PIECE_VALUE, PLAYER_INFO_TEMPLATE
 from jchess.squares import Player
+from jchess.constants import BOARD_TEMPLATE, PIECE_VALUE, PLAYER_INFO_TEMPLATE
 
 if TYPE_CHECKING:
     from jchess.state import GameState
+
+
+@dataclass
+class DisplaySize:
+    """Used to measure the size of a display."""
+
+    rows: int
+    cols: int
+
+    def __iter__(self):
+        return iter([self.rows, self.cols])
+
+
+MAIN_DISPLAY_SIZE = DisplaySize(25, 88)
 
 
 class DisplayArray:
@@ -32,6 +47,7 @@ class DisplayArray:
     def __init__(self, string: str):
         n_rows = 0
         row_len = string.find("\n")
+        row_len = row_len if row_len > 0 else len(string)
         rows = []
         for row in string.split("\n"):
             if len(row) != row_len:
@@ -40,8 +56,7 @@ class DisplayArray:
             rows.append(list(row))
 
         self.array = rows
-        self.width = row_len
-        self.height = n_rows
+        self.size = DisplaySize(n_rows, row_len)
 
     def __getitem__(self, position: VectorLike) -> str:
         if isinstance(position, tuple):
@@ -57,12 +72,12 @@ class DisplayArray:
     def merge_in(self, other: "DisplayArray", *, at: VectorLike):
         translation = Vector(*at) if isinstance(at, tuple) else at
 
-        w, h = self.width - translation.x, self.height - translation.y
-        if w < other.width or h < other.height:
+        w, h = self.size.cols - translation.x, self.size.cols - translation.y
+        if w < other.size.cols or h < other.size.rows:
             raise ValueError("The incoming display must fit in the allocated space")
 
-        for i in range(other.height):
-            for j in range(other.width):
+        for i in range(other.size.rows):
+            for j in range(other.size.cols):
                 old_position = Vector(j, i)
                 new_position = old_position + translation
                 self[new_position] = other[old_position]
@@ -105,9 +120,7 @@ def generate_player_column(game: "GameState", player: Player) -> DisplayArray:
     score = game.score[player]
     display = DisplayArray(PLAYER_INFO_TEMPLATE.format(player.value, score))
 
-    taken_pieces = sorted(
-        game.taken_pieces[player], key=lambda p: PIECE_VALUE[p.role], reverse=True
-    )
+    taken_pieces = game.taken_pieces[player]
     symbol = game.config.role_symbol
     plain_string = ", ".join(symbol[p.role] for p in taken_pieces)
     plain_string = f"{plain_string: <48}"
@@ -123,16 +136,40 @@ def generate_player_column(game: "GameState", player: Player) -> DisplayArray:
 def generate_main_display(game: "GameState") -> DisplayArray:
     """Use the helper functions above to generate the main display of the game."""
 
-    board_display = generate_board(game)
-    player1_display = generate_player_column(game, Player.ONE)
-    player2_display = generate_player_column(game, Player.TWO)
+    board = generate_board(game)
+    player1_info = generate_player_column(game, Player.ONE)
+    player2_info = generate_player_column(game, Player.TWO)
+    headline = DisplayArray(
+        "Welcome to J-Chess. Use the arrow keys to navigate, "
+        "space to select, and 'q' to quit."
+    )
 
-    blank_template = "\n".join(" " * 88 for _ in range(21))
+    score1 = game.score[Player.ONE]
+    score2 = game.score[Player.TWO]
+    if score1 > 104:
+        gutter_msg = f"PLAYER ONE wins with an effective score of {score1 - 104}!"
+    elif score1 > score2:
+        gutter_msg = f"PLAYER ONE leads by {score1 - score2} point(s)."
+    elif score2 > 104:
+        gutter_msg = f"PLAYER TWO wins with an effective score of {score2 - 104}!"
+    elif score2 > score1:
+        gutter_msg = f"PLAYER TWO leads by {score2 - score1} point(s)."
+    elif score1 == score2 == 0:
+        gutter_msg = "Start playing!"
+    else:
+        gutter_msg = "This game is close! PLAYERS ONE & TWO are equal in score."
+
+    gutter = DisplayArray(gutter_msg)
+
+    h, w = MAIN_DISPLAY_SIZE
+    blank_template = "\n".join(" " * w for _ in range(h))
     main_display = DisplayArray(blank_template)
 
-    main_display.merge_in(player1_display, at=(0, 0))
-    main_display.merge_in(board_display, at=(18, 0))
-    main_display.merge_in(player2_display, at=(60, 0))
+    main_display.merge_in(headline, at=(0, 0))
+    main_display.merge_in(player1_info, at=(0, 2))
+    main_display.merge_in(board, at=(18, 2))
+    main_display.merge_in(player2_info, at=(60, 2))
+    main_display.merge_in(gutter, at=(0, 21))
 
     return main_display
 

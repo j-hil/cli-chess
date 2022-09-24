@@ -1,7 +1,4 @@
-"""Various constants used throughout the project.
-
-Purely exists for aesthetic purposes; each constant is only used within one file.
-"""
+"""Various constants used throughout the project."""
 
 from itertools import product
 from jchess.squares import Square, Player, Role, NULL_SQUARE
@@ -83,13 +80,19 @@ BOARD_TEMPLATE = (
 PLAYER_INFO_TEMPLATE = (
     "PLAYER {0: <3}      \n"
     "                \n"
-    "SCORE={1: <2}        \n"
+    "SCORE={1:0>3}       \n"
     "                \n"
     "                \n"
     "                "
 )
 
+
+# if every white pawn where to turn into a queen, and then black captured all enemy
+# pieces, black would be left with a score of
+#   9 * 8 + 2 * 5 + 2 * 3 + 2 * 3 + 1 * 9 = 103
+# so we set Role.KING = 104 so that a score > 103 is an unambiguous win condition.
 PIECE_VALUE = {
+    Role.KING: 104,
     Role.QUEEN: 9,
     Role.ROOK: 5,
     Role.BISHOP: 3,

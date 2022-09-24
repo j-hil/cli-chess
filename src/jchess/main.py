@@ -3,8 +3,10 @@
 import os
 from msvcrt import getch
 from colorama import init
+import psutil
 
 from jchess.state import GameState
+from jchess.display import MAIN_DISPLAY_SIZE
 
 
 def get_one_key_input():
@@ -29,11 +31,11 @@ def show_cursor():
 
 
 def reset_cursor():
-    """Move the cursor up 21 lines, where the next print will occur.
+    """Move the cursor up by the number of lines displayed. Next print occurs there.
 
     This is used instead of `os.system('cls')` which creates an 'flickering' effect.
     """
-    print("\033[21A\033[2K", end="")
+    print(f"\033[{MAIN_DISPLAY_SIZE.rows}A\033[2K", end="")
 
 
 def main():
@@ -56,8 +58,15 @@ def main():
 
 
 if __name__ == "__main__":
+    # getting shell experention
+    # parent_pid = os.getppid()
+    # process_name = psutil.Process(parent_pid).parent().name()
+    # print(f"{parent_pid=}")
+    # print(f"{process_name=}")
+    # quit()
     try:
         main()
     except Exception:
         os.system("cls")
         raise
+

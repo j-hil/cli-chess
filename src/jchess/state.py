@@ -5,7 +5,13 @@ from copy import deepcopy
 from jchess.geometry import Vector, VectorLike
 from jchess.squares import NULL_SQUARE, Square, Role, Player
 from jchess.configs import Config, VS_CODE_CONFIG
-from jchess.constants import PIECE_VALUE, STANDARD_CHESS_BOARD, DELTAS, LINES, INPUT_DELTAS
+from jchess.constants import (
+    PIECE_VALUE,
+    STANDARD_CHESS_BOARD,
+    DELTAS,
+    LINES,
+    INPUT_DELTAS,
+)
 from jchess.display import generate_main_display
 
 
@@ -162,8 +168,10 @@ class GameState:
             if new_cursor_coord.in_bounds():
                 self.highlighted_coord = new_cursor_coord
 
+
 if __name__ == "__main__":
     game = GameState()
     from jchess.display import generate_player_column
+
     x = generate_player_column(game, Player.ONE)
     print(x)
