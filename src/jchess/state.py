@@ -3,7 +3,7 @@ from copy import deepcopy
 from colorama import Style
 
 from jchess.geometry import Vector, VectorLike
-from jchess.pieces import Piece, Role, Player
+from jchess.squares import Square, Role, Player
 from jchess.configs import Config, VS_CODE_CONFIG
 from jchess.constants import STANDARD_CHESS_BOARD, DELTAS, LINES, INPUT_DELTAS
 
@@ -22,14 +22,14 @@ class GameState:
         self.quitting = False
 
     @property
-    def selected(self) -> Piece | None:
+    def selected(self) -> Square | None:
         """Square currently selected by the active player, if any."""
         if self._selected_coord is None:
             return None
         return self[self._selected_coord]
 
     @property
-    def highlighted(self) -> Piece:
+    def highlighted(self) -> Square:
         """Square which the game cursor is currently highlighting."""
         piece = self[self._cursor_coord]
         if piece is None:
@@ -97,16 +97,16 @@ class GameState:
     def make_move(self):
         """Execute a move of the attacker to the current highlighted square."""
         self[self._cursor_coord] = self[self._selected_coord]
-        self[self._selected_coord] = Piece(Role.NULL, Player.NULL)
+        self[self._selected_coord] = Square(Role.NULL, Player.NULL)
         self._active, self._inactive = self._inactive, self._active
         self._selected_coord = None
 
-    def __getitem__(self, key: Vector | None) -> Piece | None:
+    def __getitem__(self, key: Vector | None) -> Square | None:
         if key is None or not key.in_bounds():
             return None
         return self._board[key.y][key.x]
 
-    def __setitem__(self, key: Vector, value: Piece):
+    def __setitem__(self, key: Vector, value: Square):
         self._board[key.y][key.x] = value
 
     def __str__(self):

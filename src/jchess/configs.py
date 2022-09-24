@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from colorama import Fore, Style, Back
-from jchess.pieces import Player, Role
+from jchess.squares import Player, Role
 
 _STANDARD_SYMBOLS = {
     Role.KING: "K",

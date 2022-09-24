@@ -24,7 +24,7 @@ class Player(Enum):
 
 
 @dataclass
-class Piece:
+class Square:
     """Representation any square on the board."""
 
     role: Role

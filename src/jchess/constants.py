@@ -4,7 +4,7 @@ Purely exists for aesthetic purposes; each constant is only used within `state.p
 """
 
 from itertools import product
-from jchess.pieces import Piece, Player, Role
+from jchess.squares import Square, Player, Role
 
 _BACK_ROW = [
     Role.ROOK,
@@ -18,13 +18,13 @@ _BACK_ROW = [
 ]
 
 _TRANSPOSED_BOARD = [
-    [Piece(role, Player.ONE) for role in _BACK_ROW],
-    [Piece(Role.PAWN, Player.ONE) for _ in range(8)],
-    *[[Piece(Role.NULL, Player.NULL) for _ in range(8)] for _ in range(4)],
-    [Piece(Role.PAWN, Player.TWO) for _ in range(8)],
-    [Piece(role, Player.TWO) for role in _BACK_ROW],
+    [Square(role, Player.ONE) for role in _BACK_ROW],
+    [Square(Role.PAWN, Player.ONE) for _ in range(8)],
+    *[[Square(Role.NULL, Player.NULL) for _ in range(8)] for _ in range(4)],
+    [Square(Role.PAWN, Player.TWO) for _ in range(8)],
+    [Square(role, Player.TWO) for role in _BACK_ROW],
 ]
-STANDARD_CHESS_BOARD: list[list[Piece]] = list(map(list, zip(*_TRANSPOSED_BOARD)))
+STANDARD_CHESS_BOARD: list[list[Square]] = list(map(list, zip(*_TRANSPOSED_BOARD)))
 
 DELTAS: dict[Role, list[tuple[int, int]]] = {
     # pylint: disable=unnecessary-comprehension  # mypy can't tell types if `list` used
