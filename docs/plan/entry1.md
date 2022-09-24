@@ -6,11 +6,12 @@ games would be nice *much* later on, but for now just manual (i.e. 2 players).
 ## Functionality
 
 We'll have 3 core aspects:
-1. A game state, where all the information is stored. It should also include a score
+- [X] A game state, where all the information is stored. It should also include a score
     based on the usual 1, 3, 3, 5, 9 system.
-2. A render function which will translate the game state into something
+- [X] A render function which will translate the game state into something
     visually pleasing.
-3. A UI for the changing the game state.
+- [ ] A UI for the changing the game state.
+
 
 ## Cosmetics
 

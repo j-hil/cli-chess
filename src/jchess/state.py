@@ -5,8 +5,8 @@ from copy import deepcopy
 from jchess.geometry import Vector, VectorLike
 from jchess.squares import NULL_SQUARE, Square, Role, Player
 from jchess.configs import Config, VS_CODE_CONFIG
-from jchess.constants import STANDARD_CHESS_BOARD, DELTAS, LINES, INPUT_DELTAS
-from jchess.display import generate_board
+from jchess.constants import PIECE_VALUE, STANDARD_CHESS_BOARD, DELTAS, LINES, INPUT_DELTAS
+from jchess.display import generate_main_display
 
 
 class GameState:
@@ -23,6 +23,7 @@ class GameState:
         self.quitting = False
 
         self.taken_pieces: dict[Player, list[Square]] = {Player.ONE: [], Player.TWO: []}
+        self.score = {Player.ONE: 0, Player.TWO: 0}
 
     @property
     def selected(self) -> Square | None:
@@ -114,7 +115,9 @@ class GameState:
 
     def make_move(self):
         """Execute a move of the attacker to the current highlighted square."""
-        self.taken_pieces[self.active].append(self.highlighted)
+        if self.highlighted is not NULL_SQUARE:
+            self.taken_pieces[self.active].append(self.highlighted)
+            self.score[self.active] += PIECE_VALUE[self.highlighted.role]
 
         self.highlighted = self.selected
         self.selected = NULL_SQUARE
@@ -136,10 +139,10 @@ class GameState:
             for row in self.board
         )
 
-    def __str__(self):
-        return generate_board(self)
+    def __str__(self) -> str:
+        return str(generate_main_display(self))
 
-    def process_input_key(self, input_key):
+    def process_input_key(self, key):
         """Take a read key and evolve the game state as appropriate."""
         can_use_highlighted = (
             self.selected is None
@@ -148,15 +151,19 @@ class GameState:
             and len(self.defending_coords(self.highlighted_coord)) > 0
         )
 
-        if input_key == " " and can_use_highlighted:
+        if key == " " and can_use_highlighted:
             self.selected_coord = deepcopy(self.highlighted_coord)
-        elif input_key == " " and self.is_defending(self.highlighted_coord):
+        elif key == " " and self.is_defending(self.highlighted_coord):
             self.make_move()
-        elif input_key in ["\x1b", "q", "Q"]:
+        elif key in ["\x1b", "q", "Q"]:
             self.quitting = True
         else:
-            next_cursor_coord = self.highlighted_coord + INPUT_DELTAS.get(
-                input_key, (0, 0)
-            )
-            if next_cursor_coord.in_bounds():
-                self.highlighted_coord = next_cursor_coord
+            new_cursor_coord = self.highlighted_coord + INPUT_DELTAS.get(key, (0, 0))
+            if new_cursor_coord.in_bounds():
+                self.highlighted_coord = new_cursor_coord
+
+if __name__ == "__main__":
+    game = GameState()
+    from jchess.display import generate_player_column
+    x = generate_player_column(game, Player.ONE)
+    print(x)

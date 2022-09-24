@@ -33,4 +33,5 @@ class Vector:
 
 
 if __name__ == "__main__":
-    print(2 * Vector(5, 10))
+    #print(2 * Vector(5, 10))
+    pass

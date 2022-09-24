@@ -29,11 +29,11 @@ def show_cursor():
 
 
 def reset_cursor():
-    """Move the cursor up 20 lines, where the next print will occur.
+    """Move the cursor up 21 lines, where the next print will occur.
 
     This is used instead of `os.system('cls')` which creates an 'flickering' effect.
     """
-    print("\033[20A\033[2K", end="")
+    print("\033[21A\033[2K", end="")
 
 
 def main():
@@ -56,4 +56,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        os.system("cls")
+        raise

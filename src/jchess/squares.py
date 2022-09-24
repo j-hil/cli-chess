@@ -18,9 +18,9 @@ class Role(Enum):
 class Player(Enum):
     """Which player (if any) that a square or turn belongs to."""
 
-    ONE = auto()
-    TWO = auto()
-    NULL = auto()
+    ONE = "ONE"
+    TWO = "TWO"
+    NULL = "NULL"
 
 
 @dataclass
