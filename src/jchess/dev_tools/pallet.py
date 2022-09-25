@@ -19,7 +19,9 @@ NAMES = {
     **{getattr(Back, f"LIGHT{color}_EX"): f"L-{color}" for color in BASE_COLORS},
 }
 
-output = (
+
+# rewrite using jchess.display?
+OUTPUT = (
     # column labels
     " " * 11
     + "".join(fore + f"{NAMES[fore]:11s}" for fore in FORES)
@@ -51,4 +53,4 @@ output = (
 
 # BLACK AND WHITE ON BLACK AND MAGENTA seems to be only good combo
 init()
-print(output)
+print(OUTPUT)

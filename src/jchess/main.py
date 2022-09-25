@@ -3,13 +3,12 @@
 import os
 from msvcrt import getch
 from colorama import init
-import psutil
 
 from jchess.state import GameState
 from jchess.display import MAIN_DISPLAY_SIZE
 
 
-def get_one_key_input():
+def get_one_key_input() -> str:
     r"""Get one key input from the console.
 
     The check for a second character is necessary as in VS Code's console the direction
@@ -20,17 +19,17 @@ def get_one_key_input():
     return char1 + char2
 
 
-def hide_cursor():
+def hide_cursor() -> None:
     """Hide the terminal's cursor using ANSI codes."""
     print("\033[?25l", end="")
 
 
-def show_cursor():
+def show_cursor() -> None:
     """Show the terminal's cursor using ANSI codes."""
     print("\033[?25h", end="")
 
 
-def reset_cursor():
+def reset_cursor() -> None:
     """Move the cursor up by the number of lines displayed. Next print occurs there.
 
     This is used instead of `os.system('cls')` which creates an 'flickering' effect.
@@ -38,7 +37,7 @@ def reset_cursor():
     print(f"\033[{MAIN_DISPLAY_SIZE.rows}A\033[2K", end="")
 
 
-def main():
+def main() -> None:
     """Entry point to begin the game.
 
     The game state is updated and re-printed after each keystroke.
@@ -59,6 +58,7 @@ def main():
 
 if __name__ == "__main__":
     # getting shell experention
+    # import psutil
     # parent_pid = os.getppid()
     # process_name = psutil.Process(parent_pid).parent().name()
     # print(f"{parent_pid=}")
@@ -69,4 +69,3 @@ if __name__ == "__main__":
     except Exception:
         os.system("cls")
         raise
-

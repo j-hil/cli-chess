@@ -15,10 +15,16 @@ from jchess.constants import (
 from jchess.display import generate_main_display
 
 
+# TODO: this class could do with cleaning & reducing
 class GameState:
     """Represents the state of the game, and controls the game logic."""
 
     def __init__(self, config: Config = VS_CODE_CONFIG):
+        """Initialise a `GameState`.
+
+        :param config: Controls settings such as color, symbols etc. Several pre-made
+            configs available in jchess.config. Defaults to VS_CODE_CONFIG
+        """
         self.board = STANDARD_CHESS_BOARD
         self.config = config
 
@@ -39,7 +45,7 @@ class GameState:
         return self[self.selected_coord]
 
     @selected.setter
-    def selected(self, value: Square | None):
+    def selected(self, value: Square | None) -> None:
         if value is None:
             self.selected_coord = None
             return
@@ -58,7 +64,7 @@ class GameState:
         return piece
 
     @highlighted.setter
-    def highlighted(self, value: Square):
+    def highlighted(self, value: Square) -> None:
         self[self.highlighted_coord] = value
 
     def is_defending(self, coord: VectorLike) -> bool:
@@ -119,8 +125,11 @@ class GameState:
 
         return result
 
-    def make_move(self):
+    def make_move(self) -> None:
         """Execute a move of the attacker to the current highlighted square."""
+        if self.selected is None:
+            raise ValueError("Cannot make a move when no Square is selected.")
+
         if self.highlighted is not NULL_SQUARE:
             self.taken_pieces[self.active].append(self.highlighted)
             self.score[self.active] += PIECE_VALUE[self.highlighted.role]
@@ -135,10 +144,10 @@ class GameState:
             return None
         return self.board[key.y][key.x]
 
-    def __setitem__(self, key: Vector, value: Square):
+    def __setitem__(self, key: Vector, value: Square) -> None:
         self.board[key.y][key.x] = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         symbol = self.config.role_symbol
         return f"\n{'-' * 31}\n".join(
             " " + " | ".join(symbol[square.role] for square in row) + " "
@@ -148,7 +157,7 @@ class GameState:
     def __str__(self) -> str:
         return str(generate_main_display(self))
 
-    def process_input_key(self, key):
+    def process_input_key(self, key: str) -> None:
         """Take a read key and evolve the game state as appropriate."""
         can_use_highlighted = (
             self.selected is None

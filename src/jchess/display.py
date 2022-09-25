@@ -11,16 +11,18 @@ built in `curses` module which I was unaware of when I begin this project.
 
 from dataclasses import dataclass
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
 from colorama import Style
 
 from jchess.geometry import Vector, VectorLike
 from jchess.squares import Player
-from jchess.constants import BOARD_TEMPLATE, PIECE_VALUE, PLAYER_INFO_TEMPLATE
+from jchess.constants import BOARD_TEMPLATE, PLAYER_INFO_TEMPLATE
 
 if TYPE_CHECKING:
     from jchess.state import GameState
+
+iter([])
 
 
 @dataclass
@@ -30,7 +32,7 @@ class DisplaySize:
     rows: int
     cols: int
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         return iter([self.rows, self.cols])
 
 
@@ -45,6 +47,12 @@ class DisplayArray:
     """
 
     def __init__(self, string: str):
+        """Initialize a `DisplayArray`.
+
+        :param string: Each line becomes a row, and each character in a line becomes an
+            element of it's corresponding row.
+        :raises ValueError: Each line must be of equal length.
+        """
         n_rows = 0
         row_len = string.find("\n")
         row_len = row_len if row_len > 0 else len(string)
@@ -63,13 +71,19 @@ class DisplayArray:
             return self.array[position[1]][position[0]]
         return self.array[position.y][position.x]
 
-    def __setitem__(self, position: Vector, value: str):
+    def __setitem__(self, position: Vector, value: str) -> None:
         self.array[position.y][position.x] = value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join("".join(c for c in row) for row in self.array)
 
-    def merge_in(self, other: "DisplayArray", *, at: VectorLike):
+    def merge_in(self, other: "DisplayArray", *, at: VectorLike) -> None:
+        """Merge another `DisplayArray` into this one.
+
+        :param other: Display to merge into the current one
+        :param at: Coordinate to start the merge at (top-left corner)
+        :raises ValueError: If `other` display doesn't fit inside `self` from `at`
+        """
         translation = Vector(*at) if isinstance(at, tuple) else at
 
         w, h = self.size.cols - translation.x, self.size.cols - translation.y
@@ -116,7 +130,6 @@ def generate_board(game: "GameState") -> DisplayArray:
 
 def generate_player_column(game: "GameState", player: Player) -> DisplayArray:
     """Create a string representing the extra info to present to the player."""
-
     score = game.score[player]
     display = DisplayArray(PLAYER_INFO_TEMPLATE.format(player.value, score))
 
@@ -129,13 +142,11 @@ def generate_player_column(game: "GameState", player: Player) -> DisplayArray:
         for j in range(16):
             position = Vector(j, i + 3)
             display[position] = plain_string[16 * i + j]
-    display
     return display
 
 
 def generate_main_display(game: "GameState") -> DisplayArray:
     """Use the helper functions above to generate the main display of the game."""
-
     board = generate_board(game)
     player1_info = generate_player_column(game, Player.ONE)
     player2_info = generate_player_column(game, Player.TWO)
@@ -183,3 +194,6 @@ if __name__ == "__main__":
     print(my_display)
 
     os.system("cls")
+
+    for x in MAIN_DISPLAY_SIZE:
+        print(x)
