@@ -2,10 +2,18 @@
 
 import os
 from msvcrt import getch
+import sys
+from warnings import warn
+
 from colorama import init
+from psutil import Process
 
 from jchess.state import GameState
 from jchess.display import MAIN_DISPLAY_SIZE
+from jchess.configs import CMD_CONFIG, PS_CONFIG, VSC_CONFIG
+
+# attempt to detect that game is being run inside VS Code
+DEV_MODE = "debugpy" in sys.modules
 
 
 def get_one_key_input() -> str:
@@ -36,6 +44,10 @@ def reset_cursor() -> None:
     """
     print(f"\033[{MAIN_DISPLAY_SIZE.rows}A\033[2K", end="")
 
+def get_shell_name() -> str:
+    # get parent's parent as if in venv parent is python
+    return Process(os.getpid()).parent().name()
+
 
 def main() -> None:
     """Entry point to begin the game.
@@ -46,7 +58,20 @@ def main() -> None:
     os.system("cls")
     hide_cursor()
 
-    game = GameState()
+
+    if DEV_MODE:
+        config = VSC_CONFIG
+    else:
+        shell = get_shell_name()
+        if shell == "cmd.exe":
+            config = CMD_CONFIG
+        elif shell == "powershell.exe":
+            config = PS_CONFIG
+        else:
+            config = VSC_CONFIG
+            warn(f"Shell {shell} not supported/recognized. Defaulting to VSC_CONFIG")
+
+    game = GameState(config)
     while not game.quitting:
         reset_cursor()
         hide_cursor()
@@ -57,13 +82,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # getting shell experention
-    # import psutil
-    # parent_pid = os.getppid()
-    # process_name = psutil.Process(parent_pid).parent().name()
-    # print(f"{parent_pid=}")
-    # print(f"{process_name=}")
-    # quit()
     try:
         main()
     except Exception:

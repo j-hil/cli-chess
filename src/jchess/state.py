@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from jchess.geometry import Vector, VectorLike
 from jchess.squares import NULL_SQUARE, Square, Role, Player
-from jchess.configs import Config, VS_CODE_CONFIG
+from jchess.configs import Config, VSC_CONFIG
 from jchess.constants import (
     PIECE_VALUE,
     STANDARD_CHESS_BOARD,
@@ -19,7 +19,7 @@ from jchess.display import generate_main_display
 class GameState:
     """Represents the state of the game, and controls the game logic."""
 
-    def __init__(self, config: Config = VS_CODE_CONFIG):
+    def __init__(self, config: Config = VSC_CONFIG):
         """Initialise a `GameState`.
 
         :param config: Controls settings such as color, symbols etc. Several pre-made
