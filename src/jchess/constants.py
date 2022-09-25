@@ -1,6 +1,9 @@
 """Various constants used throughout the project."""
 
 from jchess.squares import Square, Player, Role, NULL_SQUARE
+from jchess.display import DisplaySize
+
+MAIN_DISPLAY_SIZE = DisplaySize(25, 88)
 
 _BACK_ROW = [
     Role.ROOK,
@@ -54,3 +57,5 @@ PLAYER_INFO_TEMPLATE = (
     "                \n"
     "                "
 )
+
+#

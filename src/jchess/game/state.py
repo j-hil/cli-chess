@@ -8,7 +8,7 @@ from jchess.squares import Square, Player
 from jchess.configs import Config, VSC_CONFIG
 from jchess.constants import STANDARD_CHESS_BOARD
 from jchess.game.engine import evolve_state_
-from jchess.game.display import generate_main_display
+from jchess.game.gui import generate_main_display
 
 
 # TODO: this class could do with cleaning & reducing
