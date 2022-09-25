@@ -1,24 +1,7 @@
 """Contains display settings for different consoles."""
-# TODO: A lot of repetition in configs so maybe rethink
 from dataclasses import dataclass
 from colorama import Fore, Style, Back
 from jchess.squares import Player, Role
-
-_STANDARD_SYMBOLS = {
-    Role.KING: "K",
-    Role.QUEEN: "Q",
-    Role.ROOK: "H",
-    Role.BISHOP: "I",
-    Role.KNIGHT: "J",
-    Role.PAWN: "i",
-    Role.NULL: " ",
-}
-
-_STANDARD_COLORS = {
-        Player.ONE: Style.BRIGHT + Fore.WHITE,
-        Player.TWO: Style.NORMAL + Fore.BLACK,
-        Player.NULL: "",
-    }
 
 
 @dataclass
@@ -35,8 +18,12 @@ class Config:
 
 # for Visual Studio Code
 VSC_CONFIG = Config(
-    role_symbol=_STANDARD_SYMBOLS,
-    player_color=_STANDARD_COLORS,
+    role_symbol=dict(zip(Role, list("KQHIJi "))),
+    player_color={
+        Player.ONE: Style.BRIGHT + Fore.WHITE,
+        Player.TWO: Style.NORMAL + Fore.BLACK,
+        Player.NULL: "",
+    },
     board_color={0: Back.MAGENTA, 1: Back.BLACK},
     cursor_color=Back.YELLOW,
     selected_color=Back.RED,
@@ -45,20 +32,30 @@ VSC_CONFIG = Config(
 
 # for Powershell
 PS_CONFIG = Config(
-    role_symbol=_STANDARD_SYMBOLS,
-    player_color=_STANDARD_COLORS,
-    board_color={0: Back.WHITE, 1: Back.LIGHTBLACK_EX},
-    cursor_color=Back.YELLOW,
-    selected_color=Back.RED,
-    valid_color=Back.GREEN,
+    role_symbol=dict(zip(Role, list("KQHIJi "))),
+    player_color={
+        Player.ONE: Style.BRIGHT + Fore.WHITE,
+        Player.TWO: Style.NORMAL + Fore.BLACK,
+        Player.NULL: "",
+    },
+    board_color={0: Back.LIGHTBLACK_EX, 1: Back.CYAN},
+    cursor_color=Back.LIGHTMAGENTA_EX,
+    selected_color=Back.LIGHTRED_EX,
+    valid_color=Back.LIGHTGREEN_EX,
 )
 
 # for Command Prompt
 CMD_CONFIG = Config(
-    role_symbol=_STANDARD_SYMBOLS,
-    player_color=_STANDARD_COLORS,
+    role_symbol=dict(zip(Role, list("KQHIJi "))),
+    player_color={
+        Player.ONE: Style.BRIGHT + Fore.WHITE,
+        Player.TWO: Style.NORMAL + Fore.BLACK,
+        Player.NULL: "",
+    },
     board_color={0: Back.YELLOW, 1: Back.GREEN},
-    cursor_color=Back.CYAN,
-    selected_color=Back.BLUE,
+    cursor_color=Back.BLUE,
+    selected_color=Back.RED,
     valid_color=Back.CYAN,
 )
+
+CONFIG = {"cmd.exe": CMD_CONFIG, "powershell.exe": PS_CONFIG}

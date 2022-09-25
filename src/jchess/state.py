@@ -1,23 +1,19 @@
 """Creates a class containing the bulk of the logic and complexity of the game."""
 
 from copy import deepcopy
-from jchess.logic import def_coords_any
+from jchess.logic import defending_coords_
 
 from jchess.geometry import Vector, VectorLike
-from jchess.squares import NULL_SQUARE, PIECE_VALUE, Square, Player
+from jchess.squares import Square, Player
 from jchess.configs import Config, VSC_CONFIG
 from jchess.constants import STANDARD_CHESS_BOARD
+from jchess.engine import evolve_state_
 from jchess.display import generate_main_display
 
 
 # TODO: this class could do with cleaning & reducing
 class GameState:
     """Represents the state of the game, and controls the game logic."""
-
-    @staticmethod
-    def in_bounds(coord: Vector) -> bool:
-        """Check if a coordinate is within the chess board."""
-        return coord.x in range(8) and coord.y in range(8)
 
     def __init__(self, config: Config = VSC_CONFIG):
         """Initialise a `GameState`.
@@ -76,38 +72,19 @@ class GameState:
 
     def defending_coords(self, attacker_coord: Vector | None) -> list[Vector]:
         """All coordinates defending against the current attacker."""
-        return def_coords_any(self, attacker_coord)
+        return defending_coords_(self, attacker_coord)
 
-    def make_move(self) -> None:
-        """Execute a move of the attacker to the current highlighted square."""
-        if self.selected is None:
-            raise ValueError("Cannot make a move when no Square is selected.")
-
-        # TODO: somehow a second instance of Square(NULL, NULL) is being created
-        # ans so != NULL_SQUARE is required rather than `is not`. Find the offender.
-        if self.highlighted != NULL_SQUARE:
-            self.taken_pieces[self.active].append(self.highlighted)
-            self.score[self.active] += PIECE_VALUE[self.highlighted.role]
-
-        self.highlighted = self.selected
-        self.selected = NULL_SQUARE
-        self.active, self.inactive = self.inactive, self.active
-        self.selected_coord = None
+    def evolve_state(self) -> None:
+        """Wait for an input form the user and then act accordingly."""
+        return evolve_state_(self)
 
     def __getitem__(self, key: Vector | None) -> Square | None:
-        if key is None or not GameState.in_bounds(key):
+        if key is None or key.x not in range(8) or key.y not in range(8):
             return None
         return self.board[key.y][key.x]
 
     def __setitem__(self, key: Vector, value: Square) -> None:
         self.board[key.y][key.x] = value
-
-    def __repr__(self) -> str:
-        symbol = self.config.role_symbol
-        return f"\n{'-' * 31}\n".join(
-            " " + " | ".join(symbol[square.role] for square in row) + " "
-            for row in self.board
-        )
 
     def __str__(self) -> str:
         return str(generate_main_display(self))

@@ -6,14 +6,15 @@
   - [ ] Update pallet code
 - [ ] Add compatibility for different consoles (see `psutils`)
 - [ ] Put on PyPI
-- [ ] Add simple multiplayer - no idea how this would work.
+- [ ] Add other game-modes
+  - [ ] Add simple multiplayer - no idea how this would work.
+  - [ ] Add a simple 1 player mode (based on random moves)
 - [ ] Add automatic versioning using `git` describe
 - [ ] Complete game-play functionality
   - [ ] Add check & checkmate functionality
   - [ ] Add castling
   - [ ] Add en passant
   - [ ] Add promotion
-- [ ] Add a simple 1 player mode (based on random moves)
 - [ ] Improve visuals
   - [ ] Add boarder
   - [ ] Add more color to score etc
