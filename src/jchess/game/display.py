@@ -20,7 +20,7 @@ from jchess.squares import Player
 from jchess.constants import BOARD_TEMPLATE, PLAYER_INFO_TEMPLATE
 
 if TYPE_CHECKING:
-    from jchess.state import GameState
+    from jchess.game.state import GameState
 
 
 @dataclass

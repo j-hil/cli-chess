@@ -11,7 +11,7 @@ from msvcrt import getch
 from jchess.squares import NULL_SQUARE, PIECE_VALUE
 
 if TYPE_CHECKING:
-    from jchess.state import GameState
+    from jchess.game.state import GameState
 
 
 class Action(Enum):

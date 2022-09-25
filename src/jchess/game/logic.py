@@ -2,13 +2,13 @@
 
 from itertools import product
 from typing import TYPE_CHECKING
-from jchess.engine import CARDINAL_DIRECTION
+from jchess.game.engine import CARDINAL_DIRECTION
 
 from jchess.geometry import Vector
 from jchess.squares import Role, Player
 
 if TYPE_CHECKING:
-    from jchess.state import GameState
+    from jchess.game.state import GameState
 
 
 def defending_coords_(game: "GameState", attacker_coord: Vector | None) -> list[Vector]:
@@ -76,6 +76,7 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
 DELTAS = {
     # pylint: disable=unnecessary-comprehension  # mypy can't tell types if `list` used
+    # TODO: could be genuine mypy bug - investigate and maybe report?
     Role.KING: [(x, y) for x, y in product([-1, 0, +1], repeat=2)],
     Role.KNIGHT: (
         [(s * 2, t * 1) for s, t in product([1, -1], repeat=2)]

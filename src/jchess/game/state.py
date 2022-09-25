@@ -1,14 +1,14 @@
 """Creates a class containing the bulk of the logic and complexity of the game."""
 
 from copy import deepcopy
-from jchess.logic import defending_coords_
+from jchess.game.logic import defending_coords_
 
 from jchess.geometry import Vector, VectorLike
 from jchess.squares import Square, Player
 from jchess.configs import Config, VSC_CONFIG
 from jchess.constants import STANDARD_CHESS_BOARD
-from jchess.engine import evolve_state_
-from jchess.display import generate_main_display
+from jchess.game.engine import evolve_state_
+from jchess.game.display import generate_main_display
 
 
 # TODO: this class could do with cleaning & reducing
