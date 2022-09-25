@@ -11,6 +11,7 @@ from psutil import Process
 from jchess.state import GameState
 from jchess.display import MAIN_DISPLAY_SIZE
 from jchess.configs import CMD_CONFIG, PS_CONFIG, VSC_CONFIG
+from jchess.engine import process_input_key
 
 # attempt to detect that game is being run inside VS Code
 DEV_MODE = "debugpy" in sys.modules
@@ -44,6 +45,7 @@ def reset_cursor() -> None:
     """
     print(f"\033[{MAIN_DISPLAY_SIZE.rows}A\033[2K", end="")
 
+
 def get_shell_name() -> str:
     # get parent's parent as if in venv parent is python
     return Process(os.getpid()).parent().name()
@@ -57,7 +59,6 @@ def main() -> None:
     init()
     os.system("cls")
     hide_cursor()
-
 
     if DEV_MODE:
         config = VSC_CONFIG
@@ -77,7 +78,7 @@ def main() -> None:
         hide_cursor()
         print(game)
         key = get_one_key_input()
-        game.process_input_key(key)
+        process_input_key(game, key)
     show_cursor()
 
 

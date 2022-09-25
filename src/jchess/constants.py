@@ -1,6 +1,5 @@
 """Various constants used throughout the project."""
 
-from itertools import product
 from jchess.squares import Square, Player, Role, NULL_SQUARE
 
 _BACK_ROW = [
@@ -22,36 +21,6 @@ _TRANSPOSED_BOARD = [
     [Square(role, Player.TWO) for role in _BACK_ROW],
 ]
 STANDARD_CHESS_BOARD: list[list[Square]] = list(map(list, zip(*_TRANSPOSED_BOARD)))
-
-DELTAS: dict[Role, list[tuple[int, int]]] = {
-    # pylint: disable=unnecessary-comprehension  # mypy can't tell types if `list` used
-    Role.KING: [(x, y) for x, y in product([-1, 0, +1], repeat=2)],
-    Role.KNIGHT: (
-        [(s * 2, t * 1) for s, t in product([1, -1], repeat=2)]
-        + [(s * 1, t * 2) for s, t in product([1, -1], repeat=2)]
-    ),
-}
-
-_ROOK_LINES = [
-    [(s * d, t * d) for d in range(1, 8)] for s, t in [(0, 1), (1, 0), (-1, 0), (0, -1)]
-]
-
-_BISHOP_LINES = [
-    [(s * d, t * d) for d in range(1, 8)] for s, t in product([1, -1], repeat=2)
-]
-
-LINES = {
-    Role.QUEEN: _ROOK_LINES + _BISHOP_LINES,
-    Role.ROOK: _ROOK_LINES,
-    Role.BISHOP: _BISHOP_LINES,
-}
-
-INPUT_DELTAS: dict[str, tuple[int, int]] = {
-    "\x00H": (0, -1),
-    "\x00P": (0, +1),
-    "\x00K": (-1, 0),
-    "\x00M": (+1, 0),
-}
 
 # 19 x 39
 BOARD_TEMPLATE = (
@@ -85,17 +54,3 @@ PLAYER_INFO_TEMPLATE = (
     "                \n"
     "                "
 )
-
-
-# if every white pawn where to turn into a queen, and then black captured all enemy
-# pieces, black would be left with a score of
-#   9 * 8 + 2 * 5 + 2 * 3 + 2 * 3 + 1 * 9 = 103
-# so we set Role.KING = 104 so that a score > 103 is an unambiguous win condition.
-PIECE_VALUE = {
-    Role.KING: 104,
-    Role.QUEEN: 9,
-    Role.ROOK: 5,
-    Role.BISHOP: 3,
-    Role.KNIGHT: 3,
-    Role.PAWN: 1,
-}

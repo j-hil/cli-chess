@@ -22,8 +22,6 @@ from jchess.constants import BOARD_TEMPLATE, PLAYER_INFO_TEMPLATE
 if TYPE_CHECKING:
     from jchess.state import GameState
 
-iter([])
-
 
 @dataclass
 class DisplaySize:
