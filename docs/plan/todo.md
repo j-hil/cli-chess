@@ -8,19 +8,20 @@
   - [ ] Add automatic versioning using `git` describe or other
   - [ ] Should probably add some tests - though might be overkill here
 - [ ] Clean up code to reduce complexity and increase readability. In particular:
-  - [ ] Refactor `GameState` (see 2 TODO's in code)
+  - [X] Refactor `GameState` (see 2 TODO's in code)
   - [ ] Research implementing `curses` std-lib functions
   - [ ] Update pallet code
-- [ ] Add other game-modes
+- [ ] Add features
   - [ ] Add simple multiplayer - no idea how this would work.
   - [ ] Add a simple 1 player mode (based on random moves)
+  - [ ] [Look into Algebraic notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
 - [ ] Complete game-play functionality
   - [ ] Add check & checkmate functionality
   - [ ] Add castling
   - [ ] Add en passant
   - [ ] Add promotion
 - [ ] Improve visuals
-  - [ ] Add boarder
+  - [X] Add boarder
   - [ ] Add more color to score etc
   - [ ] Change "target" coordinates to show on hover
   - [ ] [Add option for Unicode chess pieces](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode)
