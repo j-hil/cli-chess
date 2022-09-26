@@ -23,3 +23,4 @@
   - [ ] Add boarder
   - [ ] Add more color to score etc
   - [ ] Change "target" coordinates to show on hover
+  - [ ] [Add option for Unicode chess pieces](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode)

@@ -1,14 +1,14 @@
 """Defines the various on-screen elements generated from a `GameState`
 
-To call this a GUI is a little generous.
+To call this a GUI is a little generous. This file in particular (and display itself)
+are big targets for better implementation.
 """
 from typing import TYPE_CHECKING
 from colorama import Style
 
-from jchess.display import DisplayArray
+from jchess.display import DisplayArray, DisplaySize
 from jchess.squares import Player
 from jchess.geometry import Vector
-from jchess.constants import BOARD_TEMPLATE, PLAYER_INFO_TEMPLATE, MAIN_DISPLAY_SIZE
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -16,29 +16,23 @@ if TYPE_CHECKING:
 
 def generate_main_display(game: "GameState") -> DisplayArray:
     """Use the helper functions above to generate the main display of the game."""
-    board = generate_board(game)
-    player1_info = generate_player_column(game, Player.ONE)
-    player2_info = generate_player_column(game, Player.TWO)
-    headline = DisplayArray(
-        "Welcome to J-Chess. Use the arrow keys to navigate, "
-        "space to select, and 'q' to quit."
-    )
-    gutter = generate_gutter(game)
 
-    h, w = MAIN_DISPLAY_SIZE.rows, MAIN_DISPLAY_SIZE.cols
-    blank_template = "\n".join(" " * w for _ in range(h))
-    main_display = DisplayArray(blank_template)
+    board = _generate_board(game)
+    player1_info = _generate_player_info(game, Player.ONE)
+    player2_info = _generate_player_info(game, Player.TWO)
+    gutter = _generate_gutter(game)
 
-    main_display.merge_in(headline, at=(0, 0))
-    main_display.merge_in(player1_info, at=(0, 2))
-    main_display.merge_in(board, at=(18, 2))
-    main_display.merge_in(player2_info, at=(60, 2))
-    main_display.merge_in(gutter, at=(0, 21))
+    main_display = DisplayArray(MAIN_DISPLAY_TEMPLATE)
+
+    main_display.merge_in(player1_info, at=(0, 3))
+    main_display.merge_in(board, at=(23, 3))
+    main_display.merge_in(player2_info, at=(72, 3))
+    main_display.merge_in(gutter, at=(2, 23))
 
     return main_display
 
 
-def generate_gutter(game: "GameState") -> DisplayArray:
+def _generate_gutter(game: "GameState") -> DisplayArray:
     score1 = game.score[Player.ONE]
     score2 = game.score[Player.TWO]
     if score1 > 104:
@@ -54,11 +48,10 @@ def generate_gutter(game: "GameState") -> DisplayArray:
     else:
         gutter_msg = "This game is close! PLAYERS ONE & TWO are equal in score."
 
-    return DisplayArray(gutter_msg)
+    return DisplayArray(f"{gutter_msg: ^83}")
 
 
-def generate_board(game: "GameState") -> DisplayArray:
-    """Create a string representing the inputted `GameState`."""
+def _generate_board(game: "GameState") -> DisplayArray:
     display = DisplayArray(BOARD_TEMPLATE)
 
     def coord_transform(v: Vector) -> Vector:
@@ -88,8 +81,7 @@ def generate_board(game: "GameState") -> DisplayArray:
     return display
 
 
-def generate_player_column(game: "GameState", player: Player) -> DisplayArray:
-    """Create a string representing the extra info to present to the player."""
+def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
     score = game.score[player]
     display = DisplayArray(PLAYER_INFO_TEMPLATE.format(player.value, score))
 
@@ -98,8 +90,78 @@ def generate_player_column(game: "GameState", player: Player) -> DisplayArray:
     plain_string = ", ".join(symbol[p.role] for p in taken_pieces)
     plain_string = f"{plain_string: <48}"
 
-    for i in range(3):
-        for j in range(16):
-            position = Vector(j, i + 3)
-            display[position] = plain_string[16 * i + j]
+    # TODO: remove all magic numbers in this file... :/ eg those 4's aren't the same
+    for i in range(4):
+        for j in range(12):
+            position = Vector(2 + j, i + 4)
+            display[position] = plain_string[12 * i + j]
     return display
+
+
+# 25 * 87
+MAIN_DISPLAY_TEMPLATE = """\
++-------------------------------------------------------------------------------------+
+| Welcome to J-Chess! Controls: arrows to navigate, space to select, and 'q' to quit. |
++-------------------------------------------------------------------------------------+
+| PLAYER ONE: |              a   b   c   d   e   f   g   h              | PLAYER TWO: |
++ - - - - - - +            +---+---+---+---+---+---+---+---+            + - - - - - - +
+| SCORE = NNN |          0 |   |   |   |   |   |   |   |   | 0          | SCORE = NNN |
++ - - - - - - +            +---+---+---+---+---+---+---+---+            + - - - - - - +
+| X, X, X, X, |          1 |   |   |   |   |   |   |   |   | 1          | X, X, X, X, |
+| X, X, X, X, |            +---+---+---+---+---+---+---+---+            | X, X, X, X, |
+| X, X, X, X, |          2 |   |   |   |   |   |   |   |   | 2          | X, X, X, X, |
+| X, X, X, X, |            +---+---+---+---+---+---+---+---+            | X, X, X, X, |
++ - - - - - - +          3 |   |   |   |   |   |   |   |   | 3          + - - - - - - +
+|             |            +---+---+---+---+---+---+---+---+            |             |
+|             |          4 |   |   |   |   |   |   |   |   | 4          |             |
+|             |            +---+---+---+---+---+---+---+---+            |             |
+|             |          5 |   |   |   |   |   |   |   |   | 5          |             |
+|             |            +---+---+---+---+---+---+---+---+            |             |
+|             |          6 |   |   |   |   |   |   |   |   | 6          |             |
+|             |            +---+---+---+---+---+---+---+---+            |             |
+|             |          7 |   |   |   |   |   |   |   |   | 7          |             |
+|             |            +---+---+---+---+---+---+---+---+            |             |
+|             |              a   b   c   d   e   f   g   h              | (by j-hil.) |
++-------------+---------------------------------------------------------+-------------+
+| Gutter message.                                                                     |
++-------------------------------------------------------------------------------------+\
+"""
+
+# TODO: can probably remove
+_LINES = MAIN_DISPLAY_TEMPLATE.split("\n")
+MAIN_DISPLAY_SIZE = DisplaySize(len(_LINES), len(_LINES[0]))
+
+# 19 x 39
+BOARD_TEMPLATE = (
+    "     a   b   c   d   e   f   g   h     \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 0 |   |   |   |   |   |   |   |   | 0 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 1 |   |   |   |   |   |   |   |   | 1 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 2 |   |   |   |   |   |   |   |   | 2 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 3 |   |   |   |   |   |   |   |   | 3 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 4 |   |   |   |   |   |   |   |   | 4 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 5 |   |   |   |   |   |   |   |   | 5 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 6 |   |   |   |   |   |   |   |   | 6 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    " 7 |   |   |   |   |   |   |   |   | 7 \n"
+    "   +---+---+---+---+---+---+---+---+   \n"
+    "     a   b   c   d   e   f   g   h     "
+)
+
+# 8 x 15
+PLAYER_INFO_TEMPLATE = """\
+| PLAYER {: <3}: |
++ - - - - - - +
+| SCORE = {:0>3} |
++ - - - - - - +
+| X, X, X, X, |
+| X, X, X, X, |
+| X, X, X, X, |
+| X, X, X, X, |\
+"""

@@ -7,6 +7,9 @@ could be methods but it's convenient to have them here.
 
 I think a lot of the manipulations of the display could probably be simplified with the
 built in `curses` module which I was unaware of when I begin this project.
+
+DisplayArray is used (rather than using an array of strings) as colorization
+characters (eg Fore.BLACK) become difficult to place.
 """
 from dataclasses import dataclass
 from jchess.geometry import Vector, VectorLike
