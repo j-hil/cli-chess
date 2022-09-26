@@ -64,7 +64,7 @@ def _generate_board(game: "GameState") -> DisplayArray:
             if board_position == game.highlighted_coord:
                 back_color = game.config.cursor_color
             elif board_position == game.selected_coord:
-                back_color = game.config.selected_color
+                back_color = game.config.highlight_color
             elif game.is_defending(board_position):
                 back_color = game.config.valid_color
             else:

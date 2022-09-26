@@ -49,6 +49,9 @@ good-names = [
     "ex", "Run", "_", "dy"
 ]
 
+[tool.pylint.format]
+max-line-length=88
+
 [tool.pydocstyle]
 ignore = [
     "D105",  # Missing docstring in magic method

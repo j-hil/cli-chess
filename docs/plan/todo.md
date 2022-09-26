@@ -13,6 +13,7 @@
   - [X] Refactor `GameState` (see 2 TODO's in code)
   - [ ] Research implementing `curses` std-lib functions
   - [X] Update pallet code
+  - [ ] I don't like how `black` formats functions with many parameters - replace?
 - [ ] Add features
   - [ ] Add simple multiplayer - no idea how this would work.
   - [ ] Add a simple 1 player mode (based on random moves)
@@ -26,9 +27,6 @@
   - [X] Add boarder
   - [ ] Add more color to score etc
   - [ ] Change "target" coordinates to show on hover
-  - [ ] [Add option for Unicode chess pieces](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode)
-
-      * Harder than it seems - they take up > 1 space
-      * aren't supported in powershell/cmd
+  - [ ] Unicode pieces if supported; harder than apparent - they take up > 1 space
   - [ ] Fix "abcdefg" and "01234567" labels.
   - [ ] Allow rotation of the board
