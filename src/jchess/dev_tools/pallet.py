@@ -22,7 +22,7 @@ NAMES = {
 }
 
 
-def _generate_pallet():
+def _generate_pallet() -> str:
     sep = " || "
     headers = sep.join(f"{NAMES[fore]: ^9}" for fore in FORES)
     output = " v-BACK \\ FORE->" + sep + headers + "\n"

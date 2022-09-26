@@ -8,6 +8,7 @@
 - [ ] Improve dev workflow
   - [ ] Add automatic versioning using `git` describe or other
   - [ ] Should probably add some tests - though might be overkill here
+  - [ ] Remove the need for constants.py
 - [ ] Clean up code to reduce complexity and increase readability. In particular:
   - [X] Refactor `GameState` (see 2 TODO's in code)
   - [ ] Research implementing `curses` std-lib functions
@@ -27,6 +28,7 @@
   - [ ] Change "target" coordinates to show on hover
   - [ ] [Add option for Unicode chess pieces](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode)
 
-    * Harder than it seems - they take up > 1 space
-    * aren't supported in powershell/cmd
+      * Harder than it seems - they take up > 1 space
+      * aren't supported in powershell/cmd
   - [ ] Fix "abcdefg" and "01234567" labels.
+  - [ ] Allow rotation of the board
