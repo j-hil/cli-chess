@@ -6,7 +6,7 @@ are big targets for better implementation.
 from typing import TYPE_CHECKING
 from colorama import Style
 
-from jchess.display import DisplayArray, DisplaySize
+from jchess.display import DisplayArray
 from jchess.squares import Player
 from jchess.geometry import Vector
 
@@ -126,10 +126,7 @@ MAIN_DISPLAY_TEMPLATE = """\
 | Gutter message.                                                                     |
 +-------------------------------------------------------------------------------------+\
 """
-
-# TODO: can probably remove
-_LINES = MAIN_DISPLAY_TEMPLATE.split("\n")
-MAIN_DISPLAY_SIZE = DisplaySize(len(_LINES), len(_LINES[0]))
+MAIN_DISPLAY_ROWS = len(MAIN_DISPLAY_TEMPLATE.split("\n"))
 
 # 19 x 39
 BOARD_TEMPLATE = (

@@ -21,18 +21,20 @@ NAMES = {
     **{getattr(Back, f"LIGHT{color}_EX"): f"L-{color}" for color in BASE_COLORS},
 }
 
+
 def _generate_pallet():
-    headers = " || ".join(f"{NAMES[fore]: ^9}" for fore in FORES)
-    output = " v-BACK \\ FORE->" + " || " + headers + "\n"
+    sep = " || "
+    headers = sep.join(f"{NAMES[fore]: ^9}" for fore in FORES)
+    output = " v-BACK \\ FORE->" + sep + headers + "\n"
     for back in BACKS:
-        row = Fore.WHITE + Style.BRIGHT + f"{NAMES[back]: <16}" + Style.RESET_ALL + " || "
+        row = Fore.WHITE + Style.BRIGHT + f"{NAMES[back]: <16}" + Style.RESET_ALL + sep
         for fore in FORES:
             styles = " ".join(style + "X" for style in STYLES)
-            row += back + fore + "  " + styles + "  " + Style.RESET_ALL + " || "
+            row += back + fore + "  " + styles + "  " + Style.RESET_ALL + sep
         output += row + "\n"
     return output
+
 
 if __name__ == "__main__":
     init()
     print(_generate_pallet())
-

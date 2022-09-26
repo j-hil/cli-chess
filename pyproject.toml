@@ -42,7 +42,12 @@ warn_unused_configs = true
 strict = true
 
 [tool.pylint.basic]
-good-names = ["i", "j", "k", "ex", "Run", "_", "x", "y", "w", "h", "v", "u", "dy"]
+good-names = [
+    # single letter oks
+    "a", "b", "h", "i", "j", "k", "u", "v", "w", "x", "y", "z",
+    # other
+    "ex", "Run", "_", "dy"
+]
 
 [tool.pydocstyle]
 ignore = [
