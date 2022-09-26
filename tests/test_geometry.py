@@ -3,7 +3,6 @@ from jchess.geometry import Vector
 
 
 class TestVector(TestCase):
-
     def test_init(self):
         u = Vector(4, 2)
         self.assertEqual(u.x, 4)
@@ -16,6 +15,3 @@ class TestVector(TestCase):
     def test_sub(self):
         self.assertEqual(Vector(1, 2) - Vector(5, 6), Vector(-4, -4))
         self.assertEqual(Vector(-1, 11) - (1, 4), Vector(-2, 7))
-
-
-

@@ -1,18 +1,27 @@
 """Creates representation of a chess piece."""
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
 
 
 class Role(Enum):
     """Each type chess piece and a `Null` for empty squares."""
 
-    KING = auto()
-    QUEEN = auto()
-    ROOK = auto()
-    BISHOP = auto()
-    KNIGHT = auto()
-    PAWN = auto()
-    NULL = auto()
+    KING = ("KING", 104)
+    QUEEN = ("QUEEN", 9)
+    ROOK = ("ROOK", 5)
+    BISHOP = ("BISHOP", 3)
+    KNIGHT = ("KNIGHT", 3)
+    PAWN = ("PAWN", 1)
+    NULL = ("NULL", 0)
+
+    @property
+    def val(self) -> int:
+        """The traditional point worth of each piece."""
+        # max score is 103 so KING = 104 gives score > 103 an unambiguous win condition
+        return super().value[1]
+
+    def __str__(self) -> str:
+        return super().value[0]
 
 
 class Player(Enum):
@@ -32,16 +41,3 @@ class Square:
 
 
 NULL_SQUARE = Square(Role.NULL, Player.NULL)
-
-# if every white pawn where to turn into a queen, and then black captured all enemy
-# pieces, black would be left with a score of
-#   9 * 8 + 2 * 5 + 2 * 3 + 2 * 3 + 1 * 9 = 103
-# so we set Role.KING = 104 so that a score > 103 is an unambiguous win condition.
-PIECE_VALUE = {
-    Role.KING: 104,
-    Role.QUEEN: 9,
-    Role.ROOK: 5,
-    Role.BISHOP: 3,
-    Role.KNIGHT: 3,
-    Role.PAWN: 1,
-}

@@ -8,7 +8,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 from msvcrt import getch
 
-from jchess.squares import NULL_SQUARE, PIECE_VALUE
+from jchess.squares import NULL_SQUARE
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -63,7 +63,7 @@ def _process_action(game: "GameState", action: Action) -> None:
         # TODO: somehow 2nd instance of Square(NULL, NULL) is created so != not `is not`
         if game.highlighted != NULL_SQUARE:
             game.taken_pieces[game.active].append(game.highlighted)
-            game.score[game.active] += PIECE_VALUE[game.highlighted.role]
+            game.score[game.active] += game.highlighted.role.val
 
         # TODO: mypy issue
         # can't tell here that is_defending(game.highlighted_coord) => game.selected
