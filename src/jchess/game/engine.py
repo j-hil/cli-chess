@@ -5,6 +5,7 @@ Controls reaction of `GameState` to player input.
 
 from copy import deepcopy
 from enum import Enum, auto
+import sys
 from typing import TYPE_CHECKING
 from msvcrt import getch
 
@@ -12,6 +13,12 @@ from jchess.squares import NULL_SQUARE
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
+
+
+class Mode(Enum):
+    ONE = "single player"
+    TWO = "online multi-player"
+    THREE = "local multi-player"
 
 
 class Action(Enum):
@@ -47,6 +54,9 @@ def _get_action_from_user() -> Action:
 
 def _process_action(game: "GameState", action: Action) -> None:
 
+    if game.mode is Mode.TWO:
+        # account for fact that user's view is rotated from the internal view
+        action = ROTATE.get(action, action)
     new_cursor_coord = game.highlighted_coord + CARDINAL_DIRECTION.get(action, (0, 0))
     if new_cursor_coord.x in range(8) and new_cursor_coord.y in range(8):
         game.highlighted_coord = new_cursor_coord
@@ -73,7 +83,7 @@ def _process_action(game: "GameState", action: Action) -> None:
         game.active, game.inactive = game.inactive, game.active
         game.selected_coord = None
     elif action is Action.QUIT:
-        game.quitting = True
+        sys.exit()
 
 
 CARDINAL_DIRECTION = {
@@ -90,4 +100,11 @@ ACTION_INPUTS = {
     Action.DOWN: [b"S", b"\x00P", b"\xe0P"],
     Action.LEFT: [b"A", b"\x00K", b"\xe0K"],
     Action.RIGHT: [b"D", b"\x00M", b"\xe0M"],
+}
+
+ROTATE = {
+    Action.UP: Action.LEFT,
+    Action.DOWN: Action.RIGHT,
+    Action.RIGHT: Action.UP,
+    Action.LEFT: Action.DOWN,
 }

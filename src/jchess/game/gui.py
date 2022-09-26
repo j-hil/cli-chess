@@ -3,10 +3,12 @@
 To call this a GUI is a little generous. This file in particular (and display itself)
 are big targets for better implementation.
 """
+
 from typing import TYPE_CHECKING
 from colorama import Style
 
 from jchess.display import DisplayArray
+from jchess.game.engine import Mode
 from jchess.squares import Player
 from jchess.geometry import Vector
 
@@ -54,9 +56,15 @@ def _generate_gutter(game: "GameState") -> DisplayArray:
 def _generate_board(game: "GameState") -> DisplayArray:
     display = DisplayArray(BOARD_TEMPLATE)
 
-    def coord_transform(v: Vector) -> Vector:
-        return Vector(5 + 4 * v.x, 2 + 2 * v.y)
-
+    # fmt: off
+    if game.mode is Mode.TWO:
+        def coord_transform(v: Vector) -> Vector:
+            return Vector(33 - 4 * v.y, 2 + 2 * v.x)
+    else:
+        def coord_transform(v: Vector) -> Vector:
+            return Vector(5 + 4 * v.x, 2 + 2 * v.y)
+    # fmt: on
+    
     for i, row in enumerate(game.board):
         for j, square in enumerate(row):
             board_position = Vector(j, i)

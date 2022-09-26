@@ -1,14 +1,14 @@
 """Creates a class containing the bulk of the logic and complexity of the game."""
 
-from copy import deepcopy
-from jchess.game.logic import defending_coords_
 
+from jchess.game.logic import defending_coords_
 from jchess.geometry import Vector, VectorLike
-from jchess.squares import Square, Player
+from jchess.squares import Square, Player, Role, NULL_SQUARE
 from jchess.configs import Config, VSC_CONFIG
-from jchess.constants import STANDARD_CHESS_BOARD
-from jchess.game.engine import evolve_state_
+from jchess.game.engine import Mode, evolve_state_
 from jchess.game.gui import generate_main_display
+
+K, Q, R, B, N, P, _ = Role
 
 
 # TODO: this class could do with cleaning & reducing
@@ -21,7 +21,13 @@ class GameState:
         :param config: Controls settings such as color, symbols etc. Several pre-made
             configs available in jchess.config. Defaults to VS_CODE_CONFIG
         """
-        self.board = deepcopy(STANDARD_CHESS_BOARD)
+        self.board = [
+            [Square(role, Player.TWO) for role in [R, N, B, Q, K, B, N, R]],
+            [Square(P, Player.TWO) for _ in range(8)],
+            *[[NULL_SQUARE for _ in range(8)] for _ in range(4)],
+            [Square(P, Player.ONE) for _ in range(8)],
+            [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],
+        ]
         self.config = config
 
         self.highlighted_coord = Vector(0, 4)
@@ -29,10 +35,10 @@ class GameState:
 
         self.active = Player.ONE
         self.inactive = Player.TWO
-        self.quitting = False
 
         self.taken_pieces: dict[Player, list[Square]] = {Player.ONE: [], Player.TWO: []}
         self.score = {Player.ONE: 0, Player.TWO: 0}
+        self.mode = Mode.TWO
 
     @property
     def selected(self) -> Square | None:

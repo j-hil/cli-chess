@@ -15,14 +15,6 @@ from dataclasses import dataclass
 from jchess.geometry import Vector, VectorLike
 
 
-@dataclass
-class DisplaySize:
-    """Used to measure the size of a display."""
-
-    rows: int
-    cols: int
-
-
 class DisplayArray:
     """An array of arrays of strings, but the strings should be a single printable char.
 
@@ -37,29 +29,33 @@ class DisplayArray:
             element of it's corresponding row.
         :raises ValueError: Each line must be of equal length.
         """
-        n_rows = 0
         row_len = string.find("\n")
         row_len = row_len if row_len > 0 else len(string)
         rows = []
         for row in string.split("\n"):
             if len(row) != row_len:
                 raise ValueError("Each line in `string` must be of equal length.")
-            n_rows += 1
             rows.append(list(row))
+        self.rows = rows
 
-        self.array = rows
-        self.size = DisplaySize(n_rows, row_len)
+    @property
+    def n_rows(self):
+        return len(self.rows)
+
+    @property
+    def n_cols(self):
+        return len(self.rows[0])
 
     def __getitem__(self, position: VectorLike) -> str:
         if isinstance(position, tuple):
-            return self.array[position[1]][position[0]]
-        return self.array[position.y][position.x]
+            return self.rows[position[1]][position[0]]
+        return self.rows[position.y][position.x]
 
     def __setitem__(self, position: Vector, value: str) -> None:
-        self.array[position.y][position.x] = value
+        self.rows[position.y][position.x] = value
 
     def __str__(self) -> str:
-        return "\n".join("".join(c for c in row) for row in self.array)
+        return "\n".join("".join(c for c in row) for row in self.rows)
 
     def merge_in(self, other: "DisplayArray", *, at: VectorLike) -> None:
         """Merge another `DisplayArray` into this one.
@@ -70,12 +66,12 @@ class DisplayArray:
         """
         translation = Vector(*at) if isinstance(at, tuple) else at
 
-        w, h = self.size.cols - translation.x, self.size.rows - translation.y
-        if w < other.size.cols or h < other.size.rows:
+        w, h = self.n_cols - translation.x, self.n_rows - translation.y
+        if w < other.n_cols or h < other.n_rows:
             raise ValueError("The incoming display must fit in the allocated space")
 
-        for i in range(other.size.rows):
-            for j in range(other.size.cols):
+        for i in range(other.n_rows):
+            for j in range(other.n_cols):
                 old_position = Vector(j, i)
                 new_position = old_position + translation
                 self[new_position] = other[old_position]

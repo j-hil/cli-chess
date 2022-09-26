@@ -27,7 +27,7 @@ def main() -> None:
         config = CONFIG.get(shell, VSC_CONFIG)
 
     game = GameState(config)
-    while not game.quitting:
+    while True:
         print(f"\033[{MAIN_DISPLAY_ROWS}A\033[2K", end="")  # reset cursor position
         print(game)
         game.evolve_state()

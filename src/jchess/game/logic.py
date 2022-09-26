@@ -49,26 +49,26 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
     """Implement `GameState.defending_coords` for pawns."""
     result = []
 
-    if player is Player.ONE:
+    if player is Player.TWO:
         direction = 1
-        x_start = 1
-    else:  # player is TWO
+        start_row = 1
+    else:  # player is ONE
         direction = -1
-        x_start = 6
+        start_row = 6
 
-    defender_coord = coord + (direction, 0)
+    defender_coord = coord + (0, direction)
     defender = game[defender_coord]
     if defender is not None and defender.role is Role.NULL:
         result.append(defender_coord)
 
-    for dy in [1, -1]:
-        defender_coord = coord + (direction, dy)
+    for dx in [1, -1]:
+        defender_coord = coord + (dx, direction)
         defender = game[defender_coord]
         if defender is not None and defender.player == game.inactive:
             result.append(defender_coord)
 
-    defender_coord = coord + (2 * direction, 0)
-    if coord.x == x_start:
+    defender_coord = coord + (0, 2 * direction)
+    if coord.y == start_row:
         result.append(defender_coord)
 
     return result

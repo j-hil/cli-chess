@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "jchess"
 version = "0.0.1"  # versioning not established yet...
 authors = [
+    # author doesn't appear (properly) in `pip show` :(
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
 description = "Chess in the command line."
@@ -34,6 +35,7 @@ dev = [
 ]
 
 [project.urls]
+# doesn't appear in `pip show` :(
 "homepage" = "https://j-hil@github.com/j-hil/cli-chess.git"
 
 [tool.mypy]
@@ -46,7 +48,7 @@ good-names = [
     # single letter oks
     "a", "b", "h", "i", "j", "k", "u", "v", "w", "x", "y", "z",
     # other
-    "ex", "Run", "_", "dy"
+    "ex", "Run", "_", "dx", "dy"
 ]
 
 [tool.pylint.format]
