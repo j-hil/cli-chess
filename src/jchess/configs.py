@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from colorama import Fore, Style, Back
 from jchess.squares import Player, Role
 
-
+# TODO: add defaults to config - reduce duplication
 @dataclass
 class Config:
     """Represents display settings."""
@@ -15,10 +15,14 @@ class Config:
     selected_color: str
     valid_color: str
 
+def _unpack(syms: str) -> dict[Role, str]:
+    return dict(zip(Role, list(syms)))
+
 
 # for Visual Studio Code
 VSC_CONFIG = Config(
-    role_symbol=dict(zip(Role, list("KQHIJi "))),
+    # options to try/add: '♔♕♖♗♘♙ ', '♚♛♜♝♞♟ ',  'KQHIJi ', or "KQRBNi"
+    role_symbol=_unpack("♚♛♜♝♞♟ "),
     player_color={
         Player.ONE: Style.BRIGHT + Fore.WHITE,
         Player.TWO: Style.NORMAL + Fore.BLACK,
@@ -32,7 +36,7 @@ VSC_CONFIG = Config(
 
 # for Powershell
 PS_CONFIG = Config(
-    role_symbol=dict(zip(Role, list("KQHIJi "))),
+    role_symbol=_unpack('KQHIJi '),
     player_color={
         Player.ONE: Style.BRIGHT + Fore.WHITE,
         Player.TWO: Style.NORMAL + Fore.BLACK,
@@ -46,7 +50,7 @@ PS_CONFIG = Config(
 
 # for Command Prompt
 CMD_CONFIG = Config(
-    role_symbol=dict(zip(Role, list("KQHIJi "))),
+    role_symbol=_unpack('KQHIJi '),
     player_color={
         Player.ONE: Style.BRIGHT + Fore.WHITE,
         Player.TWO: Style.NORMAL + Fore.BLACK,

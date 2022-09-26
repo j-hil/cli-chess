@@ -2,15 +2,16 @@
 
 - [ ] Improve accessability
   - [X] Add compatibility for different consoles (see `psutils`) within windows
-  - [ ] Test implement linux functionality
-  - [ ] Put on PyPI
+  - [ ] Test & implement linux functionality
+  - [X] Put on PyPI
+  - [X] Rename to j-chess or fix readme
 - [ ] Improve dev workflow
   - [ ] Add automatic versioning using `git` describe or other
   - [ ] Should probably add some tests - though might be overkill here
 - [ ] Clean up code to reduce complexity and increase readability. In particular:
   - [X] Refactor `GameState` (see 2 TODO's in code)
   - [ ] Research implementing `curses` std-lib functions
-  - [ ] Update pallet code
+  - [X] Update pallet code
 - [ ] Add features
   - [ ] Add simple multiplayer - no idea how this would work.
   - [ ] Add a simple 1 player mode (based on random moves)
@@ -25,3 +26,7 @@
   - [ ] Add more color to score etc
   - [ ] Change "target" coordinates to show on hover
   - [ ] [Add option for Unicode chess pieces](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode)
+
+    * Harder than it seems - they take up > 1 space
+    * aren't supported in powershell/cmd
+  - [ ] Fix "abcdefg" and "01234567" labels.

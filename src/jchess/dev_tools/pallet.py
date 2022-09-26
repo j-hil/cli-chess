@@ -2,6 +2,8 @@
 
 In particular this is useful to view which combinations of fores, backs and styles are
 appropriate for each console, since it varies.
+
+Original taken from https://github.com/tartley/colorama/blob/master/demos/demo01.py
 """
 from colorama import init, Fore, Back, Style
 
@@ -19,38 +21,18 @@ NAMES = {
     **{getattr(Back, f"LIGHT{color}_EX"): f"L-{color}" for color in BASE_COLORS},
 }
 
+def _generate_pallet():
+    headers = " || ".join(f"{NAMES[fore]: ^9}" for fore in FORES)
+    output = " v-BACK \\ FORE->" + " || " + headers + "\n"
+    for back in BACKS:
+        row = Fore.WHITE + Style.BRIGHT + f"{NAMES[back]: <16}" + Style.RESET_ALL + " || "
+        for fore in FORES:
+            styles = " ".join(style + "X" for style in STYLES)
+            row += back + fore + "  " + styles + "  " + Style.RESET_ALL + " || "
+        output += row + "\n"
+    return output
 
-# rewrite using jchess.display?
-OUTPUT = (
-    # column labels
-    " " * 11
-    + "".join(fore + f"{NAMES[fore]:11s}" for fore in FORES)
-    + "\n"
-    # remaining rows
-    + "".join(
-        (
-            back
-            + f"{NAMES[back]:11s}"
-            + Back.RESET
-            + back
-            + "".join(
-                (
-                    fore
-                    + "".join(style + " X" for style in STYLES)
-                    + " "
-                    + Style.RESET_ALL
-                    + " || "
-                    + back
-                )
-                for fore in FORES
-            )
-            + Style.RESET_ALL
-            + "\n"
-        )
-        for back in BACKS
-    )
-)
+if __name__ == "__main__":
+    init()
+    print(_generate_pallet())
 
-# BLACK AND WHITE ON BLACK AND MAGENTA seems to be only good combo
-init()
-print(OUTPUT)

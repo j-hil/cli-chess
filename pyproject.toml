@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jchess"
-version = "0.0.1"
+version = "0.0.1"  # versioning not established yet...
 authors = [
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
