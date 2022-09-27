@@ -5,7 +5,7 @@ from colorama import init
 from psutil import Process
 
 from jchess.game.state import GameState
-from jchess.game.gui import MAIN_DISPLAY_ROWS
+from jchess.game.visuals import MAIN_DISPLAY_ROWS
 from jchess.configs import CONFIG, VSC_CONFIG
 
 # attempt to detect that game is being run inside VS Code

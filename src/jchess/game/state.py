@@ -6,7 +6,7 @@ from jchess.geometry import Vector, VectorLike
 from jchess.squares import Square, Player, Role, NULL_SQUARE
 from jchess.configs import Config, VSC_CONFIG
 from jchess.game.engine import Mode, evolve_state_
-from jchess.game.gui import generate_main_display
+from jchess.game.visuals import generate_main_display
 
 # TODO: remove as many tooling 'ignores' as possible
 K, Q, R, B, N, P, _ = Role  # type: ignore  # pylint: disable=invalid-name
