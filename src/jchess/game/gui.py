@@ -22,14 +22,12 @@ def generate_main_display(game: "GameState") -> DisplayArray:
     row_labels, col_labels = list("abcdefgh"), list("87654321")
     if game.mode is Mode.TWO:
         row_labels, col_labels = col_labels[::], row_labels
-    s1, s2 = game.score.values()
 
     # fmt: off
     main_display = DisplayArray(MAIN_DISPLAY_TEMPLATE.format(
-        "   ".join(row_labels),
-        s1, "temp soln for line-to-long-fixme", s2,
-        "   ".join(row_labels),
-        "v0.0.1", _generate_gutter_str(game), "by j-hil"
+        "   ".join(row_labels), game.score(Player.ONE),
+        "temp solution for line-to-long", game.score(Player.TWO),
+        "   ".join(row_labels), "v0.0.1", _generate_gutter_str(game), "by j-hil"
     ))
     # fmt: on
 
@@ -55,8 +53,8 @@ def generate_main_display(game: "GameState") -> DisplayArray:
 
 
 def _generate_gutter_str(game: "GameState") -> str:
-    score1 = game.score[Player.ONE]
-    score2 = game.score[Player.TWO]
+    score1 = game.score(Player.ONE)
+    score2 = game.score(Player.TWO)
     if score1 > 104:
         gutter_msg = f"PLAYER ONE wins with an effective score of {score1 - 104}!"
     elif score1 > score2:
@@ -115,7 +113,7 @@ def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
 
     taken_pieces = game.taken_pieces[player]
     symbol = game.config.role_symbol
-    plain_string = ", ".join(symbol[p.role] for p in taken_pieces)
+    plain_string = ", ".join(symbol[role] for role in taken_pieces)
     plain_string = f"{plain_string: <48}"
 
     s = 0 if player is Player.ONE else 1

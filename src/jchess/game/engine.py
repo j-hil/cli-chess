@@ -9,7 +9,7 @@ import sys
 from typing import TYPE_CHECKING
 from msvcrt import getch
 
-from jchess.squares import NULL_SQUARE
+from jchess.squares import NULL_SQUARE, Player
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -63,7 +63,7 @@ def _process_action(game: "GameState", action: Action) -> None:
 
     can_use_highlighted = (
         game.selected is None
-        and game.highlighted.player is game.active
+        and game.highlighted.player is game.player
         and len(game.defending_coords(game.highlighted_coord)) > 0
     )
 
@@ -72,15 +72,17 @@ def _process_action(game: "GameState", action: Action) -> None:
     elif action is Action.SELECT and game.is_defending(game.highlighted_coord):
         # TODO: somehow 2nd instance of Square(NULL, NULL) is created so != not `is not`
         if game.highlighted != NULL_SQUARE:
-            game.taken_pieces[game.active].append(game.highlighted)
-            game.score[game.active] += game.highlighted.role.val
+            game.taken_pieces[game.player].append(game.highlighted.role)
 
         # TODO: mypy issue
         # can't tell here that is_defending(game.highlighted_coord) => game.selected
         # possibly solve by overloading __getitem__
-        game.highlighted = game.selected
+        game.highlighted = game.selected  # type: ignore
         game.selected = NULL_SQUARE
-        game.active, game.inactive = game.inactive, game.active
+        if game.player is Player.ONE:
+            game.player = Player.TWO
+        else:
+            game.player = Player.ONE
         game.selected_coord = None
     elif action is Action.QUIT:
         sys.exit()

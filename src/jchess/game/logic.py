@@ -29,10 +29,10 @@ def defending_coords_(game: "GameState", attacker_coord: Vector | None) -> list[
             defender_coord = attacker_coord + delta
             defender = game[defender_coord]
             if defender is not None:
-                if defender.player is game.inactive:
+                if defender.player not in [game.player, Player.NULL]:
                     result.append(defender_coord)
                     break
-                if defender.player is game.active:
+                if defender.player is game.player:
                     break
                 result.append(defender_coord)
 
@@ -40,7 +40,7 @@ def defending_coords_(game: "GameState", attacker_coord: Vector | None) -> list[
     for delta in DELTAS.get(attacker.role, []):
         defender_coord = attacker_coord + delta
         defender = game[defender_coord]
-        if defender is not None and defender.player != game.active:
+        if defender is not None and defender.player != game.player:
             result.append(defender_coord)
     return result
 
@@ -64,7 +64,7 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
     for dx in [1, -1]:
         defender_coord = coord + (dx, direction)
         defender = game[defender_coord]
-        if defender is not None and defender.player == game.inactive:
+        if defender is not None and defender.player not in [game.player, Player.NULL]:
             result.append(defender_coord)
 
     defender_coord = coord + (0, 2 * direction)

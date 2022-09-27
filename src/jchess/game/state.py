@@ -34,13 +34,9 @@ class GameState:
         self.highlighted_coord: Vector = Vector(4, 7)
         self.selected_coord: Vector | None = None
 
-        self.active: Player = Player.ONE
-        # can remove this attr
-        self.inactive: Player = Player.TWO
+        self.player: Player = Player.ONE
 
-        self.taken_pieces: dict[Player, list[Square]] = {Player.ONE: [], Player.TWO: []}
-        # can remove this attr
-        self.score: dict[Player, int] = {Player.ONE: 0, Player.TWO: 0}
+        self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
         self.mode: Mode = Mode.ONE
 
     @property
@@ -70,6 +66,9 @@ class GameState:
     @highlighted.setter
     def highlighted(self, value: Square) -> None:
         self[self.highlighted_coord] = value
+
+    def score(self, player: Player) -> int:
+        return sum(x.val for x in self.taken_pieces[player])
 
     def is_defending(self, coord: VectorLike) -> bool:
         """Check if the square at the input coord is defending against the attacker."""

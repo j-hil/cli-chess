@@ -14,7 +14,7 @@ characters (eg Fore.BLACK) become difficult to place.
 Advantages: string formatting (`merge_in`) from array perspective, len counters account
 for 0 width characters like Fore.BLACK, compatibility with `Vector`.
 """
-#TODO: clean docs in this file
+# TODO: clean docs in this file
 from itertools import product
 from jchess.geometry import Vector, VectorLike
 

@@ -7,7 +7,7 @@
   - [X] Rename to j-chess or fix readme
 - [ ] Improve dev workflow
   - [ ] Add automatic versioning using `git` describe or other
-  - [ ] Should probably add some tests - though might be overkill here
+  - [X] Should probably add some tests - though might be overkill here
   - [X] Remove the need for constants.py
   - [ ] I don't like how `black` formats functions with many parameters - replace?
   - [ ] look at moving to `setuptools`
