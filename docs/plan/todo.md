@@ -25,8 +25,8 @@
   - [ ] Add promotion
 - [ ] Improve visuals
   - [X] Add boarder
-  - [ ] Add more color to score etc
+  - [X] Add more color to score etc
   - [ ] Change "target" coordinates to show on hover
   - [ ] Unicode pieces if supported; harder than apparent (take up > 1 space)
-  - [ ] Fix "abcdefg" and "01234567" labels.
+  - [X] Fix "abcdefg" and "01234567" labels.
   - [X] Allow rotation of the board

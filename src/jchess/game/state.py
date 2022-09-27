@@ -30,7 +30,7 @@ class GameState:
         ]
         self.config = config
 
-        self.highlighted_coord = Vector(0, 4)
+        self.highlighted_coord = Vector(4, 7)
         self.selected_coord: Vector | None = None
 
         self.active = Player.ONE
@@ -38,7 +38,7 @@ class GameState:
 
         self.taken_pieces: dict[Player, list[Square]] = {Player.ONE: [], Player.TWO: []}
         self.score = {Player.ONE: 0, Player.TWO: 0}
-        self.mode = Mode.TWO
+        self.mode = Mode.ONE
 
     @property
     def selected(self) -> Square | None:

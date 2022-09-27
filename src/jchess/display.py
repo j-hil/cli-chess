@@ -1,4 +1,4 @@
-"""Printing `GameState` information.
+"""Printing `GameState` information. #TODO: clean docs in this file
 
 Contains helper functions to:
 * process `GameState` information into readable & pretty strings. In principle these
@@ -10,8 +10,11 @@ built in `curses` module which I was unaware of when I begin this project.
 
 DisplayArray is used (rather than using an array of strings) as colorization
 characters (eg Fore.BLACK) become difficult to place.
+
+Advantages: string formatting (`merge_in`) from array perspective, len counters account
+for 0 width characters like Fore.BLACK, compatibility with `Vector`.
 """
-from dataclasses import dataclass
+from itertools import product
 from jchess.geometry import Vector, VectorLike
 
 
@@ -32,9 +35,11 @@ class DisplayArray:
         row_len = string.find("\n")
         row_len = row_len if row_len > 0 else len(string)
         rows = []
-        for row in string.split("\n"):
+        for i, row in enumerate(string.split("\n")):
             if len(row) != row_len:
-                raise ValueError("Each line in `string` must be of equal length.")
+                raise ValueError("Each line in `string` must be of equal length.\n"
+                                 f"    Problem in row {i}: {row}.\n"
+                                 f"    Expected len(row)={row_len}, got {len(row)=}.")
             rows.append(list(row))
         self.rows = rows
 
@@ -51,27 +56,36 @@ class DisplayArray:
             return self.rows[position[1]][position[0]]
         return self.rows[position.y][position.x]
 
-    def __setitem__(self, position: Vector, value: str) -> None:
-        self.rows[position.y][position.x] = value
+    def __setitem__(self, position: VectorLike, value: str) -> None:
+        if isinstance(position, tuple):
+            self.rows[position[1]][position[0]] = value
+        else:
+            self.rows[position.y][position.x] = value
 
     def __str__(self) -> str:
         return "\n".join("".join(c for c in row) for row in self.rows)
 
-    def merge_in(self, other: "DisplayArray", *, at: VectorLike) -> None:
+    def merge_in(self, other: "DisplayArray", *, anchor: str) -> None:
         """Merge another `DisplayArray` into this one.
 
         :param other: Display to merge into the current one
-        :param at: Coordinate to start the merge at (top-left corner)
+        :param anchor: Merge occurs at first occurrence of `anchor`(top-left corner)
         :raises ValueError: If `other` display doesn't fit inside `self` from `at`
         """
-        translation = Vector(*at) if isinstance(at, tuple) else at
+        n_cols, n_rows = self.n_cols, self.n_rows
+        for i, j in product(range(n_rows), range(n_cols)):
+            index = Vector(j, i)
+            if self[index] == anchor:
+                break
+        else:
+            raise IndexError(f"{anchor=} not found.")
 
-        w, h = self.n_cols - translation.x, self.n_rows - translation.y
+
+        w, h = n_cols - index.x, n_rows - index.y
         if w < other.n_cols or h < other.n_rows:
-            raise ValueError("The incoming display must fit in the allocated space")
+            raise ValueError("The consumed display must fit in the allocated space")
 
-        for i in range(other.n_rows):
-            for j in range(other.n_cols):
-                old_position = Vector(j, i)
-                new_position = old_position + translation
-                self[new_position] = other[old_position]
+        for i, j in product(range(other.n_rows), range(other.n_cols)):
+            old_position = Vector(j, i)
+            new_position = old_position + index
+            self[new_position] = other[old_position]
