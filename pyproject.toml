@@ -44,19 +44,22 @@ warn_unused_configs = true
 strict = true
 
 [tool.pylint.basic]
-good-names = [
-    # single letter oks
-    "a", "b", "h", "i", "j", "k", "u", "v", "w", "x", "y", "z",
-    # other
-    "ex", "Run", "_", "dx", "dy"
-]
+# allows short names (which are to be used with due consideration):
+argument-rgx="(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
+variable-rgx="(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
+attr-rgx="(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
+const-rgx="(?#CAPITAL_CASE)^[A-Z0-9]*(_[A-Z0-9]+)*_?$"
 
 [tool.pylint.format]
 max-line-length=88
 
+[tool.pylint.messages_control]
+# I decide if something needs a docstring, not pylint or pydocstyle :|
+disable = ["missing-function-docstring", "missing-class-docstring",]
+
 [tool.pydocstyle]
 ignore = [
-    "D105",  # Missing docstring in magic method
+    "D1",  # Missing docstrings
     "D213",  # Multi-line docstring summary should start at the second line
     "D203",  # 1 blank line required before class docstring (found 0)
 ]

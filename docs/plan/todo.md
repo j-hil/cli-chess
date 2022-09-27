@@ -9,11 +9,12 @@
   - [ ] Add automatic versioning using `git` describe or other
   - [ ] Should probably add some tests - though might be overkill here
   - [X] Remove the need for constants.py
+  - [ ] I don't like how `black` formats functions with many parameters - replace?
+  - [ ] look at moving to `setuptools`
 - [ ] Clean up code to reduce complexity and increase readability. In particular:
   - [X] Refactor `GameState` (see 2 TODO's in code)
   - [ ] Research implementing `curses` std-lib functions
   - [X] Update pallet code
-  - [ ] I don't like how `black` formats functions with many parameters - replace?
 - [ ] Add features
   - [ ] Add simple multiplayer - no idea how this would work.
   - [ ] Add a simple 1 player mode (based on random moves)

@@ -1,5 +1,6 @@
-# virtual environment
+# tooling
 .venv/
+.mypy_cache/
 
 # editor related files
 .vscode/

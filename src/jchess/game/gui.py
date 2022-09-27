@@ -1,4 +1,4 @@
-"""Defines the various on-screen elements generated from a `GameState`
+"""Defines the various on-screen elements generated from a `GameState`.
 
 To call this a GUI is a little generous. This file in particular (and display itself)
 are big targets for better implementation.
@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
 def generate_main_display(game: "GameState") -> DisplayArray:
     """Use the helper functions above to generate the main display of the game."""
-
     row_labels, col_labels = list("abcdefgh"), list("87654321")
     if game.mode is Mode.TWO:
         row_labels, col_labels = col_labels[::], row_labels
@@ -55,7 +54,7 @@ def generate_main_display(game: "GameState") -> DisplayArray:
     return main_display
 
 
-def _generate_gutter_str(game: "GameState") -> DisplayArray:
+def _generate_gutter_str(game: "GameState") -> str:
     score1 = game.score[Player.ONE]
     score2 = game.score[Player.TWO]
     if score1 > 104:
@@ -123,7 +122,11 @@ def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
     for i in range(n_rows):
         for j in range(n_cols):
             position = Vector(j, i)
-            display[position] = game.config.board_color[s] + plain_string[n_cols * i + j] + Style.RESET_ALL
+            display[position] = (
+                game.config.board_color[s]
+                + plain_string[n_cols * i + j]
+                + Style.RESET_ALL
+            )
     return display
 
 

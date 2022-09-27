@@ -1,4 +1,4 @@
-"""Printing `GameState` information. #TODO: clean docs in this file
+"""Printing `GameState` information.
 
 Contains helper functions to:
 * process `GameState` information into readable & pretty strings. In principle these
@@ -14,6 +14,7 @@ characters (eg Fore.BLACK) become difficult to place.
 Advantages: string formatting (`merge_in`) from array perspective, len counters account
 for 0 width characters like Fore.BLACK, compatibility with `Vector`.
 """
+#TODO: clean docs in this file
 from itertools import product
 from jchess.geometry import Vector, VectorLike
 
@@ -37,18 +38,16 @@ class DisplayArray:
         rows = []
         for i, row in enumerate(string.split("\n")):
             if len(row) != row_len:
-                raise ValueError("Each line in `string` must be of equal length.\n"
-                                 f"    Problem in row {i}: {row}.\n"
-                                 f"    Expected len(row)={row_len}, got {len(row)=}.")
+                raise ValueError(INVALID_INPUT_MSG.format(i, row, row_len, len(row)))
             rows.append(list(row))
         self.rows = rows
 
     @property
-    def n_rows(self):
+    def n_rows(self) -> int:
         return len(self.rows)
 
     @property
-    def n_cols(self):
+    def n_cols(self) -> int:
         return len(self.rows[0])
 
     def __getitem__(self, position: VectorLike) -> str:
@@ -80,7 +79,6 @@ class DisplayArray:
         else:
             raise IndexError(f"{anchor=} not found.")
 
-
         w, h = n_cols - index.x, n_rows - index.y
         if w < other.n_cols or h < other.n_rows:
             raise ValueError("The consumed display must fit in the allocated space")
@@ -89,3 +87,10 @@ class DisplayArray:
             old_position = Vector(j, i)
             new_position = old_position + index
             self[new_position] = other[old_position]
+
+
+INVALID_INPUT_MSG = """\
+Each line in `string` must be of equal length.
+    Problem in row {}: {}.
+    Expected len(row)={}, got {}.
+"""

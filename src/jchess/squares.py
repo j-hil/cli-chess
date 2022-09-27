@@ -16,7 +16,7 @@ class Role(Enum):
 
     @property
     def val(self) -> int:
-        """The traditional point worth of each piece."""
+        """Traditional point worth of each piece."""
         # max score is 103 so KING = 104 gives score > 103 an unambiguous win condition
         return super().value[1]
 

@@ -11,9 +11,10 @@ class Config:
 
     # fmt: off
     def __init__(self, *,
-        symbols: str = "KQHIJi", board_clr1: str, board_clr2: str,
+        symbols: str = "KQHIJi",
+        board_clr1: str, board_clr2: str,
         cursor_clr: str, highlight_clr: str, valid_clr: str
-    ) -> None: # fmt: on
+    ) -> None:
         """Transform inputs into attrs better for implementation.
 
         :param board_clr1: Background color of 'even' squares.
@@ -33,6 +34,7 @@ class Config:
             Player.NULL: "",
         }
         self.board_color = {0: board_clr1, 1: board_clr2}
+    # fmt: on
 
 
 # for Visual Studio Code

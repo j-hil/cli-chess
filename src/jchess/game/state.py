@@ -8,7 +8,8 @@ from jchess.configs import Config, VSC_CONFIG
 from jchess.game.engine import Mode, evolve_state_
 from jchess.game.gui import generate_main_display
 
-K, Q, R, B, N, P, _ = Role
+# TODO: remove as many tooling 'ignores' as possible
+K, Q, R, B, N, P, _ = Role  # type: ignore  # pylint: disable=invalid-name
 
 
 # TODO: this class could do with cleaning & reducing
@@ -21,24 +22,26 @@ class GameState:
         :param config: Controls settings such as color, symbols etc. Several pre-made
             configs available in jchess.config. Defaults to VS_CODE_CONFIG
         """
-        self.board = [
-            [Square(role, Player.TWO) for role in [R, N, B, Q, K, B, N, R]],
-            [Square(P, Player.TWO) for _ in range(8)],
+        self.board: list[list[Square]] = [
+            [Square(role, Player.TWO) for role in [R, N, B, Q, K, B, N, R]],  # type: ignore  # pylint: disable=line-too-long
+            [Square(P, Player.TWO) for _ in range(8)],  # type: ignore
             *[[NULL_SQUARE for _ in range(8)] for _ in range(4)],
-            [Square(P, Player.ONE) for _ in range(8)],
-            [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],
+            [Square(P, Player.ONE) for _ in range(8)],  # type: ignore
+            [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],  # type: ignore  # pylint: disable=line-too-long
         ]
-        self.config = config
+        self.config: Config = config
 
-        self.highlighted_coord = Vector(4, 7)
+        self.highlighted_coord: Vector = Vector(4, 7)
         self.selected_coord: Vector | None = None
 
-        self.active = Player.ONE
-        self.inactive = Player.TWO
+        self.active: Player = Player.ONE
+        # can remove this attr
+        self.inactive: Player = Player.TWO
 
         self.taken_pieces: dict[Player, list[Square]] = {Player.ONE: [], Player.TWO: []}
-        self.score = {Player.ONE: 0, Player.TWO: 0}
-        self.mode = Mode.ONE
+        # can remove this attr
+        self.score: dict[Player, int] = {Player.ONE: 0, Player.TWO: 0}
+        self.mode: Mode = Mode.ONE
 
     @property
     def selected(self) -> Square | None:
@@ -52,10 +55,8 @@ class GameState:
         if value is None:
             self.selected_coord = None
             return
-
         if self.selected_coord is None:
-            raise RuntimeError("`selected` can't be a Square as selected_coord=None.")
-
+            raise RuntimeError("`selected` doesn't exist as selected_coord=None.")
         self[self.selected_coord] = value
 
     @property
