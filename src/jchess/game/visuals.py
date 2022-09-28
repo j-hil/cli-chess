@@ -10,7 +10,7 @@ from colorama import Style
 import jchess
 
 from jchess.display import DisplayArray
-from jchess.game.engine import NOT_SELECTED_COORD, NOT_SELECTED_SQUARE, Mode
+from jchess.game.engine import UNSELECTED_SQUARE, Mode
 from jchess.squares import Player
 from jchess.geometry import Vector
 
@@ -91,13 +91,22 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
         for j, square in enumerate(row):
             coord = Vector(j, i)
 
+            show_highlighted_targets = (
+                game.selected is UNSELECTED_SQUARE
+                and game.highlighted.player is game.player
+                and game.is_defending(coord, against=game.highlighted_coord)
+            )
+            show_selected_targets = (
+                game.selected is not UNSELECTED_SQUARE
+                and game.is_defending(coord, against=game.selected_coord)
+            )
             if coord == game.highlighted_coord:
                 back_color = game.config.cursor_color
             elif coord == game.selected_coord:
                 back_color = game.config.highlight_color
-            elif game.selected is NOT_SELECTED_SQUARE and game.highlighted.player is game.player and game.is_defending(coord, against=game.highlighted_coord):
+            elif show_highlighted_targets:
                 back_color = game.config.valid_color
-            elif game.selected is NOT_SELECTED_SQUARE and game.is_defending(coord, against=game.selected_coord):
+            elif show_selected_targets:
                 back_color = game.config.valid_color
             else:
                 back_color = game.config.board_color[(i + j) % 2]

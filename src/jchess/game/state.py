@@ -1,12 +1,17 @@
 """Creates a class containing the bulk of the logic and complexity of the game."""
 # TODO: remove as many tooling 'ignores' as possible
 
-from typing_extensions import Self
 from jchess.game.logic import defending_coords_
 from jchess.geometry import Vector
 from jchess.squares import Square, Player, Role
 from jchess.configs import Config, VSC_CONFIG
-from jchess.game.engine import Mode, NULL_SQUARE, NOT_SELECTED_SQUARE, NOT_SELECTED_COORD, evolve_state_
+from jchess.game.engine import (
+    Mode,
+    NULL_SQUARE,
+    UNSELECTED_SQUARE,
+    UNSELECTED_COORD,
+    evolve_state_,
+)
 from jchess.game.visuals import generate_main_display
 
 K, Q, R, B, N, P, _ = Role  # type: ignore  # pylint: disable=invalid-name
@@ -16,7 +21,8 @@ class GameState:
     """Represents the state of the game, and controls the game logic."""
 
     @staticmethod
-    def has_coord(coord: Vector) -> bool:
+    def has(coord: Vector) -> bool:
+        """Check if a valid chess coord."""
         return coord.x in range(8) and coord.y in range(8)
 
     def __init__(self, config: Config = VSC_CONFIG):
@@ -35,7 +41,7 @@ class GameState:
         self.config: Config = config
 
         self.highlighted_coord: Vector = Vector(4, 7)
-        self.selected_coord: Vector = NOT_SELECTED_COORD
+        self.selected_coord: Vector = UNSELECTED_COORD
 
         self.player: Player = Player.ONE
 
@@ -45,14 +51,14 @@ class GameState:
     @property
     def selected(self) -> Square:
         """Square currently selected by the active player, if any."""
-        if self.selected_coord is NOT_SELECTED_COORD:
-            return NOT_SELECTED_SQUARE
+        if self.selected_coord is UNSELECTED_COORD:
+            return UNSELECTED_SQUARE
         return self[self.selected_coord]
 
     @selected.setter
     def selected(self, value: Square) -> None:
-        if value is NOT_SELECTED_SQUARE:
-            self.selected_coord = NOT_SELECTED_COORD
+        if value is UNSELECTED_SQUARE:
+            self.selected_coord = UNSELECTED_COORD
         else:
             self[self.selected_coord] = value
 
@@ -84,7 +90,7 @@ class GameState:
         return evolve_state_(self)
 
     def __getitem__(self, key: Vector) -> Square:
-        if not self.has_coord(key):
+        if not self.has(key):
             raise IndexError("Index vector not within board bounds.")
         return self.board[key.y][key.x]
 

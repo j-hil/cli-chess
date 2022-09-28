@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]:
     """Implement `GameState.defending_coords`."""
-
     attacker = game[attacker_coord]
 
     # the pawn has unique behavior warranting it's own function
@@ -26,7 +25,7 @@ def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]
     for line in LINES.get(attacker.role, []):
         for delta in line:
             defender_coord = attacker_coord + delta
-            if game.has_coord(defender_coord):
+            if game.has(defender_coord):
                 defender = game[defender_coord]
                 if defender.player not in [game.player, Player.NULL]:
                     result.append(defender_coord)
@@ -36,9 +35,11 @@ def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]
                 result.append(defender_coord)
 
     # the king and knight always have fixed potential translations
-    for delta in DELTAS.get(attacker.role, []):
+    deltas = DELTAS.get(attacker.role, [])
+    # import code; code.interact(local=locals())
+    for delta in deltas:
         defender_coord = attacker_coord + delta
-        if game.has_coord(defender_coord) and game[defender_coord].player != game.player:
+        if game.has(defender_coord) and game[defender_coord].player != game.player:
             result.append(defender_coord)
 
     return result
@@ -56,12 +57,16 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
         start_row = 6
 
     defender_coord = coord + (0, direction)
-    if game.has_coord(defender_coord) and game[defender_coord].role is Role.NULL:
+    if game.has(defender_coord) and game[defender_coord].role is Role.NULL:
         result.append(defender_coord)
 
     for dx in [1, -1]:
         defender_coord = coord + (dx, direction)
-        if game.has_coord(defender_coord) and game[defender_coord].player not in [game.player, Player.NULL]:
+        valid_target = game.has(defender_coord) and game[defender_coord].player not in [
+            game.player,
+            Player.NULL,
+        ]
+        if valid_target:
             result.append(defender_coord)
 
     defender_coord = coord + (0, 2 * direction)
@@ -70,16 +75,14 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
     return result
 
-
-DELTAS = {
-    # pylint: disable=unnecessary-comprehension  # mypy can't tell types if `list` used
-    # TODO: could be genuine mypy bug - investigate and maybe report?
-    Role.KING: [(x, y) for x, y in product([-1, 0, +1], repeat=2)],
+DELTAS: dict[Role, list[tuple[int, int]]] = {
+    Role.KING: list(product([-1, 0, +1], repeat=2)),  # type: ignore
     Role.KNIGHT: (
         [(s * 2, t * 1) for s, t in product([1, -1], repeat=2)]
         + [(s * 1, t * 2) for s, t in product([1, -1], repeat=2)]
     ),
 }
+
 
 
 L1 = [[(s * d, t * d) for d in range(1, 8)] for s, t in CARDINAL_DIRECTION.values()]

@@ -49,10 +49,10 @@ strict = true
 
 [tool.pylint.basic]
 # allows short names (which are to be used with due consideration):
-argument-rgx="(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
-variable-rgx="(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
-attr-rgx="(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
-const-rgx="(?#CAPITAL_CASE)^[A-Z0-9]*(_[A-Z0-9]+)*_?$"
+argument-rgx = "(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
+variable-rgx = "(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
+attr-rgx = "(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
+const-rgx = "(?#CAPITAL_CASE)^[A-Z0-9]*(_[A-Z0-9]+)*_?|__[a-z]*__$"
 
 [tool.pylint.format]
 max-line-length=88
@@ -60,6 +60,9 @@ max-line-length=88
 [tool.pylint.messages_control]
 # I decide if something needs a docstring, not pylint or pydocstyle :|
 disable = ["missing-function-docstring", "missing-class-docstring",]
+
+[tool.pylint.reports]
+output-format = "colorized"
 
 [tool.pydocstyle]
 ignore = [

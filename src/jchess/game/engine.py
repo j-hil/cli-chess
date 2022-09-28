@@ -3,7 +3,6 @@
 Controls reaction of `GameState` to player input.
 """
 
-from copy import deepcopy
 from enum import Enum, auto
 import sys
 from typing import TYPE_CHECKING
@@ -16,8 +15,8 @@ if TYPE_CHECKING:
     from jchess.game.state import GameState
 
 NULL_SQUARE = Square(Role.NULL, Player.NULL)
-NOT_SELECTED_SQUARE = Square(Role.NULL, Player.NULL)
-NOT_SELECTED_COORD = Vector(-999, -999)  # in theory any (x, y) will do
+UNSELECTED_SQUARE = Square(Role.NULL, Player.NULL)
+UNSELECTED_COORD = Vector(-999, -999)  # in theory any (x, y) will do
 
 
 class Mode(Enum):
@@ -68,16 +67,14 @@ def _process_action(game: "GameState", action: Action) -> None:
         game.highlighted_coord = new_cursor_coord
 
     can_use_highlighted = (
-        game.selected is NOT_SELECTED_SQUARE
+        game.selected is UNSELECTED_SQUARE
         and game.highlighted.player is game.player
         and len(game.defending_coords(game.highlighted_coord)) > 0
     )
 
-    can_make_move = (
-        game.selected_coord is not NOT_SELECTED_COORD
-        and game.is_defending(game.highlighted_coord, against=game.selected_coord)
+    can_make_move = game.selected_coord is not UNSELECTED_COORD and game.is_defending(
+        game.highlighted_coord, against=game.selected_coord
     )
-
 
     if action is Action.SELECT and can_use_highlighted:
         game.selected_coord = game.highlighted_coord
@@ -91,7 +88,7 @@ def _process_action(game: "GameState", action: Action) -> None:
             game.player = Player.TWO
         else:
             game.player = Player.ONE
-        game.selected_coord = NOT_SELECTED_COORD
+        game.selected_coord = UNSELECTED_COORD
     elif action is Action.QUIT:
         sys.exit()
 
