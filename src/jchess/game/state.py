@@ -1,5 +1,4 @@
 """Creates a class containing the bulk of the logic and complexity of the game."""
-# TODO: remove as many tooling 'ignores' as possible
 
 from jchess.game.logic import defending_coords_
 from jchess.geometry import Vector
@@ -14,7 +13,7 @@ from jchess.game.engine import (
 )
 from jchess.game.visuals import generate_main_display
 
-K, Q, R, B, N, P, _ = Role  # type: ignore  # pylint: disable=invalid-name
+K, Q, R, B, N, P, _ = list(Role)
 
 
 class GameState:
@@ -32,11 +31,11 @@ class GameState:
             configs available in jchess.config. Defaults to VS_CODE_CONFIG
         """
         self.board: list[list[Square]] = [
-            [Square(role, Player.TWO) for role in [R, N, B, Q, K, B, N, R]],  # type: ignore  # pylint: disable=line-too-long
-            [Square(P, Player.TWO) for _ in range(8)],  # type: ignore
+            [Square(role, Player.TWO) for role in [R, N, B, Q, K, B, N, R]],
+            [Square(P, Player.TWO) for _ in range(8)],
             *[[NULL_SQUARE for _ in range(8)] for _ in range(4)],
-            [Square(P, Player.ONE) for _ in range(8)],  # type: ignore
-            [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],  # type: ignore  # pylint: disable=line-too-long
+            [Square(P, Player.ONE) for _ in range(8)],
+            [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],
         ]
         self.config: Config = config
 

@@ -35,9 +35,7 @@ def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]
                 result.append(defender_coord)
 
     # the king and knight always have fixed potential translations
-    deltas = DELTAS.get(attacker.role, [])
-    # import code; code.interact(local=locals())
-    for delta in deltas:
+    for delta in DELTAS.get(attacker.role, []):
         defender_coord = attacker_coord + delta
         if game.has(defender_coord) and game[defender_coord].player != game.player:
             result.append(defender_coord)
@@ -76,7 +74,7 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
     return result
 
 DELTAS: dict[Role, list[tuple[int, int]]] = {
-    Role.KING: list(product([-1, 0, +1], repeat=2)),  # type: ignore
+    Role.KING: list(product([-1, 0, +1], [-1, 0, +1])),
     Role.KNIGHT: (
         [(s * 2, t * 1) for s, t in product([1, -1], repeat=2)]
         + [(s * 1, t * 2) for s, t in product([1, -1], repeat=2)]
