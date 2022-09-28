@@ -95,7 +95,9 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
                 back_color = game.config.cursor_color
             elif coord == game.selected_coord:
                 back_color = game.config.highlight_color
-            elif game.is_defending(coord):
+            elif game.selected is None and game.highlighted.player is game.player and game.is_defending(coord, against=game.highlighted_coord):
+                back_color = game.config.valid_color
+            elif game.is_defending(coord, against=game.selected_coord):
                 back_color = game.config.valid_color
             else:
                 back_color = game.config.board_color[(i + j) % 2]

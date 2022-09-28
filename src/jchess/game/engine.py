@@ -57,6 +57,7 @@ def _process_action(game: "GameState", action: Action) -> None:
     if game.mode is Mode.TWO:
         # account for fact that user's view is rotated from the internal view
         action = ROTATE.get(action, action)
+
     new_cursor_coord = game.highlighted_coord + CARDINAL_DIRECTION.get(action, (0, 0))
     if new_cursor_coord.x in range(8) and new_cursor_coord.y in range(8):
         game.highlighted_coord = new_cursor_coord
@@ -69,7 +70,7 @@ def _process_action(game: "GameState", action: Action) -> None:
 
     if action is Action.SELECT and can_use_highlighted:
         game.selected_coord = deepcopy(game.highlighted_coord)
-    elif action is Action.SELECT and game.is_defending(game.highlighted_coord):
+    elif action is Action.SELECT and game.is_defending(game.highlighted_coord, against=game.selected_coord):
         # TODO: somehow 2nd instance of Square(NULL, NULL) is created so != not `is not`
         if game.highlighted != NULL_SQUARE:
             game.taken_pieces[game.player].append(game.highlighted.role)

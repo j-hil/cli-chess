@@ -70,11 +70,11 @@ class GameState:
     def score(self, player: Player) -> int:
         return sum(x.val for x in self.taken_pieces[player])
 
-    def is_defending(self, coord: VectorLike) -> bool:
+    def is_defending(self, coord: VectorLike, against: VectorLike) -> bool:
         """Check if the square at the input coord is defending against the attacker."""
         if isinstance(coord, tuple):
             coord = Vector(*coord)
-        return coord in self.defending_coords(self.selected_coord)
+        return coord in self.defending_coords(against)
 
     def defending_coords(self, attacker_coord: Vector | None) -> list[Vector]:
         """All coordinates defending against the current attacker."""
