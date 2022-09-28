@@ -7,6 +7,7 @@ are big targets for better implementation.
 
 from typing import TYPE_CHECKING
 from colorama import Style
+import jchess
 
 from jchess.display import DisplayArray
 from jchess.game.engine import Mode
@@ -26,8 +27,9 @@ def generate_main_display(game: "GameState") -> DisplayArray:
     # fmt: off
     main_display = DisplayArray(MAIN_DISPLAY_TEMPLATE.format(
         "   ".join(row_labels), game.score(Player.ONE),
-        "temp solution for line-to-long", game.score(Player.TWO),
-        "   ".join(row_labels), "v0.0.1", _generate_gutter_str(game), "by j-hil"
+        "|   |   |   |   |   |   |   |   |", game.score(Player.TWO),
+        "   ".join(row_labels), jchess.__version__[:11],
+        _generate_gutter_str(game), f"by {jchess.__author__}"
     ))
     # fmt: on
 
@@ -37,18 +39,21 @@ def generate_main_display(game: "GameState") -> DisplayArray:
     player_two = DisplayArray("PLAYER TWO:")
     player_two[0, 0] = game.config.board_color[1] + player_two[0, 0]
     player_two[-1, 0] += Style.RESET_ALL
+
     display_elements = (
+        # must be in correct order
         player_one,
         player_two,
-        _generate_board(game),
         DisplayArray("\n \n".join(col_labels)),
         DisplayArray("\n \n".join(col_labels)),
         _generate_player_info(game, Player.ONE),
         _generate_player_info(game, Player.TWO),
     )
-
     for display in display_elements:
         main_display.merge_in(display, anchor="@")
+
+    _add_pieces(game, main_display)
+
     return main_display
 
 
@@ -71,8 +76,7 @@ def _generate_gutter_str(game: "GameState") -> str:
     return f"{gutter_msg: ^55}"
 
 
-def _generate_board(game: "GameState") -> DisplayArray:
-    display = DisplayArray(BOARD_TEMPLATE)
+def _add_pieces(game: "GameState", display: DisplayArray) -> None:
 
     # fmt: off
     if game.mode is Mode.TWO:
@@ -80,18 +84,18 @@ def _generate_board(game: "GameState") -> DisplayArray:
             return Vector(30 - 4 * v.y, 1 + 2 * v.x)
     else:
         def coord_transform(v: Vector) -> Vector:
-            return Vector(2 + 4 * v.x, 1 + 2 * v.y)
+            return Vector(29 + 4 * v.x, 5 + 2 * v.y)
     # fmt: on
 
     for i, row in enumerate(game.board):
         for j, square in enumerate(row):
-            board_position = Vector(j, i)
+            coord = Vector(j, i)
 
-            if board_position == game.highlighted_coord:
+            if coord == game.highlighted_coord:
                 back_color = game.config.cursor_color
-            elif board_position == game.selected_coord:
+            elif coord == game.selected_coord:
                 back_color = game.config.highlight_color
-            elif game.is_defending(board_position):
+            elif game.is_defending(coord):
                 back_color = game.config.valid_color
             else:
                 back_color = game.config.board_color[(i + j) % 2]
@@ -99,12 +103,10 @@ def _generate_board(game: "GameState") -> DisplayArray:
             fore_color = game.config.player_color[square.player]
             symbol = game.config.role_symbol[square.role]
 
-            display_position = coord_transform(board_position)
+            display_position = coord_transform(coord)
             display[display_position - (1, 0)] = back_color + fore_color + " "
             display[display_position] = symbol
             display[display_position + (1, 0)] = " " + Style.RESET_ALL
-
-    return display
 
 
 def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
@@ -134,7 +136,7 @@ MAIN_DISPLAY_TEMPLATE = """\
 | Welcome to J-Chess! Controls: arrows to navigate, space to select, and 'q' to quit. |
 +-------------------------------------------------------------------------------------+
 | @           |              {: ^29}              | @           |
-+ - - - - - - +            @---+---+---+---+---+---+---+---+            + - - - - - - +
++ - - - - - - +            +---+---+---+---+---+---+---+---+            + - - - - - - +
 | SCORE = {:0>3} |          @ {: ^33} @          | SCORE = {:0>3} |
 + - - - - - - +            +---+---+---+---+---+---+---+---+            + - - - - - - +
 | @           |            |   |   |   |   |   |   |   |   |            | @           |
@@ -157,24 +159,3 @@ MAIN_DISPLAY_TEMPLATE = """\
 +-------------------------------------------------------------------------------------+\
 """
 MAIN_DISPLAY_ROWS = len(MAIN_DISPLAY_TEMPLATE.split("\n"))
-
-# 19 x 39
-BOARD_TEMPLATE = """\
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+
-|   |   |   |   |   |   |   |   |
-+---+---+---+---+---+---+---+---+\
-"""

@@ -6,11 +6,11 @@
   - [X] Put on PyPI
   - [X] Rename to j-chess or fix readme
 - [ ] Improve dev workflow
-  - [ ] Add automatic versioning using `git` describe or other
+  - [X] Add automatic versioning using `git` describe or other
   - [X] Should probably add some tests - though might be overkill here
   - [X] Remove the need for constants.py
   - [ ] I don't like how `black` formats functions with many parameters - replace?
-  - [ ] look at moving to `setuptools`
+  - [X] look at moving to `setuptools`
 - [ ] Clean up code to reduce complexity and increase readability. In particular:
   - [X] Refactor `GameState` (see 2 TODO's in code)
   - [ ] Research implementing `curses` std-lib functions

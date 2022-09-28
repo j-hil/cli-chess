@@ -40,7 +40,7 @@ dev = [
 "homepage" = "https://j-hil@github.com/j-hil/cli-chess.git"
 
 [tool.setuptools.dynamic]
-version = {attr="jchess.__version__"}
+version = {attr="jchess._version.VERSION"}
 
 [tool.mypy]
 warn_return_any = true
