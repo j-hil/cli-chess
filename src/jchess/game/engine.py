@@ -8,11 +8,16 @@ from enum import Enum, auto
 import sys
 from typing import TYPE_CHECKING
 from msvcrt import getch
+from jchess.geometry import Vector
 
-from jchess.squares import NULL_SQUARE, Player
+from jchess.squares import Square, Role, Player
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
+
+NULL_SQUARE = Square(Role.NULL, Player.NULL)
+NOT_SELECTED_SQUARE = Square(Role.NULL, Player.NULL)
+NOT_SELECTED_COORD = Vector(-999, -999)  # in theory any (x, y) will do
 
 
 class Mode(Enum):
@@ -63,28 +68,30 @@ def _process_action(game: "GameState", action: Action) -> None:
         game.highlighted_coord = new_cursor_coord
 
     can_use_highlighted = (
-        game.selected is None
+        game.selected is NOT_SELECTED_SQUARE
         and game.highlighted.player is game.player
         and len(game.defending_coords(game.highlighted_coord)) > 0
     )
 
+    can_make_move = (
+        game.selected_coord is not NOT_SELECTED_COORD
+        and game.is_defending(game.highlighted_coord, against=game.selected_coord)
+    )
+
+
     if action is Action.SELECT and can_use_highlighted:
-        game.selected_coord = deepcopy(game.highlighted_coord)
-    elif action is Action.SELECT and game.is_defending(game.highlighted_coord, against=game.selected_coord):
-        # TODO: somehow 2nd instance of Square(NULL, NULL) is created so != not `is not`
-        if game.highlighted != NULL_SQUARE:
+        game.selected_coord = game.highlighted_coord
+    elif action is Action.SELECT and can_make_move:
+        if game.highlighted is not NULL_SQUARE:
             game.taken_pieces[game.player].append(game.highlighted.role)
 
-        # TODO: mypy issue
-        # can't tell here that is_defending(game.highlighted_coord) => game.selected
-        # possibly solve by overloading __getitem__
-        game.highlighted = game.selected  # type: ignore
+        game.highlighted = game[game.selected_coord]
         game.selected = NULL_SQUARE
         if game.player is Player.ONE:
             game.player = Player.TWO
         else:
             game.player = Player.ONE
-        game.selected_coord = None
+        game.selected_coord = NOT_SELECTED_COORD
     elif action is Action.QUIT:
         sys.exit()
 

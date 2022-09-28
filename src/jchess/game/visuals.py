@@ -10,7 +10,7 @@ from colorama import Style
 import jchess
 
 from jchess.display import DisplayArray
-from jchess.game.engine import Mode
+from jchess.game.engine import NOT_SELECTED_COORD, NOT_SELECTED_SQUARE, Mode
 from jchess.squares import Player
 from jchess.geometry import Vector
 
@@ -71,7 +71,7 @@ def _generate_gutter_str(game: "GameState") -> str:
     elif score1 == score2 == 0:
         gutter_msg = "Start playing!"
     else:
-        gutter_msg = "This game is close! PLAYERS ONE & TWO are equal in score."
+        gutter_msg = "PLAYERS ONE & TWO are equal in score; close game!"
 
     return f"{gutter_msg: ^55}"
 
@@ -95,9 +95,9 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
                 back_color = game.config.cursor_color
             elif coord == game.selected_coord:
                 back_color = game.config.highlight_color
-            elif game.selected is None and game.highlighted.player is game.player and game.is_defending(coord, against=game.highlighted_coord):
+            elif game.selected is NOT_SELECTED_SQUARE and game.highlighted.player is game.player and game.is_defending(coord, against=game.highlighted_coord):
                 back_color = game.config.valid_color
-            elif game.is_defending(coord, against=game.selected_coord):
+            elif game.selected is NOT_SELECTED_SQUARE and game.is_defending(coord, against=game.selected_coord):
                 back_color = game.config.valid_color
             else:
                 back_color = game.config.board_color[(i + j) % 2]

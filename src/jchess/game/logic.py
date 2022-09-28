@@ -11,11 +11,10 @@ if TYPE_CHECKING:
     from jchess.game.state import GameState
 
 
-def defending_coords_(game: "GameState", attacker_coord: Vector | None) -> list[Vector]:
+def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]:
     """Implement `GameState.defending_coords`."""
+
     attacker = game[attacker_coord]
-    if attacker is None or attacker_coord is None:
-        return []
 
     # the pawn has unique behavior warranting it's own function
     if attacker.role is Role.PAWN:
@@ -27,8 +26,8 @@ def defending_coords_(game: "GameState", attacker_coord: Vector | None) -> list[
     for line in LINES.get(attacker.role, []):
         for delta in line:
             defender_coord = attacker_coord + delta
-            defender = game[defender_coord]
-            if defender is not None:
+            if game.has_coord(defender_coord):
+                defender = game[defender_coord]
                 if defender.player not in [game.player, Player.NULL]:
                     result.append(defender_coord)
                     break
@@ -39,9 +38,9 @@ def defending_coords_(game: "GameState", attacker_coord: Vector | None) -> list[
     # the king and knight always have fixed potential translations
     for delta in DELTAS.get(attacker.role, []):
         defender_coord = attacker_coord + delta
-        defender = game[defender_coord]
-        if defender is not None and defender.player != game.player:
+        if game.has_coord(defender_coord) and game[defender_coord].player != game.player:
             result.append(defender_coord)
+
     return result
 
 
@@ -57,14 +56,12 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
         start_row = 6
 
     defender_coord = coord + (0, direction)
-    defender = game[defender_coord]
-    if defender is not None and defender.role is Role.NULL:
+    if game.has_coord(defender_coord) and game[defender_coord].role is Role.NULL:
         result.append(defender_coord)
 
     for dx in [1, -1]:
         defender_coord = coord + (dx, direction)
-        defender = game[defender_coord]
-        if defender is not None and defender.player not in [game.player, Player.NULL]:
+        if game.has_coord(defender_coord) and game[defender_coord].player not in [game.player, Player.NULL]:
             result.append(defender_coord)
 
     defender_coord = coord + (0, 2 * direction)

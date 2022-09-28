@@ -16,12 +16,13 @@ from subprocess import run
 def _get_stdout(cmd: str) -> str:
     return run(cmd.split(), capture_output=True).stdout.decode()
 
-def _get_version():
+
+def _get_version() -> str:
     today = date.today()
     # this probably only works with a linear commit history
     commits = _get_stdout("git rev-list --all --count").strip()
     dirty = _get_stdout("git status --porcelain") and "+dirty"
     return f"{today.year % 100}.{today.month}.{commits}{dirty}"
 
-VERSION = _get_version()
 
+VERSION = _get_version()

@@ -1,20 +1,23 @@
 """Creates a class containing the bulk of the logic and complexity of the game."""
+# TODO: remove as many tooling 'ignores' as possible
 
-
+from typing_extensions import Self
 from jchess.game.logic import defending_coords_
-from jchess.geometry import Vector, VectorLike
-from jchess.squares import Square, Player, Role, NULL_SQUARE
+from jchess.geometry import Vector
+from jchess.squares import Square, Player, Role
 from jchess.configs import Config, VSC_CONFIG
-from jchess.game.engine import Mode, evolve_state_
+from jchess.game.engine import Mode, NULL_SQUARE, NOT_SELECTED_SQUARE, NOT_SELECTED_COORD, evolve_state_
 from jchess.game.visuals import generate_main_display
 
-# TODO: remove as many tooling 'ignores' as possible
 K, Q, R, B, N, P, _ = Role  # type: ignore  # pylint: disable=invalid-name
 
 
-# TODO: this class could do with cleaning & reducing
 class GameState:
     """Represents the state of the game, and controls the game logic."""
+
+    @staticmethod
+    def has_coord(coord: Vector) -> bool:
+        return coord.x in range(8) and coord.y in range(8)
 
     def __init__(self, config: Config = VSC_CONFIG):
         """Initialise a `GameState`.
@@ -32,7 +35,7 @@ class GameState:
         self.config: Config = config
 
         self.highlighted_coord: Vector = Vector(4, 7)
-        self.selected_coord: Vector | None = None
+        self.selected_coord: Vector = NOT_SELECTED_COORD
 
         self.player: Player = Player.ONE
 
@@ -40,20 +43,18 @@ class GameState:
         self.mode: Mode = Mode.ONE
 
     @property
-    def selected(self) -> Square | None:
+    def selected(self) -> Square:
         """Square currently selected by the active player, if any."""
-        if self.selected_coord is None:
-            return None
+        if self.selected_coord is NOT_SELECTED_COORD:
+            return NOT_SELECTED_SQUARE
         return self[self.selected_coord]
 
     @selected.setter
-    def selected(self, value: Square | None) -> None:
-        if value is None:
-            self.selected_coord = None
-            return
-        if self.selected_coord is None:
-            raise RuntimeError("`selected` doesn't exist as selected_coord=None.")
-        self[self.selected_coord] = value
+    def selected(self, value: Square) -> None:
+        if value is NOT_SELECTED_SQUARE:
+            self.selected_coord = NOT_SELECTED_COORD
+        else:
+            self[self.selected_coord] = value
 
     @property
     def highlighted(self) -> Square:
@@ -70,23 +71,21 @@ class GameState:
     def score(self, player: Player) -> int:
         return sum(x.val for x in self.taken_pieces[player])
 
-    def is_defending(self, coord: VectorLike, against: VectorLike) -> bool:
+    def is_defending(self, coord: Vector, against: Vector) -> bool:
         """Check if the square at the input coord is defending against the attacker."""
-        if isinstance(coord, tuple):
-            coord = Vector(*coord)
         return coord in self.defending_coords(against)
 
-    def defending_coords(self, attacker_coord: Vector | None) -> list[Vector]:
-        """All coordinates defending against the current attacker."""
+    def defending_coords(self, attacker_coord: Vector) -> list[Vector]:
+        """All coordinates defending `attacker_coord`."""
         return defending_coords_(self, attacker_coord)
 
     def evolve_state(self) -> None:
         """Wait for an input form the user and then act accordingly."""
         return evolve_state_(self)
 
-    def __getitem__(self, key: Vector | None) -> Square | None:
-        if key is None or key.x not in range(8) or key.y not in range(8):
-            return None
+    def __getitem__(self, key: Vector) -> Square:
+        if not self.has_coord(key):
+            raise IndexError("Index vector not within board bounds.")
         return self.board[key.y][key.x]
 
     def __setitem__(self, key: Vector, value: Square) -> None:

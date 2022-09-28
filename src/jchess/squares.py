@@ -38,6 +38,3 @@ class Square:
 
     role: Role
     player: Player
-
-
-NULL_SQUARE = Square(Role.NULL, Player.NULL)

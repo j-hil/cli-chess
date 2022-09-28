@@ -24,6 +24,7 @@
   - [ ] Add castling
   - [ ] Add en passant
   - [ ] Add promotion
+  - [ ] Prevent pawn from "jumping"
 - [ ] Improve visuals
   - [X] Add boarder
   - [X] Add more color to score etc
