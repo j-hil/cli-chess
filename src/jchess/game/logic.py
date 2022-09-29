@@ -1,9 +1,9 @@
 """Implements rules/logic associate with each piece.
 
-We use 3 different methods:
+We use 2 different general methods:
 * Queen, Bishop, Rook: check along each line of movement; terminate when a blocker met
 * King, Knight: check each viable translation vector
-* Pawn: specialized function.
+And then pawns and castling require specialized logic.
 """
 
 from itertools import product
@@ -49,6 +49,34 @@ def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]
         ):
             result.append(defender_coord)
 
+    # extra logic for king-side castling
+    if (
+        attacker.role is Role.KING
+        and game.can_king_side_castle[attacker.player]
+        and game[Vector(5, attacker_coord.y)] is EMPTY_SQUARE
+        and game[Vector(6, attacker_coord.y)] is EMPTY_SQUARE
+        # oof...
+        and all(Vector(4, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+        and all(Vector(5, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+        and all(Vector(6, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+    ):
+        result.append(attacker_coord + (2, 0))
+
+    # extra logic for queen-side castling
+    if (
+        attacker.role is Role.KING
+        and game.can_queen_side_castle[attacker.player]
+        and game[Vector(1, attacker_coord.y)] is EMPTY_SQUARE
+        and game[Vector(2, attacker_coord.y)] is EMPTY_SQUARE
+        and game[Vector(3, attacker_coord.y)] is EMPTY_SQUARE
+        # oof...
+        and all(Vector(1, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+        and all(Vector(2, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+        and all(Vector(3, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+        and all(Vector(4, attacker_coord.y) not in game.defending_coords(Vector(i, j)) for i, j in product(range(8), range(8)) if game[Vector(i, j)].player is not attacker.player)
+    ):
+        result.append(attacker_coord - (2, 0))
+
     return result
 
 
@@ -87,7 +115,7 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
 DELTAS = {
     Role.KING: list(product([-1, 0, +1], [-1, 0, +1])),
-    Role.KNIGHT: list(product((-1, 1), (-2, 2))) + list(product((-1, 1), (-2, 2))),
+    Role.KNIGHT: list(product((-1, 1), (-2, 2))) + list(product((-2, 2), (-1, 1))),
 }
 
 
@@ -98,3 +126,4 @@ LINES = {
     Role.ROOK: L1,
     Role.BISHOP: L2,
 }
+

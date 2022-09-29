@@ -39,11 +39,11 @@ class GameState:
         self.selected_coord = UNSELECTED_COORD
 
         self.en_passant_victim_coord: Vector = UNSELECTED_COORD
-        # self.can_left_castle = {Player.ONE: True, Player.TWO: True}
+        self.can_king_side_castle = {Player.ONE: True, Player.TWO: True}
+        self.can_queen_side_castle = {Player.ONE: True, Player.TWO: True}
 
         self.turn = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
-
 
     @property
     def selected(self) -> Square:
