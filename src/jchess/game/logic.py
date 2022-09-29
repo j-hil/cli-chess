@@ -1,9 +1,15 @@
-"""Implements rules associate with each piece."""
+"""Implements rules/logic associate with each piece.
+
+We use 3 different methods:
+* Queen, Bishop, Rook: check along each line of movement; terminate when a blocker met
+* King, Knight: check each viable translation vector
+* Pawn: specialized function.
+"""
 
 from itertools import product
 from typing import TYPE_CHECKING
-from jchess.game.engine import CARDINAL_DIRECTION, EMPTY_SQUARE
 
+from jchess.game.engine import CARDINAL_DIRECTION, EMPTY_SQUARE
 from jchess.geometry import Vector
 from jchess.squares import Role, Player
 
@@ -37,7 +43,10 @@ def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]
     # the king and knight always have fixed potential translations
     for delta in DELTAS.get(attacker.role, []):
         defender_coord = attacker_coord + delta
-        if game.has(defender_coord) and game[defender_coord].player != game.active_player():
+        if (
+            game.has(defender_coord)
+            and game[defender_coord].player != game.active_player()
+        ):
             result.append(defender_coord)
 
     return result
@@ -60,7 +69,11 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
     for dx in [1, -1]:
         defender_coord = coord + (dx, direction)
-        if game.has(defender_coord) and game[defender_coord].player is game.inactive_player():
+        # TODO: look into reducing this code pattern
+        if (
+            game.has(defender_coord)
+            and game[defender_coord].player is game.inactive_player()
+        ):
             result.append(defender_coord)
 
     defender_coord = coord + (0, 2 * direction)
@@ -72,10 +85,7 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
 DELTAS = {
     Role.KING: list(product([-1, 0, +1], [-1, 0, +1])),
-    Role.KNIGHT: (
-        [(s * 2, t * 1) for s, t in product([1, -1], repeat=2)]
-        + [(s * 1, t * 2) for s, t in product([1, -1], repeat=2)]
-    ),
+    Role.KNIGHT: list(product((-1, 1), (-2, 2))) + list(product((-1, 1), (-2, 2))),
 }
 
 

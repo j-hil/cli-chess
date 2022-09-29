@@ -1,6 +1,9 @@
 """Implementation of `GameState.evolve_state`.
 
-Controls reaction of `GameState` to player input.
+Controls reaction to and collection player input. Recognized actions are
+* quitting - exit the entire game
+* select - pick the highlighted square to move to/from
+* up, down, left, right - move the cursor around the board
 """
 
 from enum import Enum, auto
@@ -14,10 +17,10 @@ from jchess.squares import Square, Role, Player
 if TYPE_CHECKING:
     from jchess.game.state import GameState
 
-# A square on the board, but with no piece on it
+# Sentinel: A square on the board, but with no piece on it
 EMPTY_SQUARE = Square(Role.NULL, Player.NULL)
 
-# A square not on the board
+# Sentinel: A square not on the board
 UNSELECTED_SQUARE = Square(Role.NULL, Player.NULL)
 UNSELECTED_COORD = Vector(-999, -999)  # in theory any |x|, |y| >= 8 will do
 
@@ -63,32 +66,29 @@ def _process_action(game: "GameState", action: Action) -> None:
         # account for fact that user's view is rotated from the internal view
         action = ROTATE.get(action, action)
 
-    new_cursor_coord = game.highlighted_coord + CARDINAL_DIRECTION.get(action, (0, 0))
-    if new_cursor_coord.x in range(8) and new_cursor_coord.y in range(8):
-        game.highlighted_coord = new_cursor_coord
+    new_cursor_coord = game.cursor_coord + CARDINAL_DIRECTION.get(action, (0, 0))
+    if game.has(new_cursor_coord):
+        game.cursor_coord = new_cursor_coord
 
-    can_use_highlighted = (
-        game.selected is UNSELECTED_SQUARE
-        and game.highlighted.player is game.active_player()
-        and len(game.defending_coords(game.highlighted_coord)) > 0
-    )
-
-    can_make_move = (  # fmt: off
-        game.selected_coord is not UNSELECTED_COORD
-        and game.is_defending(game.highlighted_coord, against=game.selected_coord)
-    )  # fmt: on
-
-    if action is Action.SELECT and can_use_highlighted:
-        game.selected_coord = game.highlighted_coord
-    elif action is Action.SELECT and can_make_move:
-
-        if game.highlighted is not EMPTY_SQUARE:
-            game.taken_pieces[game.active_player()].append(game.highlighted.role)
-
-        game.highlighted = game[game.selected_coord]
-        game.selected = UNSELECTED_SQUARE
+    if (
+        action is Action.SELECT
+        and game.selected_coord is UNSELECTED_COORD
+        and game.cursor.player is game.active_player()
+        and game.defending_coords(game.cursor_coord)
+    ):
+        game.selected_coord = game.cursor_coord
+    elif (
+        action is Action.SELECT
+        and game.selected_coord is not UNSELECTED_COORD
+        and game.cursor_coord in game.defending_coords(game.selected_coord)
+    ):
+        if game.cursor is not EMPTY_SQUARE:
+            game.taken_pieces[game.active_player()].append(game.cursor.role)
+        game.cursor = game[game.selected_coord]
+        game.selected = EMPTY_SQUARE
         game.turn += 1
         game.selected_coord = UNSELECTED_COORD
+
     elif action is Action.QUIT:
         sys.exit()
 

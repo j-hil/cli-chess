@@ -1,4 +1,4 @@
-"""Creates representation of a chess piece."""
+"""Creates representation of a chess board square."""
 from dataclasses import dataclass
 from enum import Enum
 
@@ -25,8 +25,6 @@ class Role(Enum):
 
 
 class Player(Enum):
-    """Which player (if any) that a square or turn belongs to."""
-
     ONE = "ONE"
     TWO = "TWO"
     NULL = "NULL"
@@ -34,7 +32,5 @@ class Player(Enum):
 
 @dataclass
 class Square:
-    """Representation any square on the board."""
-
     role: Role
     player: Player

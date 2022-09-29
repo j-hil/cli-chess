@@ -1,30 +1,18 @@
-"""Printing `GameState` information.
+"""Class for manipulating 2D arrays of displayable characters.
 
-Contains helper functions to:
-* process `GameState` information into readable & pretty strings. In principle these
-could be methods but it's convenient to have them here.
-* combine said strings according to desired relative positions
-
-I think a lot of the manipulations of the display could probably be simplified with the
-built in `curses` module which I was unaware of when I begin this project.
-
-DisplayArray is used (rather than using an array of strings) as colorization
-characters (eg Fore.BLACK) become difficult to place.
-
-Advantages: string formatting (`merge_in`) from array perspective, len counters account
-for 0 width characters like Fore.BLACK, compatibility with `Vector`.
+Provides the following extra features over a usual array of strings:
+* Each element is a *displayable* character (rather than potentially a character of
+zero length like a color.
+* Basic formatting which is agnostic to rows and columns (see `merge_in`)
+* Compatible with `geometry.Vector`.
 """
-# TODO: clean docs in this file
+# TODO: Introduce a printable-char class
 from itertools import product
 from jchess.geometry import Vector, VectorLike
 
 
 class DisplayArray:
-    """An array of arrays of strings, but the strings should be a single printable char.
-
-    Designed to work with `Vector` and have mutable elements. Length of strings not
-    enforced.
-    """
+    """An array of arrays of displayable characters."""
 
     def __init__(self, string: str):
         """Initialize a `DisplayArray`.

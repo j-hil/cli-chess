@@ -1,4 +1,5 @@
 """Contains display settings for different consoles."""
+# TODO: investigate if dataclass is really helping here
 
 from dataclasses import dataclass
 from colorama import Fore, Style, Back
@@ -12,8 +13,8 @@ class Config:
     # fmt: off
     def __init__(self, *,
         symbols: str = "KQHIJi",
-        board_clr1: str, board_clr2: str,
-        cursor_clr: str, highlight_clr: str, valid_clr: str
+        board_color1: str, board_color2: str,
+        cursor_color: str, highlight_color: str, valid_color: str
     ) -> None:
         """Transform inputs into attrs better for implementation.
 
@@ -24,16 +25,16 @@ class Config:
         :param valid_clr: Color of squares available to move too.
         :param symbols: Characters to represent each piece; defaults to "KQHIJi"
         """
-        self.cursor_color = cursor_clr
-        self.highlight_color = highlight_clr
-        self.valid_color = valid_clr
+        self.cursor_color = cursor_color
+        self.highlight_color = highlight_color
+        self.valid_color = valid_color
         self.role_symbol = dict(zip(Role, list(symbols + " ")))
         self.player_color = {
             Player.ONE: Style.BRIGHT + Fore.WHITE,
             Player.TWO: Style.NORMAL + Fore.BLACK,
             Player.NULL: "",
         }
-        self.board_color = {0: board_clr1, 1: board_clr2}
+        self.board_color = {0: board_color1, 1: board_color2}
     # fmt: on
 
 
@@ -41,29 +42,31 @@ class Config:
 VSC_CONFIG = Config(
     # options to try/add: '♔♕♖♗♘♙', '♚♛♜♝♞♟',  'KQHIJi', or "KQRBNi"
     symbols="♚♛♜♝♞♟",
-    board_clr1=Back.MAGENTA,
-    board_clr2=Back.BLACK,
-    cursor_clr=Back.YELLOW,
-    highlight_clr=Back.RED,
-    valid_clr=Back.GREEN,
+    board_color1=Back.MAGENTA,
+    board_color2=Back.BLACK,
+    cursor_color=Back.YELLOW,
+    highlight_color=Back.RED,
+    valid_color=Back.GREEN,
 )
 
 # for Powershell
 PS_CONFIG = Config(
-    board_clr1=Back.LIGHTBLACK_EX,
-    board_clr2=Back.CYAN,
-    cursor_clr=Back.LIGHTMAGENTA_EX,
-    highlight_clr=Back.LIGHTRED_EX,
-    valid_clr=Back.LIGHTGREEN_EX,
+    board_color1=Back.LIGHTBLACK_EX,
+    board_color2=Back.CYAN,
+    cursor_color=Back.LIGHTMAGENTA_EX,
+    highlight_color=Back.LIGHTRED_EX,
+    valid_color=Back.LIGHTGREEN_EX,
 )
 
 # for Command Prompt
 CMD_CONFIG = Config(
-    board_clr1=Back.YELLOW,
-    board_clr2=Back.GREEN,
-    cursor_clr=Back.BLUE,
-    highlight_clr=Back.RED,
-    valid_clr=Back.CYAN,
+    board_color1=Back.YELLOW,
+    board_color2=Back.GREEN,
+    cursor_color=Back.BLUE,
+    highlight_color=Back.RED,
+    valid_color=Back.CYAN,
 )
 
 CONFIG = {"cmd.exe": CMD_CONFIG, "powershell.exe": PS_CONFIG}
+
+print(CMD_CONFIG)

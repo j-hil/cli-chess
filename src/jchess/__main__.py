@@ -1,4 +1,7 @@
-"""Program entry point."""
+"""Program entry point.
+
+Can be run as `python -m jchess`.
+"""
 import os
 import sys
 from colorama import init
