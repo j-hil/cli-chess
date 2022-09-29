@@ -32,14 +32,18 @@ class GameState:
             [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],
         ]
         self.config = config
+        self.mode = Mode.ONE
 
         # start cursor at player one's King
         self.cursor_coord = Vector(4, 7)
         self.selected_coord = UNSELECTED_COORD
 
+        self.en_passant_victim_coord: Vector = UNSELECTED_COORD
+        # self.can_left_castle = {Player.ONE: True, Player.TWO: True}
+
         self.turn = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
-        self.mode = Mode.ONE
+
 
     @property
     def selected(self) -> Square:

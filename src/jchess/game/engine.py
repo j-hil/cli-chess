@@ -82,9 +82,26 @@ def _process_action(game: "GameState", action: Action) -> None:
         and game.selected_coord is not UNSELECTED_COORD
         and game.cursor_coord in game.defending_coords(game.selected_coord)
     ):
+        # piece is taken - add it to taken pieces list
         if game.cursor is not EMPTY_SQUARE:
             game.taken_pieces[game.active_player()].append(game.cursor.role)
-        game.cursor = game[game.selected_coord]
+
+        # remove any previous vulnerabilities to en passant
+        if game.en_passant_victim_coord is not UNSELECTED_COORD and game.active_player() is game[game.en_passant_victim_coord].player:
+            game.en_passant_victim_coord = UNSELECTED_COORD
+
+        # add a vulnerability to en passant (if appropriate)
+        if game.selected.role is Role.PAWN and (game.selected_coord - game.cursor_coord) in [Vector(0, 2), Vector(0, -2)]:
+            game.en_passant_victim_coord = (game.cursor_coord)
+
+        # en passant move chosen, so delete piece to the left/ right or whatever
+        delta = game.cursor_coord - game.selected_coord
+        if game.selected.role is Role.PAWN and delta in [Vector(1, 1), Vector(1, -1), Vector(-1, 1), Vector(-1, -1)] and game.cursor is EMPTY_SQUARE:
+            game[game.selected_coord + (delta.x, 0)] = EMPTY_SQUARE
+            game.taken_pieces[game.active_player()].append(Role.PAWN)
+
+        # execute move
+        game.cursor = game.selected
         game.selected = EMPTY_SQUARE
         game.turn += 1
         game.selected_coord = UNSELECTED_COORD

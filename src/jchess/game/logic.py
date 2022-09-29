@@ -69,15 +69,17 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
     for dx in [1, -1]:
         defender_coord = coord + (dx, direction)
+        en_passant_victim_coord = coord + (dx, 0)
         # TODO: look into reducing this code pattern
         if (
             game.has(defender_coord)
             and game[defender_coord].player is game.inactive_player()
+            or en_passant_victim_coord == game.en_passant_victim_coord
         ):
             result.append(defender_coord)
 
     defender_coord = coord + (0, 2 * direction)
-    if coord.y == start_row:
+    if coord.y == start_row and game[defender_coord - (0, direction)] is EMPTY_SQUARE:
         result.append(defender_coord)
 
     return result
