@@ -14,7 +14,7 @@ DEV_MODE = "debugpy" in sys.modules
 
 def main() -> None:
     """Entry point to begin game. Game state updated & re-printed with each input."""
-    # enable colors, clear the screen and hide the cursor
+    # enable colors, clear the screen, and hide the cursor
     init()
     os.system("cls")
     print("\033[?25l", end="")

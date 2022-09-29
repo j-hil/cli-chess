@@ -6,7 +6,7 @@ from jchess.squares import Square, Player, Role
 from jchess.configs import Config, VSC_CONFIG
 from jchess.game.engine import (
     Mode,
-    NULL_SQUARE,
+    EMPTY_SQUARE,
     UNSELECTED_SQUARE,
     UNSELECTED_COORD,
     evolve_state_,
@@ -33,19 +33,18 @@ class GameState:
         self.board: list[list[Square]] = [
             [Square(role, Player.TWO) for role in [R, N, B, Q, K, B, N, R]],
             [Square(P, Player.TWO) for _ in range(8)],
-            *[[NULL_SQUARE for _ in range(8)] for _ in range(4)],
+            *[[EMPTY_SQUARE for _ in range(8)] for _ in range(4)],
             [Square(P, Player.ONE) for _ in range(8)],
             [Square(role, Player.ONE) for role in [R, N, B, Q, K, B, N, R]],
         ]
-        self.config: Config = config
+        self.config = config
 
-        self.highlighted_coord: Vector = Vector(4, 7)
-        self.selected_coord: Vector = UNSELECTED_COORD
+        self.highlighted_coord = Vector(4, 7)
+        self.selected_coord = UNSELECTED_COORD
 
-        self.player: Player = Player.ONE
-
+        self.turn = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
-        self.mode: Mode = Mode.ONE
+        self.mode = Mode.ONE
 
     @property
     def selected(self) -> Square:
@@ -75,6 +74,12 @@ class GameState:
 
     def score(self, player: Player) -> int:
         return sum(x.val for x in self.taken_pieces[player])
+
+    def active_player(self) -> Player:
+        return list(Player)[self.turn % 2]
+
+    def inactive_player(self) -> Player:
+        return list(Player)[(self.turn + 1) % 2]
 
     def is_defending(self, coord: Vector, against: Vector) -> bool:
         """Check if the square at the input coord is defending against the attacker."""

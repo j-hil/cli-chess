@@ -93,7 +93,7 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
 
             show_highlighted_targets = (
                 game.selected is UNSELECTED_SQUARE
-                and game.highlighted.player is game.player
+                and game.highlighted.player is game.active_player()
                 and game.is_defending(coord, against=game.highlighted_coord)
             )
             show_selected_targets = (

@@ -2,7 +2,7 @@
 
 from itertools import product
 from typing import TYPE_CHECKING
-from jchess.game.engine import CARDINAL_DIRECTION
+from jchess.game.engine import CARDINAL_DIRECTION, EMPTY_SQUARE
 
 from jchess.geometry import Vector
 from jchess.squares import Role, Player
@@ -27,17 +27,17 @@ def defending_coords_(game: "GameState", attacker_coord: Vector) -> list[Vector]
             defender_coord = attacker_coord + delta
             if game.has(defender_coord):
                 defender = game[defender_coord]
-                if defender.player not in [game.player, Player.NULL]:
+                if defender.player is game.inactive_player():
                     result.append(defender_coord)
                     break
-                if defender.player is game.player:
+                if defender.player is game.active_player():
                     break
                 result.append(defender_coord)
 
     # the king and knight always have fixed potential translations
     for delta in DELTAS.get(attacker.role, []):
         defender_coord = attacker_coord + delta
-        if game.has(defender_coord) and game[defender_coord].player != game.player:
+        if game.has(defender_coord) and game[defender_coord].player != game.active_player():
             result.append(defender_coord)
 
     return result
@@ -55,16 +55,12 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
         start_row = 6
 
     defender_coord = coord + (0, direction)
-    if game.has(defender_coord) and game[defender_coord].role is Role.NULL:
+    if game.has(defender_coord) and game[defender_coord] is EMPTY_SQUARE:
         result.append(defender_coord)
 
     for dx in [1, -1]:
         defender_coord = coord + (dx, direction)
-        valid_target = game.has(defender_coord) and game[defender_coord].player not in [
-            game.player,
-            Player.NULL,
-        ]
-        if valid_target:
+        if game.has(defender_coord) and game[defender_coord].player is game.inactive_player():
             result.append(defender_coord)
 
     defender_coord = coord + (0, 2 * direction)
@@ -73,14 +69,14 @@ def _def_coords_pawn(game: "GameState", coord: Vector, player: Player) -> list[V
 
     return result
 
-DELTAS: dict[Role, list[tuple[int, int]]] = {
+
+DELTAS = {
     Role.KING: list(product([-1, 0, +1], [-1, 0, +1])),
     Role.KNIGHT: (
         [(s * 2, t * 1) for s, t in product([1, -1], repeat=2)]
         + [(s * 1, t * 2) for s, t in product([1, -1], repeat=2)]
     ),
 }
-
 
 
 L1 = [[(s * d, t * d) for d in range(1, 8)] for s, t in CARDINAL_DIRECTION.values()]

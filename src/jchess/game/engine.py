@@ -14,9 +14,12 @@ from jchess.squares import Square, Role, Player
 if TYPE_CHECKING:
     from jchess.game.state import GameState
 
-NULL_SQUARE = Square(Role.NULL, Player.NULL)
+# A square on the board, but with no piece on it
+EMPTY_SQUARE = Square(Role.NULL, Player.NULL)
+
+# A square not on the board
 UNSELECTED_SQUARE = Square(Role.NULL, Player.NULL)
-UNSELECTED_COORD = Vector(-999, -999)  # in theory any (x, y) will do
+UNSELECTED_COORD = Vector(-999, -999)  # in theory any |x|, |y| >= 8 will do
 
 
 class Mode(Enum):
@@ -26,8 +29,6 @@ class Mode(Enum):
 
 
 class Action(Enum):
-    """Player actions recognized by the game."""
-
     UP = auto()
     DOWN = auto()
     LEFT = auto()
@@ -68,26 +69,25 @@ def _process_action(game: "GameState", action: Action) -> None:
 
     can_use_highlighted = (
         game.selected is UNSELECTED_SQUARE
-        and game.highlighted.player is game.player
+        and game.highlighted.player is game.active_player()
         and len(game.defending_coords(game.highlighted_coord)) > 0
     )
 
-    can_make_move = game.selected_coord is not UNSELECTED_COORD and game.is_defending(
-        game.highlighted_coord, against=game.selected_coord
-    )
+    can_make_move = (  # fmt: off
+        game.selected_coord is not UNSELECTED_COORD
+        and game.is_defending(game.highlighted_coord, against=game.selected_coord)
+    )  # fmt: on
 
     if action is Action.SELECT and can_use_highlighted:
         game.selected_coord = game.highlighted_coord
     elif action is Action.SELECT and can_make_move:
-        if game.highlighted is not NULL_SQUARE:
-            game.taken_pieces[game.player].append(game.highlighted.role)
+
+        if game.highlighted is not EMPTY_SQUARE:
+            game.taken_pieces[game.active_player()].append(game.highlighted.role)
 
         game.highlighted = game[game.selected_coord]
-        game.selected = NULL_SQUARE
-        if game.player is Player.ONE:
-            game.player = Player.TWO
-        else:
-            game.player = Player.ONE
+        game.selected = UNSELECTED_SQUARE
+        game.turn += 1
         game.selected_coord = UNSELECTED_COORD
     elif action is Action.QUIT:
         sys.exit()
