@@ -8,7 +8,72 @@ zero length like a color.
 """
 # TODO: Introduce a printable-char class
 from itertools import product
+import re
+from colorama import Style
 from jchess.geometry import Vector, VectorLike
+from jchess.pallet import FORES, BACKS, STYLES, NAME
+
+
+class PrintableChar:
+    """A single character which is printable"""
+
+    def __init__(self, char: str, fore: str = "", back: str = "", style: str = ""):
+
+        if len(char) != 1 or not char.isprintable():
+            raise ValueError("Input `char` must be a single printable character")
+        self.char = char
+
+        self._fore = self._back = self._style = ""
+        self.fore = fore
+        self.back = back
+        self.style = style
+
+    @property
+    def fore(self):
+        return self._fore
+
+    @fore.setter
+    def fore(self, value: str):
+        if value not in FORES  and value != "":
+            raise ValueError("The `fore` must be an attribute of `colorama.Fore`.")
+        self._fore = value
+
+    @property
+    def back(self):
+        return self._back
+
+    @back.setter
+    def back(self, value):
+        if value not in BACKS and value != "":
+            raise ValueError("The `back` must be an attribute of `colorama.Back`.")
+        self._back = value
+
+    @property
+    def style(self):
+        return self._style
+
+    @style.setter
+    def style(self, value):
+        if value not in STYLES and value != "":
+            raise ValueError("The `back` must be an attribute of `colorama.Back`.")
+        self._style = value
+
+    def __str__(self) -> str:
+        return self.fore + self.back + self.style + self.char + Style.RESET_ALL
+
+    def __repr__(self) -> str:
+        fore = NAME.get(self.fore, "NONE")
+        back = NAME.get(self.back, "NONE")
+        style = NAME.get(self.style, "NONE")
+        return f"[char={self.char!r}, color={fore};{back};{style}]"
+
+c = PrintableChar("c")
+from colorama import Fore, Back
+c.fore = Fore.BLACK
+print(repr(c))
+
+
+
 
 
 class DisplayArray:
@@ -23,6 +88,7 @@ class DisplayArray:
         """
         row_len = string.find("\n")
         row_len = row_len if row_len > 0 else len(string)
+
         rows = []
         for i, row in enumerate(string.split("\n")):
             if len(row) != row_len:
