@@ -18,6 +18,7 @@ class Role(Enum):
     def val(self) -> int:
         """Traditional point worth of each piece."""
         # max score is 103 so KING = 104 gives score > 103 an unambiguous win condition
+        # TODO: uh why are these super() calls?
         return super().value[1]
 
     def __str__(self) -> str:
@@ -28,6 +29,9 @@ class Player(Enum):
     ONE = "ONE"
     TWO = "TWO"
     NULL = "NULL"
+
+    def __str__(self) -> str:
+        return f"PLAYER {self.value}"
 
 
 @dataclass

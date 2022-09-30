@@ -34,7 +34,7 @@ class PrintableChar:
 
     @fore.setter
     def fore(self, value: str):
-        if value not in FORES  and value != "":
+        if value not in FORES and value != "":
             raise ValueError("The `fore` must be an attribute of `colorama.Fore`.")
         self._fore = value
 
@@ -58,8 +58,16 @@ class PrintableChar:
             raise ValueError("The `back` must be an attribute of `colorama.Back`.")
         self._style = value
 
+    @property
+    def color(self):
+        return self.fore + self.back + self.style
+
+    @color.setter
+    def color(self, value: tuple[str, str, str]):
+        self.fore, self.back, self.style = value
+
     def __str__(self) -> str:
-        return self.fore + self.back + self.style + self.char + Style.RESET_ALL
+        return self.color + self.char + Style.RESET_ALL
 
     def __repr__(self) -> str:
         fore = NAME.get(self.fore, "NONE")
@@ -67,17 +75,9 @@ class PrintableChar:
         style = NAME.get(self.style, "NONE")
         return f"[char={self.char!r}, color={fore};{back};{style}]"
 
-c = PrintableChar("c")
-from colorama import Fore, Back
-c.fore = Fore.BLACK
-print(repr(c))
-
-
-
-
 
 class DisplayArray:
-    """An array of arrays of displayable characters."""
+    """A 2D of displayable characters."""
 
     def __init__(self, string: str):
         """Initialize a `DisplayArray`.
@@ -93,8 +93,8 @@ class DisplayArray:
         for i, row in enumerate(string.split("\n")):
             if len(row) != row_len:
                 raise ValueError(INVALID_INPUT_MSG.format(i, row, row_len, len(row)))
-            rows.append(list(row))
-        self.rows = rows
+            rows.append([PrintableChar(c) for c in row])
+        self.rows: list[list[PrintableChar]] = rows
 
     @property
     def n_rows(self) -> int:
@@ -104,19 +104,19 @@ class DisplayArray:
     def n_cols(self) -> int:
         return len(self.rows[0])
 
-    def __getitem__(self, position: VectorLike) -> str:
+    def __getitem__(self, position: VectorLike) -> PrintableChar:
         if isinstance(position, tuple):
             return self.rows[position[1]][position[0]]
         return self.rows[position.y][position.x]
 
-    def __setitem__(self, position: VectorLike, value: str) -> None:
+    def __setitem__(self, position: VectorLike, value: PrintableChar) -> None:
         if isinstance(position, tuple):
             self.rows[position[1]][position[0]] = value
         else:
             self.rows[position.y][position.x] = value
 
     def __str__(self) -> str:
-        return "\n".join("".join(c for c in row) for row in self.rows)
+        return "\n".join("".join(str(c) for c in row) for row in self.rows)
 
     def merge_in(self, other: "DisplayArray", *, anchor: str) -> None:
         """Merge another `DisplayArray` into this one.
@@ -128,7 +128,7 @@ class DisplayArray:
         n_cols, n_rows = self.n_cols, self.n_rows
         for i, j in product(range(n_rows), range(n_cols)):
             index = Vector(j, i)
-            if self[index] == anchor:
+            if self[index].char == anchor:
                 break
         else:
             raise IndexError(f"{anchor=} not found.")

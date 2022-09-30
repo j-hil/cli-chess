@@ -30,8 +30,8 @@ class Config:
         self.valid_color = valid_color
         self.role_symbol = dict(zip(Role, list(symbols + " ")))
         self.player_color = {
-            Player.ONE: Style.BRIGHT + Fore.WHITE,
-            Player.TWO: Style.NORMAL + Fore.BLACK,
+            Player.ONE: Fore.WHITE, #Style.BRIGHT + Fore.WHITE,
+            Player.TWO: Fore.BLACK,#Style.NORMAL + Fore.BLACK,
             Player.NULL: "",
         }
         self.board_color = {0: board_color1, 1: board_color2}

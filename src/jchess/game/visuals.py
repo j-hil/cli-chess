@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from colorama import Style
 import jchess
 
-from jchess.display import DisplayArray
+from jchess.display import DisplayArray, PrintableChar
 from jchess.game.engine import UNSELECTED_COORD, Mode
 from jchess.squares import Player
 from jchess.geometry import Vector
@@ -109,9 +109,9 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
             symbol = game.config.role_symbol[square.role]
 
             display_position = coord_transform(coord)
-            display[display_position - (1, 0)] = back_color + fore_color + " "
-            display[display_position] = symbol
-            display[display_position + (1, 0)] = " " + Style.RESET_ALL
+            display[display_position - (1, 0)].color = fore_color, back_color, ""
+            display[display_position] = PrintableChar(symbol, fore_color, back_color)
+            display[display_position + (1, 0)].color = fore_color, back_color, ""
 
 
 def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
@@ -126,16 +126,23 @@ def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
     s = 0 if player is Player.ONE else 1
     for i, j in product(range(n_rows), range(n_cols)):
         position = Vector(j, i)
-        display[position] = (
-            game.config.board_color[s] + plain_string[n_cols * i + j] + Style.RESET_ALL
+        display[position] = PrintableChar(
+            plain_string[n_cols * i + j],
+            fore=game.config.player_color[player],
+            back=game.config.board_color[s],
         )
     return display
 
 
 def _generate_player_header(game: "GameState", player: Player) -> DisplayArray:
     display = DisplayArray(f"{player}:")
-    display[0, 0] = game.config.board_color[1] + display[0, 0]
-    display[-1, 0] += Style.RESET_ALL
+    s = 0 if player is Player.ONE else 1
+    for j in range(display.n_cols):
+        display[j, 0].color = (
+            game.config.player_color[player],
+            game.config.board_color[s],
+            "",
+        )
     return display
 
 
