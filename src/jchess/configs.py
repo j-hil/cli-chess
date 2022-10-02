@@ -1,12 +1,10 @@
 """Contains display settings for different consoles."""
 # TODO: investigate if dataclass is really helping here
 
-from dataclasses import dataclass
 from colorama import Fore, Style, Back
-from jchess.squares import Player, Role
+from jchess.pieces import Player, Role
 
 
-@dataclass
 class Config:
     """Represents display settings."""
 
@@ -28,11 +26,10 @@ class Config:
         self.cursor_color = cursor_color
         self.highlight_color = highlight_color
         self.valid_color = valid_color
-        self.role_symbol = dict(zip(Role, list(symbols + " ")))
+        self.role_symbol = dict(zip(Role, list(symbols)))
         self.player_color = {
             Player.ONE: Style.BRIGHT + Fore.WHITE,
             Player.TWO: Style.NORMAL + Fore.BLACK,
-            Player.NULL: "",
         }
         self.board_color = {0: board_color1, 1: board_color2}
     # fmt: on

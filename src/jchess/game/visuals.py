@@ -14,9 +14,9 @@ from colorama import Style
 import jchess
 
 from jchess.display import DisplayArray
-from jchess.game.engine import UNSELECTED_COORD, Mode
-from jchess.squares import Player
-from jchess.geometry import Vector
+from jchess.pieces import Player
+from jchess.geometry import Vector, VectorLike
+from jchess.game.engine import Mode
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -74,44 +74,51 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
 
     # fmt: off
     if game.mode is Mode.TWO:
-        def coord_transform(v: Vector) -> Vector:
-            return Vector(30 - 4 * v.y, 1 + 2 * v.x)
+        def coord_transform(v: VectorLike) -> Vector:
+            return Vector(30 - 4 * v[1], 1 + 2 * v[0])
     else:
-        def coord_transform(v: Vector) -> Vector:
-            return Vector(29 + 4 * v.x, 5 + 2 * v.y)
+        def coord_transform(v: VectorLike) -> Vector:
+            return Vector(29 + 4 * v[0], 5 + 2 * v[1])
     # fmt: on
 
-    for i, row in enumerate(game.board):
-        for j, square in enumerate(row):
-            coord = Vector(j, i)
+    # TODO: wildly inefficient as now game.pieces replaces game.board
+    # iterate over game.pieces instead
+    for i, j in product(range(8), repeat=2):
+        
+        cursor_piece = game[game.cursor_coord]
+        highlight_potential_targets = (
+            game.attacking_piece is None
+            and cursor_piece is not None
+            and cursor_piece.player is game.active_player()
+            and (j, i) in game.targets_of(cursor_piece)
+        )
+        show_actual_targets = (
+            game.attacking_piece is not None
+            and (j, i) in game.targets_of(game.attacking_piece)
+        )
+        if (j, i) == game.cursor_coord:
+            back_color = game.config.cursor_color
+        elif (j, i) == game.attacking_piece:
+            back_color = game.config.highlight_color
+        elif highlight_potential_targets:
+            back_color = game.config.valid_color
+        elif show_actual_targets:
+            back_color = game.config.valid_color
+        else:
+            back_color = game.config.board_color[(i + j) % 2]
 
-            show_highlighted_targets = (
-                game.selected_coord is UNSELECTED_COORD
-                and game.cursor.player is game.active_player()
-                and coord in game.defending_coords(game.cursor_coord)
-            )
-            show_selected_targets = (
-                game.selected_coord is not UNSELECTED_COORD
-                and coord in game.defending_coords(game.selected_coord)
-            )
-            if coord == game.cursor_coord:
-                back_color = game.config.cursor_color
-            elif coord == game.selected_coord:
-                back_color = game.config.highlight_color
-            elif show_highlighted_targets:
-                back_color = game.config.valid_color
-            elif show_selected_targets:
-                back_color = game.config.valid_color
-            else:
-                back_color = game.config.board_color[(i + j) % 2]
+        piece = game[j, i]
+        if piece is not None:
+            fore_color = game.config.player_color[piece.player]
+            symbol = game.config.role_symbol[piece.role]
+        else:
+            fore_color = ""
+            symbol = " "
 
-            fore_color = game.config.player_color[square.player]
-            symbol = game.config.role_symbol[square.role]
-
-            display_position = coord_transform(coord)
-            display[display_position - (1, 0)] = back_color + fore_color + " "
-            display[display_position] = symbol
-            display[display_position + (1, 0)] = " " + Style.RESET_ALL
+        display_position = coord_transform((j, i))
+        display[display_position - (1, 0)] = back_color + fore_color + " "
+        display[display_position] = symbol
+        display[display_position + (1, 0)] = " " + Style.RESET_ALL
 
 
 def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:

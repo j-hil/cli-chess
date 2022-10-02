@@ -6,7 +6,6 @@ zero length like a color.
 * Basic formatting which is agnostic to rows and columns (see `merge_in`)
 * Compatible with `geometry.Vector`.
 """
-# TODO: Introduce a printable-char class
 from itertools import product
 from jchess.geometry import Vector, VectorLike
 

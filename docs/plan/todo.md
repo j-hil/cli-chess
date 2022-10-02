@@ -11,9 +11,9 @@
   - [X] Remove the need for constants.py
   - [ ] I don't like how `black` formats functions with many parameters - replace?
   - [X] look at moving to `setuptools`
-- [ ] Clean up code to reduce complexity and increase readability. In particular:
+- [X] Clean up code to reduce complexity and increase readability. In particular:
   - [X] Refactor `GameState` (see 2 TODO's in code)
-  - [ ] Research implementing `curses` std-lib functions
+  - [X] Research implementing `curses` std-lib functions
   - [X] Update pallet code
 - [ ] Add features
   - [ ] Add simple multiplayer - no idea how this would work.
@@ -21,7 +21,7 @@
   - [ ] [Look into Algebraic notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
 - [ ] Complete game-play functionality
   - [ ] Add check & checkmate functionality
-  - [ ] Add castling
+  - [X] Add castling
   - [ ] Add en passant
   - [ ] Add promotion
   - [ ] Prevent pawn from "jumping"

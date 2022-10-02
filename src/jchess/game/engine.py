@@ -10,19 +10,116 @@ from enum import Enum, auto
 import sys
 from typing import TYPE_CHECKING
 from msvcrt import getch
-from jchess.geometry import Vector
 
-from jchess.squares import Square, Role, Player
+from jchess.pieces import Piece, Role
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
 
-# Sentinel: A square on the board, but with no piece on it
-EMPTY_SQUARE = Square(Role.NULL, Player.NULL)
 
-# Sentinel: A square not on the board
-UNSELECTED_SQUARE = Square(Role.NULL, Player.NULL)
-UNSELECTED_COORD = Vector(-999, -999)  # in theory any |x|, |y| >= 8 will do
+def evolve_state_(game: "GameState") -> None:
+    """Implement `GameState.evolve_state`."""
+    action = _get_action_from_user()
+    _process_action(game, action)
+
+
+def _get_action_from_user() -> "Action":
+
+    # 2nd char necessary: directions are as '\x00{c}' or '\xe0{c}' for some capital `c`
+    user_input = getch().upper()
+    if user_input in [b"\x00", b"\xe0"]:
+        user_input += getch().upper()
+
+    for action in Action:
+        if user_input in ACTION_INPUTS.get(action, []):
+            return action
+    return Action.IGNORE
+
+
+def _process_action(game: "GameState", action: "Action") -> None:
+
+    if action in CARDINAL_DIRECTION:
+        if game.mode is Mode.TWO:
+            # account for fact that user's view is rotated from the internal view
+            action = ROTATE.get(action, action)
+
+        new_cursor_coord = game.cursor_coord + CARDINAL_DIRECTION[action]
+        if game.has(new_cursor_coord):
+            game.cursor_coord = new_cursor_coord
+
+    elif action is Action.SELECT:
+        cursor_piece = game[game.cursor_coord]
+        if (
+            game.attacking_piece is None
+            and cursor_piece is not None
+            and cursor_piece.player is game.active_player()
+            and game.targets_of(cursor_piece) != []
+        ):
+            game.attacking_piece = cursor_piece
+        elif (
+            game.attacking_piece is not None
+            and game.cursor_coord in game.targets_of(game.attacking_piece)
+        ):
+            _process_attack(game, game.attacking_piece)
+
+    elif action is Action.QUIT:
+        sys.exit()
+
+
+def _process_attack(game: "GameState", attacker: Piece):
+    defender = game[game.cursor_coord]
+    delta = game.cursor_coord - attacker.coord
+
+    # remove any previous vulnerability to en passant
+    if (
+        game.passant_vulnerable_piece is not None
+        and game.passant_vulnerable_piece.player is game.active_player()
+    ):
+        game.passant_vulnerable_piece = None
+
+    # add any new vulnerability to en passant
+    if attacker.role is Role.PAWN and delta in [(0, 2), (0, -2)]:
+        game.passant_vulnerable_piece = attacker
+
+    # en passant move chosen, so delete piece to the left/right
+    if (
+        attacker.role is Role.PAWN
+        and delta in [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+        and defender is None
+        # not really required: pleases type checker
+        and game.passant_vulnerable_piece is not None
+    ):
+        game.pieces.remove(game.passant_vulnerable_piece)
+        game.taken_pieces[game.active_player()].append(Role.PAWN)
+
+    # castling
+    if attacker.role is Role.KING:
+        y_king = attacker.coord.y
+
+        # king-side castle
+        if delta.x == 2:
+            castle = game[7, y_king]
+            if castle is None:
+                raise RuntimeError("King-side castling shouldn't have been available.")
+            castle.coord = (5, y_king)
+
+        # queen-side caste
+        if delta.x == -2:
+            castle = game[0, y_king]
+            if castle is None:
+                raise RuntimeError("Queen-side castling shouldn't have been available.")
+            castle.coord = (3, y_king)
+
+    # execute move
+    attacker.coord = game.cursor_coord
+    game.turn += 1
+    game.attacking_piece = None
+
+
+    # piece is taken
+    if defender is not None:
+        game.pieces.remove(defender)
+        game.taken_pieces[game.active_player()].append(defender.role)
 
 
 class Mode(Enum):
@@ -39,110 +136,6 @@ class Action(Enum):
     SELECT = auto()
     QUIT = auto()
     IGNORE = auto()
-
-
-def evolve_state_(game: "GameState") -> None:
-    """Implement `GameState.evolve_state`."""
-    action = _get_action_from_user()
-    _process_action(game, action)
-
-
-def _get_action_from_user() -> Action:
-
-    # 2nd char necessary: directions are as '\x00{c}' or '\xe0{c}' for some capital `c`
-    user_input = getch().upper()
-    if user_input in [b"\x00", b"\xe0"]:
-        user_input += getch().upper()
-
-    for action in Action:
-        if user_input in ACTION_INPUTS.get(action, []):
-            return action
-    return Action.IGNORE
-
-
-def _process_action(game: "GameState", action: Action) -> None:
-
-    if game.mode is Mode.TWO:
-        # account for fact that user's view is rotated from the internal view
-        action = ROTATE.get(action, action)
-
-    new_cursor_coord = game.cursor_coord + CARDINAL_DIRECTION.get(action, (0, 0))
-    if game.has(new_cursor_coord):
-        game.cursor_coord = new_cursor_coord
-
-    if (
-        action is Action.SELECT
-        and game.selected_coord is UNSELECTED_COORD
-        and game.cursor.player is game.active_player()
-        and game.defending_coords(game.cursor_coord)
-    ):
-        game.selected_coord = game.cursor_coord
-    elif (
-        action is Action.SELECT
-        and game.selected_coord is not UNSELECTED_COORD
-        and game.cursor_coord in game.defending_coords(game.selected_coord)
-    ):
-        delta = game.cursor_coord - game.selected_coord
-
-        # piece is taken - add it to taken pieces list
-        if game.cursor is not EMPTY_SQUARE:
-            game.taken_pieces[game.active_player()].append(game.cursor.role)
-
-        # remove any previous vulnerabilities to en passant
-        if (
-            game.en_passant_victim_coord is not UNSELECTED_COORD
-            and game.active_player() is game[game.en_passant_victim_coord].player
-        ):
-            game.en_passant_victim_coord = UNSELECTED_COORD
-
-        # add a vulnerability to en passant (if appropriate)
-        if game.selected.role is Role.PAWN and delta in [Vector(0, 2), Vector(0, -2)]:
-            game.en_passant_victim_coord = game.cursor_coord
-
-        # en passant move chosen, so delete piece to the left/right
-        if (
-            game.selected.role is Role.PAWN
-            and delta in [Vector(1, 1), Vector(1, -1), Vector(-1, 1), Vector(-1, -1)]
-            and game.cursor is EMPTY_SQUARE
-        ):
-            game[game.selected_coord + (delta.x, 0)] = EMPTY_SQUARE
-            game.taken_pieces[game.active_player()].append(Role.PAWN)
-
-        # king-side castle
-        if game.selected.role is Role.KING and delta == Vector(2, 0):
-            input("here")
-            game[game.selected_coord + (1, 0)] = game[game.selected_coord + (3, 0)]
-            game[game.selected_coord + (3, 0)] = EMPTY_SQUARE
-
-        # queen-side castling
-        if game.selected.role is Role.KING and delta == Vector(-2, 0):
-            game[game.selected_coord - (1, 0)] = game[game.selected_coord - (4, 0)]
-            game[game.selected_coord - (4, 0)] = EMPTY_SQUARE
-
-        # disable king-side castling
-        if (
-            game.selected.role is Role.KING
-            or game.selected.role is Role.ROOK
-            and game.selected_coord.x == 7
-        ):
-            game.can_king_side_castle[game.selected.player] = False
-
-        # disable queen-side castling
-        if (
-            game.selected.role is Role.KING
-            or game.selected.role is Role.ROOK
-            and game.selected_coord.x == 1
-        ):
-            game.can_queen_side_castle[game.selected.player] = False
-
-        # execute move
-        game.cursor = game.selected
-        game.selected = EMPTY_SQUARE
-        game.turn += 1
-        game.selected_coord = UNSELECTED_COORD
-
-    elif action is Action.QUIT:
-        sys.exit()
 
 
 CARDINAL_DIRECTION = {

@@ -17,3 +17,12 @@ class TestVector(TestCase):
     def test_sub(self) -> None:
         self.assertEqual(Vector(1, 2) - Vector(5, 6), Vector(-4, -4))
         self.assertEqual(Vector(-1, 11) - (1, 4), Vector(-2, 7))
+
+    def test_unpacking(self) -> None:
+        self.assertEqual(Vector(*Vector(1,2)), Vector(1,2))
+        self.assertEqual(Vector(*(1,2)), Vector(1,2))
+
+    def test_equality(self) -> None:
+        self.assertEqual(Vector(1, 2), (1, 2))
+        self.assertTrue(Vector(1, 2) in [(1, 2), (3, 4)])
+        self.assertTrue((1, 2) in [Vector(1, 2), Vector(3, 4)])
