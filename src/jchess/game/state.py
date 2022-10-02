@@ -1,3 +1,8 @@
+"""Contains the class representing the internal state of the game.
+
+Draws upon the other modules in jchess/game to complete the class.
+"""
+
 from jchess.configs import Config
 from jchess.geometry import Vector, VectorLike
 from jchess.pieces import Piece, Player, Role
@@ -13,7 +18,7 @@ class GameState:
     """Represents the state of the game, and controls the game logic."""
 
     @staticmethod
-    def has(coord: VectorLike):
+    def has(coord: VectorLike) -> bool:
         return coord[0] in range(8) and coord[1] in range(8)
 
     def __init__(self, config: Config):
@@ -45,19 +50,14 @@ class GameState:
     def active_player(self) -> Player:
         return list(Player)[self.turn % 2]
 
-    # TODO: now that Player is binary this can be removed.
-    def inactive_player(self) -> Player:
-        return list(Player)[(self.turn + 1) % 2]
-
-    def __str__(self) -> str:
-        return str(generate_main_display(self))
-
     def targets_of(self, piece: Piece) -> list[Vector]:
         return targets_of_(self, piece)
 
     def evolve_state(self) -> None:
         evolve_state_(self)
 
+    def __str__(self) -> str:
+        return str(generate_main_display(self))
 
     def __getitem__(self, key: VectorLike) -> Piece | None:
         for piece in self.pieces:

@@ -38,7 +38,7 @@ def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
                 if defender is None:
                     result.append(defender_coord)
                     continue
-                if defender.player is game.inactive_player():
+                if defender.player is not game.active_player():
                     result.append(defender_coord)
                 break
 
@@ -50,42 +50,47 @@ def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
             if defender is None or defender.player != game.active_player():
                 result.append(defender_coord)
 
+    # extra logic for castling
     if attacker.role is Role.KING and attacker.has_not_moved():
-        y_king = attacker.coord.y
-
-        # extra logic for king-side castling
-        rook = game[(7, y_king)]
-        if (
-            # unmoved rook
-            (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
-            # empty path
-            and all(game[(x, y_king)] is None for x in [5, 6])
-            # safe path
-            and all(
-                (x, y_king) not in game.targets_of(p)
-                for p, x in product(game.pieces, [4, 5, 6])
-                if p.player is not attacker.player
-            )
-        ):
-            result.append(attacker.coord + (2, 0))
-
-        # extra logic for queen-side castling
-        rook = game[(0, y_king)]
-        if (
-            # unmoved rook
-            (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
-            # empty path
-            and all(game[(x, y_king)] is None for x in [1, 2, 3])
-            # safe path
-            and all(
-                (x, y_king) not in game.targets_of(p)
-                for p, x in product(game.pieces, [1, 2, 3, 4])
-                if p.player is not attacker.player
-            )
-        ):
-            result.append(attacker.coord - (2, 0))
+        _castling_logic(game, attacker, result)
 
     return result
+
+
+def _castling_logic(game: "GameState", attacker: Piece, result: list[Vector]):
+    y_king = attacker.coord.y
+
+    # extra logic for king-side castling
+    rook = game[(7, y_king)]
+    if (
+        # unmoved rook
+        (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
+        # empty path
+        and all(game[(x, y_king)] is None for x in [5, 6])
+        # safe path
+        and all(
+            (x, y_king) not in game.targets_of(p)
+            for p, x in product(game.pieces, [4, 5, 6])
+            if p.player is not attacker.player
+        )
+    ):
+        result.append(attacker.coord + (2, 0))
+
+    # extra logic for queen-side castling
+    rook = game[(0, y_king)]
+    if (
+        # unmoved rook
+        (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
+        # empty path
+        and all(game[(x, y_king)] is None for x in [1, 2, 3])
+        # safe path
+        and all(
+            (x, y_king) not in game.targets_of(p)
+            for p, x in product(game.pieces, [1, 2, 3, 4])
+            if p.player is not attacker.player
+        )
+    ):
+        result.append(attacker.coord - (2, 0))
 
 
 def _targeted_by_pawn(game: "GameState", attacker: Piece) -> list[Vector]:
@@ -108,7 +113,7 @@ def _targeted_by_pawn(game: "GameState", attacker: Piece) -> list[Vector]:
             # standard pawn capture
             game.has(defender_coord)
             and defender is not None
-            and defender.player is game.inactive_player()
+            and defender.player is not game.active_player()
             # en passant capture
             or game[attacker.coord + (dx, 0)] == game.passant_vulnerable_piece
         ):

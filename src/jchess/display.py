@@ -38,15 +38,10 @@ class DisplayArray:
         return len(self.rows[0])
 
     def __getitem__(self, position: VectorLike) -> str:
-        if isinstance(position, tuple):
-            return self.rows[position[1]][position[0]]
-        return self.rows[position.y][position.x]
+        return self.rows[position[1]][position[0]]
 
     def __setitem__(self, position: VectorLike, value: str) -> None:
-        if isinstance(position, tuple):
-            self.rows[position[1]][position[0]] = value
-        else:
-            self.rows[position.y][position.x] = value
+        self.rows[position[1]][position[0]] = value
 
     def __str__(self) -> str:
         return "\n".join("".join(c for c in row) for row in self.rows)

@@ -48,25 +48,23 @@ def _process_action(game: "GameState", action: "Action") -> None:
             game.cursor_coord = new_cursor_coord
 
     elif action is Action.SELECT:
+        attacker = game.attacking_piece
         cursor_piece = game[game.cursor_coord]
         if (
-            game.attacking_piece is None
+            attacker is None
             and cursor_piece is not None
             and cursor_piece.player is game.active_player()
             and game.targets_of(cursor_piece) != []
         ):
             game.attacking_piece = cursor_piece
-        elif (
-            game.attacking_piece is not None
-            and game.cursor_coord in game.targets_of(game.attacking_piece)
-        ):
-            _process_attack(game, game.attacking_piece)
+        elif attacker is not None and game.cursor_coord in game.targets_of(attacker):
+            _process_attack(game, attacker)
 
     elif action is Action.QUIT:
         sys.exit()
 
 
-def _process_attack(game: "GameState", attacker: Piece):
+def _process_attack(game: "GameState", attacker: Piece) -> None:
     defender = game[game.cursor_coord]
     delta = game.cursor_coord - attacker.coord
 
@@ -114,7 +112,6 @@ def _process_attack(game: "GameState", attacker: Piece):
     attacker.coord = game.cursor_coord
     game.turn += 1
     game.attacking_piece = None
-
 
     # piece is taken
     if defender is not None:

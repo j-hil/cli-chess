@@ -1,12 +1,20 @@
 """Contains display settings for different consoles."""
-# TODO: investigate if dataclass is really helping here
 
+from dataclasses import dataclass
 from colorama import Fore, Style, Back
 from jchess.pieces import Player, Role
 
 
+@dataclass
 class Config:
     """Represents display settings."""
+
+    cursor_color: str
+    highlight_color: str
+    valid_color: str
+    role_symbol: dict[Role, str]
+    player_color: dict[Player, str]
+    board_color: dict[int, str]
 
     # fmt: off
     def __init__(self, *,
@@ -65,5 +73,3 @@ CMD_CONFIG = Config(
 )
 
 CONFIG = {"cmd.exe": CMD_CONFIG, "powershell.exe": PS_CONFIG}
-
-print(CMD_CONFIG)

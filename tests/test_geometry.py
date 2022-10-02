@@ -19,8 +19,8 @@ class TestVector(TestCase):
         self.assertEqual(Vector(-1, 11) - (1, 4), Vector(-2, 7))
 
     def test_unpacking(self) -> None:
-        self.assertEqual(Vector(*Vector(1,2)), Vector(1,2))
-        self.assertEqual(Vector(*(1,2)), Vector(1,2))
+        self.assertEqual(Vector(*Vector(1, 2)), Vector(1, 2))
+        self.assertEqual(Vector(*(1, 2)), Vector(1, 2))
 
     def test_equality(self) -> None:
         self.assertEqual(Vector(1, 2), (1, 2))

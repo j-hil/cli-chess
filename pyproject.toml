@@ -45,7 +45,9 @@ version = {attr="jchess._version.VERSION"}
 [tool.mypy]
 warn_return_any = true
 warn_unused_configs = true
-strict = true
+show_error_codes = true
+# required due to a mypy issue: https://github.com/python/mypy/issues/3004
+disable_error_code = ["assignment"]
 
 [tool.pylint.basic]
 # allows short names (which are to be used with due consideration):
@@ -56,6 +58,10 @@ const-rgx = "(?#CAPITAL_CASE)^[A-Z0-9]*(_[A-Z0-9]+)*_?|__[a-z]*__$"
 
 [tool.pylint.format]
 max-line-length=88
+
+[tool.pylint.design]
+# the defualt (7) really is too low
+max-attributes=10
 
 [tool.pylint.messages_control]
 # I decide if something needs a docstring, not pylint or pydocstyle :|

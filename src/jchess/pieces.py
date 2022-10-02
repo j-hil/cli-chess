@@ -1,3 +1,5 @@
+"""Contains representation of a chess piece."""
+
 from enum import Enum
 from jchess.geometry import Vector, VectorLike
 
@@ -13,7 +15,7 @@ class Piece:
         return self._coord
 
     @coord.setter
-    def coord(self, value: VectorLike):
+    def coord(self, value: VectorLike) -> None:
         self._coord = Vector(*value)
 
     def has_not_moved(self) -> bool:

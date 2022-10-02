@@ -84,21 +84,22 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
     # TODO: wildly inefficient as now game.pieces replaces game.board
     # iterate over game.pieces instead
     for i, j in product(range(8), repeat=2):
-        
+        coord = (j, i)
+
         cursor_piece = game[game.cursor_coord]
         highlight_potential_targets = (
             game.attacking_piece is None
             and cursor_piece is not None
             and cursor_piece.player is game.active_player()
-            and (j, i) in game.targets_of(cursor_piece)
+            and coord in game.targets_of(cursor_piece)
         )
         show_actual_targets = (
             game.attacking_piece is not None
-            and (j, i) in game.targets_of(game.attacking_piece)
+            and coord in game.targets_of(game.attacking_piece)
         )
-        if (j, i) == game.cursor_coord:
+        if coord == game.cursor_coord:
             back_color = game.config.cursor_color
-        elif (j, i) == game.attacking_piece:
+        elif coord == game.attacking_piece:
             back_color = game.config.highlight_color
         elif highlight_potential_targets:
             back_color = game.config.valid_color
@@ -107,7 +108,7 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
         else:
             back_color = game.config.board_color[(i + j) % 2]
 
-        piece = game[j, i]
+        piece = game[coord]
         if piece is not None:
             fore_color = game.config.player_color[piece.player]
             symbol = game.config.role_symbol[piece.role]
@@ -115,7 +116,7 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
             fore_color = ""
             symbol = " "
 
-        display_position = coord_transform((j, i))
+        display_position = coord_transform(coord)
         display[display_position - (1, 0)] = back_color + fore_color + " "
         display[display_position] = symbol
         display[display_position + (1, 0)] = " " + Style.RESET_ALL
