@@ -24,7 +24,6 @@ def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
 
     # the pawn has unique behavior warranting it's own function
     if attacker.role is Role.PAWN:
-        # FIXME: pawn movement is busted
         return _targeted_by_pawn(game, attacker)
 
     result = []
@@ -109,13 +108,15 @@ def _targeted_by_pawn(game: "GameState", attacker: Piece) -> list[Vector]:
     for dx in [1, -1]:
         defender_coord = attacker.coord + (dx, direction)
         defender = game[defender_coord]
+        en_passant_vulnerable_piece = game[attacker.coord + (dx, 0)]
         if (
             # standard pawn capture
             game.has(defender_coord)
             and defender is not None
             and defender.player is not game.active_player()
             # en passant capture
-            or game[attacker.coord + (dx, 0)] == game.passant_vulnerable_piece
+            or en_passant_vulnerable_piece is not None
+            and en_passant_vulnerable_piece == game.passant_vulnerable_piece
         ):
             result.append(defender_coord)
 

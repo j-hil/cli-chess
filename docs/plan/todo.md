@@ -22,9 +22,9 @@
 - [ ] Complete game-play functionality
   - [ ] Add check & checkmate functionality
   - [X] Add castling
-  - [ ] Add en passant
+  - [X] Add en passant
   - [ ] Add promotion
-  - [ ] Prevent pawn from "jumping"
+  - [X] Prevent pawn from "jumping"
 - [ ] Improve visuals
   - [X] Add boarder
   - [X] Add more color to score etc
