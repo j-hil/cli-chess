@@ -8,7 +8,7 @@ Controls reaction to and collection player input. Recognized actions are
 
 from enum import Enum, auto
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 from msvcrt import getch
 
 from jchess.pieces import Piece, Role
@@ -17,9 +17,10 @@ if TYPE_CHECKING:
     from jchess.game.state import GameState
 
 
-def evolve_state_(game: "GameState") -> None:
+def evolve_state_(game: "GameState", action: Union["Action", None] = None) -> None:
     """Implement `GameState.evolve_state`."""
-    action = _get_action_from_user()
+    if action is None:
+        action = _get_action_from_user()
     _process_action(game, action)
 
 

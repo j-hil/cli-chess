@@ -6,10 +6,11 @@ We use 2 different general methods:
 And then pawns and castling require specialized logic.
 """
 
+from copy import deepcopy
 from itertools import product
 from typing import TYPE_CHECKING
 
-from jchess.game.engine import CARDINAL_DIRECTION
+from jchess.game.engine import CARDINAL_DIRECTION, Action
 from jchess.geometry import Vector
 from jchess.pieces import Piece, Role, Player
 
@@ -20,13 +21,13 @@ if TYPE_CHECKING:
 def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
 
     if attacker not in game.pieces:
-        raise RuntimeError("piece not in play")
+        raise RuntimeError(f"{attacker} not in play.")
+
+    result: list[Vector] = []
 
     # the pawn has unique behavior warranting it's own function
     if attacker.role is Role.PAWN:
-        return _targeted_by_pawn(game, attacker)
-
-    result = []
+        _targeted_by_pawn(game, attacker, result)
 
     # the queen, bishop & rook always move along lines
     for line in LINES.get(attacker.role, []):
@@ -53,7 +54,29 @@ def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
     if attacker.role is Role.KING and attacker.has_not_moved():
         _castling_logic(game, attacker, result)
 
+    # TODO: revise just like all of this branch... its so slow! may require large rework
+    if not hasattr(game, "flag"):
+        _handle_check(game, attacker, result)
+
     return result
+
+
+def _handle_check(game: "GameState", attacker: Piece, result: list[Vector]):
+    for defender_coord in result.copy():
+        game_copy = deepcopy(game)
+        game_copy.flag = "monkey_patch"  # type: ignore
+
+        # initiate the attack
+        game_copy.attacking_piece = game_copy[attacker.coord]
+        game_copy.cursor_coord = defender_coord
+        game_copy.evolve_state(Action.SELECT)
+
+        for piece in game_copy.pieces:
+            if piece.player is not attacker.player:
+                for coord in targets_of_(game_copy, piece):
+                    defender = game_copy[coord]
+                    if defender is not None and defender.role is Role.KING:
+                        result.remove(defender_coord)
 
 
 def _castling_logic(game: "GameState", attacker: Piece, result: list[Vector]):
@@ -92,9 +115,8 @@ def _castling_logic(game: "GameState", attacker: Piece, result: list[Vector]):
         result.append(attacker.coord - (2, 0))
 
 
-def _targeted_by_pawn(game: "GameState", attacker: Piece) -> list[Vector]:
+def _targeted_by_pawn(game: "GameState", attacker: Piece, result: list[Vector]):
     """Implement `GameState.defending_coords` for pawns."""
-    result = []
 
     if attacker.player is Player.TWO:
         direction = 1
@@ -123,8 +145,6 @@ def _targeted_by_pawn(game: "GameState", attacker: Piece) -> list[Vector]:
     defender_coord = attacker.coord + (0, 2 * direction)
     if attacker.has_not_moved() and game[defender_coord - (0, direction)] is None:
         result.append(defender_coord)
-
-    return result
 
 
 DELTAS = {

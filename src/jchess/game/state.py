@@ -7,7 +7,7 @@ from jchess.configs import Config
 from jchess.geometry import Vector, VectorLike
 from jchess.pieces import Piece, Player, Role
 from jchess.game.logic import targets_of_
-from jchess.game.engine import Mode, evolve_state_
+from jchess.game.engine import Action, Mode, evolve_state_
 from jchess.game.visuals import generate_main_display
 
 K, Q, R, B, N, P = list(Role)
@@ -53,8 +53,8 @@ class GameState:
     def targets_of(self, piece: Piece) -> list[Vector]:
         return targets_of_(self, piece)
 
-    def evolve_state(self) -> None:
-        evolve_state_(self)
+    def evolve_state(self, action: Action | None = None) -> None:
+        evolve_state_(self, action)
 
     def __str__(self) -> str:
         return str(generate_main_display(self))
