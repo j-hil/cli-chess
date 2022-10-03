@@ -30,7 +30,7 @@ def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
         _targeted_by_pawn(game, attacker, result)
 
     # the queen, bishop & rook always move along lines
-    for line in LINES.get(attacker.role, []):
+    for line in _LINES.get(attacker.role, []):
         for delta in line:
             defender_coord = attacker.coord + delta
             if game.has(defender_coord):
@@ -43,7 +43,7 @@ def targets_of_(game: "GameState", attacker: Piece) -> list[Vector]:
                 break
 
     # the king and knight always have fixed potential translations
-    for delta in DELTAS.get(attacker.role, []):
+    for delta in _DELTAS.get(attacker.role, []):
         defender_coord = attacker.coord + delta
         if game.has(defender_coord):
             defender = game[defender_coord]
@@ -147,16 +147,16 @@ def _targeted_by_pawn(game: "GameState", attacker: Piece, result: list[Vector]):
         result.append(defender_coord)
 
 
-DELTAS = {
+_DELTAS = {
     Role.KING: list(product([-1, 0, +1], [-1, 0, +1])),
     Role.KNIGHT: list(product((-1, 1), (-2, 2))) + list(product((-2, 2), (-1, 1))),
 }
 
 
-L1 = [[(s * d, t * d) for d in range(1, 8)] for s, t in CARDINAL_DIRECTION.values()]
-L2 = [[(s * d, t * d) for d in range(1, 8)] for s, t in product([1, -1], repeat=2)]
-LINES = {
-    Role.QUEEN: L1 + L2,
-    Role.ROOK: L1,
-    Role.BISHOP: L2,
+_L1 = [[(s * d, t * d) for d in range(1, 8)] for s, t in CARDINAL_DIRECTION.values()]
+_L2 = [[(s * d, t * d) for d in range(1, 8)] for s, t in product([1, -1], repeat=2)]
+_LINES = {
+    Role.QUEEN: _L1 + _L2,
+    Role.ROOK: _L1,
+    Role.BISHOP: _L2,
 }

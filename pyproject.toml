@@ -48,6 +48,7 @@ warn_unused_configs = true
 show_error_codes = true
 # required due to a mypy issue: https://github.com/python/mypy/issues/3004
 disable_error_code = ["assignment"]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src/stubs/"
 
 [tool.pylint.basic]
 # allows short names (which are to be used with due consideration):

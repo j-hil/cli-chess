@@ -1,27 +1,27 @@
 """Contains representation of a chess piece."""
 
 from enum import Enum
-from jchess.geometry import Vector, VectorLike
+from jchess.geometry import Vector
 
 
 class Piece:
-    def __init__(self, role: "Role", player: "Player", coord: VectorLike):
+    def __init__(self, role, player, coord):
         self.role = role
         self.player = player
         self._coord = self._initial_coord = Vector(*coord)
 
     @property
-    def coord(self) -> Vector:
+    def coord(self):
         return self._coord
 
     @coord.setter
-    def coord(self, value: VectorLike) -> None:
+    def coord(self, value):
         self._coord = Vector(*value)
 
-    def has_not_moved(self) -> bool:
+    def has_not_moved(self):
         return self._initial_coord == self._coord
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"Piece({self.role}, {self.player}, {self._coord})"
 
 
@@ -41,3 +41,6 @@ class Role(Enum):
     @property
     def worth(self) -> int:
         return self.value[1]
+
+
+print(Role.KING.worth + "hye")
