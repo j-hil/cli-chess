@@ -26,3 +26,11 @@ class TestVector(TestCase):
         self.assertEqual(Vector(1, 2), (1, 2))
         self.assertTrue(Vector(1, 2) in [(1, 2), (3, 4)])
         self.assertTrue((1, 2) in [Vector(1, 2), Vector(3, 4)])
+
+    def test_list_removal(self) -> None:
+
+        array = [Vector(x, y) for x, y in ((1, 2), (3, 4), (5, 6), (7, 8))]
+        for coord in array.copy():
+            if coord.x == 3:
+                array.remove(coord)
+        self.assertEqual(array, [Vector(x, y) for x, y in ((1, 2), (5, 6), (7, 8))])

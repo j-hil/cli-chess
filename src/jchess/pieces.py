@@ -9,6 +9,7 @@ class Piece:
         self.role = role
         self.player = player
         self._coord = self._initial_coord = Vector(*coord)
+        self.targets: list[Vector] = []
 
     @property
     def coord(self) -> Vector:
@@ -22,21 +23,21 @@ class Piece:
         return self._initial_coord == self._coord
 
     def __repr__(self) -> str:
-        return f"Piece({self.role}, {self.player}, {self._coord})"
+        return f"Piece({self.role.value[0]}, P{self.player.value}, {self._coord})"
 
 
 class Player(Enum):
-    ONE = "ONE"
-    TWO = "TWO"
+    ONE = 1
+    TWO = 2
 
 
 class Role(Enum):
-    KING = ("KING", 104)
-    QUEEN = ("QUEEN", 9)
-    ROOK = ("ROOK", 5)
-    BISHOP = ("BISHOP", 3)
-    KNIGHT = ("KNIGHT", 3)
-    PAWN = ("PAWN", 1)
+    KING = ("K", 104)
+    QUEEN = ("Q", 9)
+    ROOK = ("R", 5)
+    BISHOP = ("B", 3)
+    KNIGHT = ("N", 3)
+    PAWN = ("P", 1)
 
     @property
     def worth(self) -> int:

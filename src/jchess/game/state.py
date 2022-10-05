@@ -6,7 +6,7 @@ Draws upon the other modules in jchess/game to complete the class.
 from jchess.configs import Config
 from jchess.geometry import Vector, VectorLike
 from jchess.pieces import Piece, Player, Role
-from jchess.game.logic import targets_of_
+from jchess.game.logic import update_targets_
 from jchess.game.engine import Action, Mode, evolve_state_
 from jchess.game.visuals import generate_main_display
 
@@ -44,17 +44,20 @@ class GameState:
         self.config = config
         self.mode = Mode.ONE
 
+        self.protect_king = True
+        self.update_targets()
+
     def score(self, player: Player) -> int:
         return sum(role.worth for role in self.taken_pieces[player])
 
     def active_player(self) -> Player:
         return list(Player)[self.turn % 2]
 
-    def targets_of(self, piece: Piece) -> list[Vector]:
-        return targets_of_(self, piece)
-
     def evolve_state(self, action: Action | None = None) -> None:
         evolve_state_(self, action)
+
+    def update_targets(self):
+        update_targets_(self)
 
     def __str__(self) -> str:
         return str(generate_main_display(self))

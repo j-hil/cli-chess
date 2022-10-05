@@ -49,7 +49,7 @@ class Vector:
     def __iter__(self) -> Iterator[int]:
         return (z for z in [self.x, self.y])
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"V({self.x}, {self.y})"
 
     def __len__(self) -> int:

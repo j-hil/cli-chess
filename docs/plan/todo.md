@@ -20,7 +20,8 @@
   - [ ] Add a simple 1 player mode (based on random moves)
   - [ ] [Look into Algebraic notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
 - [ ] Complete game-play functionality
-  - [ ] Add check & checkmate functionality
+  - [X] Add check
+  - [ ] Add checkmate functionality
   - [X] Add castling
   - [X] Add en passant
   - [ ] Add promotion

@@ -7,6 +7,10 @@ from jchess.pieces import Piece, Player, Role
 class TestPiece(TestCase):
     """Test `jchess.pieces.Piece`."""
 
+    def test_coord_setter_and_init(self) -> None:
+        bishop = Piece(Role.BISHOP, Player.TWO, (1, 2))
+        self.assertTrue(isinstance(bishop.coord, Vector))
+
     def test_has_moved(self) -> None:
         queen = Piece(Role.QUEEN, Player.ONE, Vector(1, 2))
         queen.coord = (3, 4)

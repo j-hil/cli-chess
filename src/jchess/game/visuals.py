@@ -11,8 +11,8 @@ display which will already display the pieces. There are the following elements:
 from itertools import product
 from typing import TYPE_CHECKING
 from colorama import Style
-import jchess
 
+import jchess
 from jchess.display import DisplayArray
 from jchess.pieces import Player
 from jchess.geometry import Vector, VectorLike
@@ -91,11 +91,10 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
             game.attacking_piece is None
             and cursor_piece is not None
             and cursor_piece.player is game.active_player()
-            and coord in game.targets_of(cursor_piece)
+            and coord in cursor_piece.targets
         )
         show_actual_targets = (
-            game.attacking_piece is not None
-            and coord in game.targets_of(game.attacking_piece)
+            game.attacking_piece is not None and coord in game.attacking_piece.targets
         )
         if coord == game.cursor_coord:
             back_color = game.config.cursor_color

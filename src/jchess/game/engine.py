@@ -55,10 +55,10 @@ def _process_action(game: "GameState", action: "Action") -> None:
             attacker is None
             and cursor_piece is not None
             and cursor_piece.player is game.active_player()
-            and game.targets_of(cursor_piece) != []
+            and cursor_piece.targets != []
         ):
             game.attacking_piece = cursor_piece
-        elif attacker is not None and game.cursor_coord in game.targets_of(attacker):
+        elif attacker is not None and game.cursor_coord in attacker.targets:
             _process_attack(game, attacker)
 
     elif action is Action.QUIT:
@@ -118,6 +118,8 @@ def _process_attack(game: "GameState", attacker: Piece) -> None:
     if defender is not None:
         game.pieces.remove(defender)
         game.taken_pieces[game.active_player()].append(defender.role)
+
+    game.update_targets()
 
 
 class Mode(Enum):
