@@ -149,7 +149,11 @@ def pawn_targets(game: "GameState", attacker: Piece) -> list[Vector]:
             result.append(defender_coord)
 
     defender_coord = attacker.coord + (0, 2 * direction)
-    if attacker.has_not_moved() and game[defender_coord - (0, direction)] is None:
+    if (
+        attacker.has_not_moved()
+        and game[defender_coord - (0, direction)] is None
+        and game[defender_coord] is None
+    ):
         result.append(defender_coord)
 
     return result
