@@ -111,13 +111,11 @@ def _process_attack(game: "GameState", attacker: Piece) -> None:
 
     # execute move
     attacker.coord = game.cursor_coord
-    game.turn += 1
     game.attacking_piece = None
-
-    # piece is taken
     if defender is not None:
         game.pieces.remove(defender)
         game.taken_pieces[game.active_player()].append(defender.role)
+    game.turn += 1
 
     game.update_targets()
 
