@@ -11,19 +11,19 @@ display which will already display the pieces. There are the following elements:
 from itertools import product
 from typing import TYPE_CHECKING
 from colorama import Style
-import jchess
 
-from jchess.display import DisplayArray, PrintableChar
-from jchess.game.engine import UNSELECTED_COORD, Mode
-from jchess.squares import Player
-from jchess.geometry import Vector
+import jchess
+from jchess.display import DisplayArray
+from jchess.pieces import Player
+from jchess.geometry import Vector, VectorLike
+from jchess.game.engine import Mode
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
 
 
 def generate_main_display(game: "GameState") -> DisplayArray:
-    """Use the helper functions above to generate the main display of the game."""
+    """Use the helper functions below to generate the main display of the game."""
     row_labels, col_labels = list("abcdefgh"), list("87654321")
     if game.mode is Mode.TWO:
         row_labels, col_labels = col_labels[::], row_labels
@@ -36,12 +36,12 @@ def generate_main_display(game: "GameState") -> DisplayArray:
         _generate_player_header(game, Player.ONE),
         DisplayArray("   ".join(row_labels)),
         _generate_player_header(game, Player.TWO),
-        DisplayArray(f"SCORE = {game.score(Player.ONE)}"),
+        DisplayArray(f"SCORE = {game.score(Player.ONE):0>3}"),
         DisplayArray("\n \n".join(col_labels)),
         DisplayArray("\n \n".join(col_labels)),
-        DisplayArray(f"SCORE = {game.score(Player.TWO)}"),
-        _generate_player_info(game, Player.ONE),
-        _generate_player_info(game, Player.TWO),
+        DisplayArray(f"SCORE = {game.score(Player.TWO):0>3}"),
+        _generate_taken_pieces(game, Player.ONE),
+        _generate_taken_pieces(game, Player.TWO),
         DisplayArray("   ".join(row_labels)),
         DisplayArray(jchess.__version__[:11]),
         _generate_gutter(game),
@@ -74,75 +74,75 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
 
     # fmt: off
     if game.mode is Mode.TWO:
-        def coord_transform(v: Vector) -> Vector:
-            return Vector(30 - 4 * v.y, 1 + 2 * v.x)
+        def coord_transform(v: VectorLike) -> Vector:
+            return Vector(30 - 4 * v[1], 1 + 2 * v[0])
     else:
-        def coord_transform(v: Vector) -> Vector:
-            return Vector(29 + 4 * v.x, 5 + 2 * v.y)
+        def coord_transform(v: VectorLike) -> Vector:
+            return Vector(29 + 4 * v[0], 5 + 2 * v[1])
     # fmt: on
 
-    for i, row in enumerate(game.board):
-        for j, square in enumerate(row):
-            coord = Vector(j, i)
+    # TODO: wildly inefficient as now game.pieces replaces game.board
+    # iterate over game.pieces instead
+    for i, j in product(range(8), repeat=2):
+        coord = (j, i)
 
-            show_highlighted_targets = (
-                game.selected_coord is UNSELECTED_COORD
-                and game.cursor.player is game.active_player()
-                and coord in game.defending_coords(game.cursor_coord)
-            )
-            show_selected_targets = (
-                game.selected_coord is not UNSELECTED_COORD
-                and coord in game.defending_coords(game.selected_coord)
-            )
-            if coord == game.cursor_coord:
-                back_color = game.config.cursor_color
-            elif coord == game.selected_coord:
-                back_color = game.config.highlight_color
-            elif show_highlighted_targets:
-                back_color = game.config.valid_color
-            elif show_selected_targets:
-                back_color = game.config.valid_color
-            else:
-                back_color = game.config.board_color[(i + j) % 2]
+        cursor_piece = game[game.cursor_coord]
+        highlight_potential_targets = (
+            game.attacking_piece is None
+            and cursor_piece is not None
+            and cursor_piece.player is game.active_player()
+            and coord in cursor_piece.targets
+        )
+        show_actual_targets = (
+            game.attacking_piece is not None and coord in game.attacking_piece.targets
+        )
+        if coord == game.cursor_coord:
+            back_color = game.config.cursor_color
+        elif game.attacking_piece is not None and coord == game.attacking_piece.coord:
+            back_color = game.config.highlight_color
+        elif highlight_potential_targets:
+            back_color = game.config.valid_color
+        elif show_actual_targets:
+            back_color = game.config.valid_color
+        else:
+            back_color = game.config.board_color[(i + j) % 2]
 
-            fore_color = game.config.player_color[square.player]
-            symbol = game.config.role_symbol[square.role]
+        piece = game[coord]
+        if piece is not None:
+            fore_color = game.config.player_color[piece.player]
+            symbol = game.config.role_symbol[piece.role]
+        else:
+            fore_color = ""
+            symbol = " "
 
-            display_position = coord_transform(coord)
-            display[display_position - (1, 0)].color = fore_color, back_color, ""
-            display[display_position] = PrintableChar(symbol, fore_color, back_color)
-            display[display_position + (1, 0)].color = fore_color, back_color, ""
+        display_position = coord_transform(coord)
+        display[display_position - (1, 0)] = back_color + fore_color + " "
+        display[display_position] = symbol
+        display[display_position + (1, 0)] = " " + Style.RESET_ALL
 
 
-def _generate_player_info(game: "GameState", player: Player) -> DisplayArray:
+def _generate_taken_pieces(game: "GameState", player: Player) -> DisplayArray:
     n_rows, n_cols = 4, 11
     display = DisplayArray("\n".join(" " * n_cols for _ in range(n_rows)))
 
-    taken_pieces = game.taken_pieces[player]
     symbol = game.config.role_symbol
+    back = game.config.board_color[player.value - 1]
+    fore = game.config.player_color[Player.TWO if player is Player.ONE else Player.ONE]
+
+    taken_pieces = game.taken_pieces[player]
     plain_string = ", ".join(symbol[role] for role in taken_pieces)
     plain_string = f"{plain_string: <48}"
 
-    s = 0 if player is Player.ONE else 1
     for i, j in product(range(n_rows), range(n_cols)):
         position = Vector(j, i)
-        display[position] = PrintableChar(
-            plain_string[n_cols * i + j],
-            fore=game.config.player_color[player],
-            back=game.config.board_color[s],
-        )
+        display[position] = back + fore + plain_string[n_cols * i + j] + Style.RESET_ALL
     return display
 
 
 def _generate_player_header(game: "GameState", player: Player) -> DisplayArray:
-    display = DisplayArray(f"{player}:")
-    s = 0 if player is Player.ONE else 1
-    for j in range(display.n_cols):
-        display[j, 0].color = (
-            game.config.player_color[player],
-            game.config.board_color[s],
-            "",
-        )
+    display = DisplayArray(f" Player {player.value}: ")
+    display[0, 0] = game.config.board_color[2 - player.value] + display[0, 0]
+    display[-1, 0] += Style.RESET_ALL
     return display
 
 
