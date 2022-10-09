@@ -14,12 +14,15 @@ from jchess.configs import CONFIG, VSC_CONFIG
 # attempt to detect that game is being run inside VS Code
 DEV_MODE = "debugpy" in sys.modules
 
+def clear_console():
+    os.system('cls' if os.name=='nt' else 'clear')
+
 
 def main() -> None:
     """Entry point to begin game. Game state updated & re-printed with each input."""
     # enable colors, clear the screen, and hide the cursor
     init()
-    os.system("cls")
+    clear_console()
     print("\033[?25l", end="")
 
     if DEV_MODE:
@@ -40,5 +43,5 @@ if __name__ == "__main__":
     try:
         main()
     finally:
-        os.system("cls")
+        clear_console()
         print("\033[?25h", end="")  # show cursor
