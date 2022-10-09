@@ -1,4 +1,7 @@
-"""Provide versioning constant for `setuptools`.
+"""Provide generation of version string.
+
+Ideally would be automatically read in build process but fails as build does not occur
+within the git-repo. Currently must be manually updated in `setup.cfg`.
 
 Chosen convention is `year.month.commits` which has the following desired properties:
 * generates a strictly increasing sequence of version numbers
@@ -27,3 +30,5 @@ def _get_version() -> str:
 
 
 VERSION = _get_version()
+if __name__ == "__main__":
+    print(VERSION)
