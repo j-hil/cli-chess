@@ -17,6 +17,7 @@ from jchess.display import DisplayArray
 from jchess.pieces import Player
 from jchess.geometry import Vector, VectorLike
 from jchess.game.engine import Mode
+from jchess.board import Board
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -24,6 +25,9 @@ if TYPE_CHECKING:
 
 def generate_main_display(game: "GameState") -> DisplayArray:
     """Use the helper functions below to generate the main display of the game."""
+
+    board = game.board
+
     row_labels, col_labels = list("abcdefgh"), list("87654321")
     if game.mode is Mode.TWO:
         row_labels, col_labels = col_labels[::], row_labels
@@ -36,15 +40,15 @@ def generate_main_display(game: "GameState") -> DisplayArray:
         _generate_player_header(game, Player.ONE),
         DisplayArray("   ".join(row_labels)),
         _generate_player_header(game, Player.TWO),
-        DisplayArray(f"SCORE = {game.score(Player.ONE):0>3}"),
+        DisplayArray(f"SCORE = {board.score(Player.ONE):0>3}"),
         DisplayArray("\n \n".join(col_labels)),
         DisplayArray("\n \n".join(col_labels)),
-        DisplayArray(f"SCORE = {game.score(Player.TWO):0>3}"),
+        DisplayArray(f"SCORE = {board.score(Player.TWO):0>3}"),
         _generate_taken_pieces(game, Player.ONE),
         _generate_taken_pieces(game, Player.TWO),
         DisplayArray("   ".join(row_labels)),
         DisplayArray(jchess.__version__[:11]),
-        _generate_gutter(game),
+        _generate_gutter(board),
         DisplayArray(f"by {jchess.__author__}"),
     )
     for display in display_elements:
@@ -53,7 +57,8 @@ def generate_main_display(game: "GameState") -> DisplayArray:
     return main_display
 
 
-def _generate_gutter(game: "GameState") -> DisplayArray:
+def _generate_gutter(game: "Board") -> DisplayArray:
+
     score1, score2 = game.score(Player.ONE), game.score(Player.TWO)
     if score1 > 104:
         gutter_msg = f"PLAYER ONE wins with an effective score of {score1 - 104}!"
@@ -71,6 +76,7 @@ def _generate_gutter(game: "GameState") -> DisplayArray:
 
 
 def _add_pieces(game: "GameState", display: DisplayArray) -> None:
+    board = game.board
 
     # fmt: off
     if game.mode is Mode.TWO:
@@ -86,11 +92,11 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
     for i, j in product(range(8), repeat=2):
         coord = (j, i)
 
-        cursor_piece = game[game.cursor_coord]
+        cursor_piece = board[game.cursor_coord]
         highlight_potential_targets = (
             game.attacking_piece is None
             and cursor_piece is not None
-            and cursor_piece.player is game.active_player()
+            and cursor_piece.player is board.active_player()
             and coord in cursor_piece.targets
         )
         show_actual_targets = (
@@ -107,7 +113,7 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
         else:
             back_color = game.config.board_color[(i + j) % 2]
 
-        piece = game[coord]
+        piece = board[coord]
         if piece is not None:
             fore_color = game.config.player_color[piece.player]
             symbol = game.config.role_symbol[piece.role]
@@ -122,6 +128,7 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
 
 
 def _generate_taken_pieces(game: "GameState", player: Player) -> DisplayArray:
+    board = game.board
     n_rows, n_cols = 4, 11
     display = DisplayArray("\n".join(" " * n_cols for _ in range(n_rows)))
 
@@ -129,7 +136,7 @@ def _generate_taken_pieces(game: "GameState", player: Player) -> DisplayArray:
     back = game.config.board_color[player.value - 1]
     fore = game.config.player_color[Player.TWO if player is Player.ONE else Player.ONE]
 
-    taken_pieces = game.taken_pieces[player]
+    taken_pieces = board.taken_pieces[player]
     plain_string = ", ".join(symbol[role] for role in taken_pieces)
     plain_string = f"{plain_string: <48}"
 

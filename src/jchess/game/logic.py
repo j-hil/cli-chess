@@ -11,14 +11,14 @@ from itertools import product
 from typing import TYPE_CHECKING
 
 from jchess.geometry import Vector
-from jchess.pieces import Piece, Role, Player
-from jchess.game.engine import CARDINAL_DIRECTION, Action
+from jchess.pieces import Piece, Role
+from jchess.game.engine import CARDINAL_DIRECTION, Action, process_attack
 
 if TYPE_CHECKING:
-    from jchess.game.state import GameState
+    from jchess.board import Board
 
 
-def update_targets_(game: "GameState"):
+def update_targets_(game: "Board"):
     for attacker in game.pieces:
         targets: list[Vector] = []
 
@@ -60,62 +60,61 @@ def update_targets_(game: "GameState"):
 
 
 def risky_targets(
-    game: "GameState", attacker: Piece, current_targets: list[Vector]
+    board: "Board", attacker: Piece, current_targets: list[Vector]
 ) -> list[Vector]:
 
     result = []
 
     for defender_coord in current_targets:
-        game_copy = deepcopy(game)
+        board_copy = deepcopy(board)
+        attacker_copy = deepcopy(attacker)
 
         # initiate the attack
-        game_copy.attacking_piece = game_copy[attacker.coord]
-        game_copy.cursor_coord = defender_coord
-        game_copy.protect_king = False
-        game_copy.update_targets()
-        game_copy.evolve_state(Action.SELECT)
+        board_copy.protect_king = False
+        board_copy.update_targets()
+        process_attack(board_copy, attacker_copy, defender_coord)
 
-        for piece in game_copy.pieces:
-            if piece.player is not attacker.player:
+        for piece in board_copy.pieces:
+            if piece.player is not attacker_copy.player:
                 for coord in piece.targets:
-                    target = game_copy[coord]
+                    target = board_copy[coord]
                     if target is not None and target.role is Role.KING:
                         result.append(defender_coord)
     return result
 
 
-def castling_targets(game: "GameState", attacker: Piece) -> list[Vector]:
+def castling_targets(board: "Board", attacker: Piece) -> list[Vector]:
     result = []
 
     y_king = attacker.coord.y
 
     # extra logic for king-side castling
-    rook = game[(7, y_king)]
+    rook = board[(7, y_king)]
     if (
         # unmoved rook
         (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
         # empty path
-        and all(game[(x, y_king)] is None for x in [5, 6])
+        and all(board[(x, y_king)] is None for x in [5, 6])
         # safe path
         and all(
             (x, y_king) not in p.targets
-            for p, x in product(game.pieces, [4, 5, 6])
+            for p, x in product(board.pieces, [4, 5, 6])
             if p.player is not attacker.player
         )
     ):
         result.append(attacker.coord + (2, 0))
 
     # extra logic for queen-side castling
-    rook = game[(0, y_king)]
+    rook = board[(0, y_king)]
     if (
         # unmoved rook
         (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
         # empty path
-        and all(game[(x, y_king)] is None for x in [1, 2, 3])
+        and all(board[(x, y_king)] is None for x in [1, 2, 3])
         # safe path
         and all(
             (x, y_king) not in p.targets
-            for p, x in product(game.pieces, [1, 2, 3, 4])
+            for p, x in product(board.pieces, [1, 2, 3, 4])
             if p.player is not attacker.player
         )
     ):
@@ -123,36 +122,36 @@ def castling_targets(game: "GameState", attacker: Piece) -> list[Vector]:
     return result
 
 
-def pawn_targets(game: "GameState", attacker: Piece) -> list[Vector]:
+def pawn_targets(board: "Board", attacker: Piece) -> list[Vector]:
     result = []
 
     # map 1 to -1 and 2 to +1; i.e up or down depending on player.
     direction = 2 * attacker.player.value - 3
 
     defender_coord = attacker.coord + (0, direction)
-    if game.has(defender_coord) and game[defender_coord] is None:
+    if board.has(defender_coord) and board[defender_coord] is None:
         result.append(defender_coord)
 
     for dx in [1, -1]:
         defender_coord = attacker.coord + (dx, direction)
-        defender = game[defender_coord]
-        en_passant_vulnerable_piece = game[attacker.coord + (dx, 0)]
+        defender = board[defender_coord]
+        en_passant_vulnerable_piece = board[attacker.coord + (dx, 0)]
         if (
             # standard pawn capture
-            game.has(defender_coord)
+            board.has(defender_coord)
             and defender is not None
             and defender.player is not attacker.player
             # en passant capture
             or en_passant_vulnerable_piece is not None
-            and en_passant_vulnerable_piece == game.passant_vulnerable_piece
+            and en_passant_vulnerable_piece == board.passant_vulnerable_piece
         ):
             result.append(defender_coord)
 
     defender_coord = attacker.coord + (0, 2 * direction)
     if (
         attacker.has_not_moved()
-        and game[defender_coord - (0, direction)] is None
-        and game[defender_coord] is None
+        and board[defender_coord - (0, direction)] is None
+        and board[defender_coord] is None
     ):
         result.append(defender_coord)
 
