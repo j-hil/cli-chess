@@ -11,7 +11,7 @@ import sys
 from typing import TYPE_CHECKING, Union
 
 from jchess.pieces import Piece, Role
-from jchess.utils import getch
+from jchess.terminal import get_char
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -26,16 +26,16 @@ def evolve_state_(game: "GameState", action: Union["Action", None] = None) -> No
 
 def _get_action_from_user() -> "Action":
 
-    user_input = getch().upper()
+    user_input = get_char().upper()
 
     # for windows terminal and vscode inputs
     if user_input in ["\x00", "\xe0"]:
-        user_input += getch().upper()
+        user_input += get_char().upper()
 
     # for linux vscode inputs
     if user_input == "\x1b":
-        user_input += getch().upper()
-        user_input += getch().upper()
+        user_input += get_char().upper()
+        user_input += get_char().upper()
 
     for action in Action:
         if user_input in ACTION_INPUTS.get(action, []):
