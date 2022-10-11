@@ -181,4 +181,3 @@ MAIN_DISPLAY_TEMPLATE = """\
 | @           | @                                                       | @           |
 +-------------------------------------------------------------------------------------+\
 """
-MAIN_DISPLAY_ROWS = len(MAIN_DISPLAY_TEMPLATE.split("\n"))

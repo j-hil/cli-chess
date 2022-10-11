@@ -9,7 +9,8 @@ Controls reaction to and collection player input. Recognized actions are
 from enum import Enum, auto
 import sys
 from typing import TYPE_CHECKING, Union
-from msvcrt import getch
+
+from jchess.terminal import get_char
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
@@ -24,10 +25,16 @@ def evolve_state_(game: "GameState", action: Union["Action", None] = None) -> No
 
 def _get_action_from_user() -> "Action":
 
-    # 2nd char necessary: directions are as '\x00{c}' or '\xe0{c}' for some capital `c`
-    user_input = getch().upper()
-    if user_input in [b"\x00", b"\xe0"]:
-        user_input += getch().upper()
+    user_input = get_char().upper()
+
+    # for windows terminal and vscode inputs
+    if user_input in ["\x00", "\xe0"]:
+        user_input += get_char().upper()
+
+    # for linux vscode inputs
+    if user_input == "\x1b":
+        user_input += get_char().upper()
+        user_input += get_char().upper()
 
     for action in Action:
         if user_input in ACTION_INPUTS.get(action, []):
@@ -89,12 +96,12 @@ CARDINAL_DIRECTION = {
 }
 
 ACTION_INPUTS = {
-    Action.QUIT: [b"\x1b", b"Q"],
-    Action.SELECT: [b" ", b"\r"],
-    Action.UP: [b"W", b"\x00H", b"\xe0H"],
-    Action.DOWN: [b"S", b"\x00P", b"\xe0P"],
-    Action.LEFT: [b"A", b"\x00K", b"\xe0K"],
-    Action.RIGHT: [b"D", b"\x00M", b"\xe0M"],
+    Action.QUIT: ["\x1b", "Q"],
+    Action.SELECT: [" ", "\r"],
+    Action.UP: ["W", "\x00H", "\xe0H", "\x1b[A"],
+    Action.DOWN: ["S", "\x00P", "\xe0P", "\x1b[B"],
+    Action.LEFT: ["A", "\x00K", "\xe0K", "\x1b[D"],
+    Action.RIGHT: ["D", "\x00M", "\xe0M", "\x1b[C"],
 }
 
 ROTATE = {

@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jchess"
+version = "22.10.70"
 authors = [
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
@@ -22,7 +23,6 @@ dependencies = [
     "colorama>=0.4.5, <1",
     "psutil>=5.9.2, <6",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
@@ -36,9 +36,6 @@ dev = [
 
 [project.urls]
 Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
-
-[tool.hatch.version]
-path = "src/jchess/_version.py"
 
 [tool.mypy]
 warn_return_any = true
