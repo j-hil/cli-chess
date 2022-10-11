@@ -26,4 +26,4 @@ def _get_version() -> str:
     return f"{today.year % 100}.{today.month}.{commits}{dirty}"
 
 
-VERSION = _get_version()
+VERSION = "0.0.1"  # _get_version()
