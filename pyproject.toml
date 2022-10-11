@@ -1,22 +1,21 @@
-[build-system]  # TODO: should this be "build-system"?
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "jchess"
 authors = [
-    # author doesn't appear (properly) in `pip show` :(
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
 description = "Chess in the command line."
 readme = "README.md"
 license = {text="GNU General Public License v3 (GPLv3)"}
-keywords = ["chess"]
+keywords = ["chess", "terminal"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Operating System :: Microsoft :: Windows",
-    "Development Status :: 1 - Planning"
+    "Operating System :: OS Independent",
+    "Development Status :: 2 - Pre-Alpha"
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -36,11 +35,10 @@ dev = [
 ]
 
 [project.urls]
-# doesn't appear in `pip show` :(
-"homepage" = "https://j-hil@github.com/j-hil/cli-chess.git"
+Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
 
-[tool.setuptools.dynamic]
-version = {attr="jchess._version.VERSION"}
+[tool.hatch.version]
+path = "src/jchess/_version.py"
 
 [tool.mypy]
 warn_return_any = true
