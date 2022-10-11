@@ -96,7 +96,7 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
         highlight_potential_targets = (
             game.attacking_piece is None
             and cursor_piece is not None
-            and cursor_piece.player is board.active_player()
+            and cursor_piece.player is board.active_player
             and coord in cursor_piece.targets
         )
         show_actual_targets = (

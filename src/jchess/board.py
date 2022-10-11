@@ -13,6 +13,7 @@ class Board:
 
     @staticmethod
     def has(coord: VectorLike) -> bool:
+        """Check if a coordinate is within the board bounds."""
         return coord[0] in range(8) and coord[1] in range(8)
 
     def __init__(self):
@@ -32,7 +33,12 @@ class Board:
 
         self.update_targets()
 
+    @property
+    def active_player(self) -> Player:
+        return list(Player)[self.turn % 2]
+
     def update_targets(self):
+        """Update the targets attribute for each piece on the board."""
         _update_targets(self)
 
     def process_attack(self, attacker: Piece, defender_coord: Vector):
@@ -40,9 +46,6 @@ class Board:
 
     def score(self, player: Player) -> int:
         return sum(role.worth for role in self.taken_pieces[player])
-
-    def active_player(self) -> Player:
-        return list(Player)[self.turn % 2]
 
     def __getitem__(self, key: VectorLike) -> Piece | None:
         for piece in self.pieces:
@@ -206,7 +209,7 @@ def _process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> 
     # remove any previous vulnerability to en passant
     if (
         board.passant_vulnerable_piece is not None
-        and board.passant_vulnerable_piece.player is board.active_player()
+        and board.passant_vulnerable_piece.player is board.active_player
     ):
         board.passant_vulnerable_piece = None
 
@@ -223,7 +226,7 @@ def _process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> 
         and board.passant_vulnerable_piece is not None
     ):
         board.pieces.remove(board.passant_vulnerable_piece)
-        board.taken_pieces[board.active_player()].append(Role.PAWN)
+        board.taken_pieces[board.active_player].append(Role.PAWN)
 
     # castling
     if attacker.role is Role.KING:
@@ -247,7 +250,7 @@ def _process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> 
     attacker.coord = defender_coord
     if defender is not None:
         board.pieces.remove(defender)
-        board.taken_pieces[board.active_player()].append(defender.role)
+        board.taken_pieces[board.active_player].append(defender.role)
     board.turn += 1
     board.update_targets()
 

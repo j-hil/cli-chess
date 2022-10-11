@@ -1,4 +1,4 @@
-[build-requires]
+[build-system]  # TODO: should this be "build-system"?
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
@@ -65,7 +65,11 @@ max-attributes=10
 
 [tool.pylint.messages_control]
 # I decide if something needs a docstring, not pylint or pydocstyle :|
-disable = ["missing-function-docstring", "missing-class-docstring",]
+disable = [
+    "missing-function-docstring",
+    "missing-class-docstring",
+    "missing-module-docstring",
+]
 
 [tool.pylint.reports]
 output-format = "colorized"

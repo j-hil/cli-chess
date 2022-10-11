@@ -53,7 +53,7 @@ def _process_action(game: "GameState", action: "Action") -> None:
         if (
             attacker is None
             and cursor_piece is not None
-            and cursor_piece.player is board.active_player()
+            and cursor_piece.player is board.active_player
             and cursor_piece.targets != []
         ):
             game.attacking_piece = cursor_piece
