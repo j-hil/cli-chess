@@ -10,13 +10,9 @@ from enum import Enum, auto
 import sys
 from typing import TYPE_CHECKING, Union
 from msvcrt import getch
-from jchess.geometry import Vector
-
-from jchess.pieces import Piece, Role
 
 if TYPE_CHECKING:
     from jchess.game.state import GameState
-    from jchess.board import Board
 
 
 def evolve_state_(game: "GameState", action: Union["Action", None] = None) -> None:
@@ -62,65 +58,11 @@ def _process_action(game: "GameState", action: "Action") -> None:
         ):
             game.attacking_piece = cursor_piece
         elif attacker is not None and game.cursor_coord in attacker.targets:
-            process_attack(game.board, attacker, game.cursor_coord)
+            board.process_attack(attacker, game.cursor_coord)
             game.attacking_piece = None
 
     elif action is Action.QUIT:
         sys.exit()
-
-
-def process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> None:
-
-    defender = board[defender_coord]
-    delta = defender_coord - attacker.coord
-
-    # remove any previous vulnerability to en passant
-    if (
-        board.passant_vulnerable_piece is not None
-        and board.passant_vulnerable_piece.player is board.active_player()
-    ):
-        board.passant_vulnerable_piece = None
-
-    # add any new vulnerability to en passant
-    if attacker.role is Role.PAWN and delta in [(0, 2), (0, -2)]:
-        board.passant_vulnerable_piece = attacker
-
-    # en passant move chosen, so delete piece to the left/right
-    if (
-        attacker.role is Role.PAWN
-        and delta in [(1, 1), (1, -1), (-1, 1), (-1, -1)]
-        and defender is None
-        # not really required: pleases type checker
-        and board.passant_vulnerable_piece is not None
-    ):
-        board.pieces.remove(board.passant_vulnerable_piece)
-        board.taken_pieces[board.active_player()].append(Role.PAWN)
-
-    # castling
-    if attacker.role is Role.KING:
-        y_king = attacker.coord.y
-
-        # king-side castle
-        if delta.x == 2:
-            castle = board[7, y_king]
-            if castle is None:
-                raise RuntimeError("King-side castling shouldn't have been available.")
-            castle.coord = (5, y_king)
-
-        # queen-side caste
-        if delta.x == -2:
-            castle = board[0, y_king]
-            if castle is None:
-                raise RuntimeError("Queen-side castling shouldn't have been available.")
-            castle.coord = (3, y_king)
-
-    # execute move
-    attacker.coord = defender_coord
-    if defender is not None:
-        board.pieces.remove(defender)
-        board.taken_pieces[board.active_player()].append(defender.role)
-    board.turn += 1
-    board.update_targets()
 
 
 class Mode(Enum):

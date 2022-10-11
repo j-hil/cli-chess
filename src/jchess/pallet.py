@@ -14,7 +14,7 @@ FORES = [getattr(Fore, color) for color in BASE_COLORS + LIGHT_COLORS]
 BACKS = [getattr(Back, color) for color in BASE_COLORS + LIGHT_COLORS]
 STYLES = [Style.DIM, Style.NORMAL, Style.BRIGHT]
 
-NAME: dict[str, str]= {
+NAME: dict[str, str] = {
     **{getattr(Fore, color): color for color in BASE_COLORS},
     **{getattr(Fore, f"LIGHT{color}_EX"): f"L-{color}" for color in BASE_COLORS},
     **{getattr(Back, color): color for color in BASE_COLORS},

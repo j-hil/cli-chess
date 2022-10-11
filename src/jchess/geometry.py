@@ -15,10 +15,7 @@ becomes (if facilitated by the type(array))
 >>> x = array[1, 2]
 """
 
-from typing import Any, Iterator, Union
-
-# Vector is designed to be interchangeable with a tuple where possible.
-VectorLike = Union["Vector", tuple[int, int]]
+from typing import Any, Iterator
 
 
 class Vector:
@@ -35,10 +32,10 @@ class Vector:
             return self.y
         raise IndexError(f"{index=} should be 0 or 1.")
 
-    def __add__(self, other: VectorLike) -> "Vector":
+    def __add__(self, other: "VectorLike") -> "Vector":
         return Vector(self[0] + other[0], self[1] + other[1])
 
-    def __sub__(self, other: VectorLike) -> "Vector":
+    def __sub__(self, other: "VectorLike") -> "Vector":
         return Vector(self[0] - other[0], self[1] - other[1])
 
     def __eq__(self, other: Any) -> bool:
@@ -54,3 +51,8 @@ class Vector:
 
     def __len__(self) -> int:
         return 2
+
+
+# Conveniences for typing
+VectorLike = Vector | tuple[int, int]  # designed to be interchangeable with a tuple
+Vectors = list[Vector]
