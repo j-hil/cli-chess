@@ -7,11 +7,4 @@ if you want to play a game with a friend locally (or just play yourself?).
 To play simply install from the `jchess` package from PyPI and run the package as a
 module, i.e run `pip install jchess` and `python -m jchess`.
 
-You should see something like the following:
-<h1 align="center">
-<img src="image.png">
-</h1><br>
-
 Enjoy!
-
-NB: Image does not appear on PyPI

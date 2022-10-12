@@ -44,7 +44,7 @@ def reset_console():
 
 
 try:
-    from msvcrt import getch
+    from msvcrt import getch  # type: ignore
 
     ACTION_BYTES = {
         Action.QUIT: [b"\x1b", b"Q"],
