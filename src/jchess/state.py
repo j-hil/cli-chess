@@ -1,61 +1,117 @@
-"""Defines the various on-screen elements generated from a `GameState`.
-
-Each display element is generated as a `DisplayArray` and then merged into the main
-display which will already display the pieces. There are the following elements:
-* Rank/file labels (4)
-* Player one/two titles, score and taken pieces (6)
-* Left, middle and right gutter messages (3)
-"""
-# TODO: generally clean
-
+"""Contains the class representing the internal state of the game."""
+import sys
+from enum import Enum
 from itertools import product
-from typing import TYPE_CHECKING
 from colorama import Style
 
 import jchess
-from jchess.display import DisplayArray
-from jchess.pieces import Player
-from jchess.geometry import Vector, VectorLike
-from jchess.game.engine import Mode
 from jchess.board import Board
+from jchess.pieces import Piece, Player
+from jchess.display import DisplayArray
+from jchess.configs import VSC_CONFIG, Config
+from jchess.geometry import Vector, VectorLike
+from jchess.terminal import Action, get_user_action
 
-if TYPE_CHECKING:
-    from jchess.game.state import GameState
+
+class Mode(Enum):
+    ONE = "single player"
+    TWO = "online multi-player"
+    THREE = "local multi-player"
 
 
-def generate_main_display(game: "GameState") -> DisplayArray:
-    """Use the helper functions below to generate the main display of the game."""
+class GameState:
+    """Interface layer between the player and chess game."""
 
-    board = game.board
+    def __init__(self, config: Config = VSC_CONFIG, board: Board | None = None):
+        """Initialise a `GameState`.
 
-    row_labels, col_labels = list("abcdefgh"), list("87654321")
-    if game.mode is Mode.TWO:
-        row_labels, col_labels = col_labels[::], row_labels
+        :param config: Controls settings such as color, symbols etc. Several pre-made
+            configs available in jchess.config. Defaults to VSC_CONFIG
+        """
+        if board is None:
+            self.board = Board()
 
-    main_display = DisplayArray(MAIN_DISPLAY_TEMPLATE)
-    _add_pieces(game, main_display)
+        self.attacking_piece: Piece | None = None
+        self.cursor_coord = Vector(4, 7)
 
-    display_elements = (
-        # must be in correct order
-        _generate_player_header(game, Player.ONE),
-        DisplayArray("   ".join(row_labels)),
-        _generate_player_header(game, Player.TWO),
-        DisplayArray(f"SCORE = {board.score(Player.ONE):0>3}"),
-        DisplayArray("\n \n".join(col_labels)),
-        DisplayArray("\n \n".join(col_labels)),
-        DisplayArray(f"SCORE = {board.score(Player.TWO):0>3}"),
-        _generate_taken_pieces(game, Player.ONE),
-        _generate_taken_pieces(game, Player.TWO),
-        DisplayArray("   ".join(row_labels)),
-        DisplayArray(jchess.__version__[:11]),
-        _generate_gutter(board),
-        DisplayArray(f"by {jchess.__author__}"),
-    )
-    for display in display_elements:
-        main_display.merge_in(display, anchor="@")
+        self.config = config
+        self.mode = Mode.ONE
 
-    return main_display
+    def evolve_state(self) -> None:
 
+        board = self.board
+        action = get_user_action()
+
+        if action in CARDINAL_DIRECTION:
+
+            # account for fact that user's view is rotated from the internal view
+            if self.mode is Mode.TWO:
+                action = ROTATE.get(action, action)
+
+            new_cursor_coord = self.cursor_coord + CARDINAL_DIRECTION[action]
+            if board.has(new_cursor_coord):
+                self.cursor_coord = new_cursor_coord
+
+        elif action is Action.SELECT:
+            attacker = self.attacking_piece
+            cursor_piece = board[self.cursor_coord]
+            if (
+                attacker is None
+                and cursor_piece is not None
+                and cursor_piece.player is board.active_player
+                and cursor_piece.targets != []
+            ):
+                self.attacking_piece = cursor_piece
+            elif attacker is not None and self.cursor_coord in attacker.targets:
+                board.process_attack(attacker, self.cursor_coord)
+                self.attacking_piece = None
+
+        elif action is Action.QUIT:
+            sys.exit()
+
+    def __str__(self) -> str:
+        """Use the helper functions below to generate the main display of the game."""
+        # TODO: generally clean
+
+        game = self
+        board = game.board
+
+        row_labels, col_labels = list("abcdefgh"), list("87654321")
+        if game.mode is Mode.TWO:
+            row_labels, col_labels = col_labels[::], row_labels
+
+        main_display = DisplayArray(MAIN_DISPLAY_TEMPLATE)
+        _add_pieces(game, main_display)
+
+        display_elements = (
+            # must be in correct order
+            _generate_player_header(game, Player.ONE),
+            DisplayArray("   ".join(row_labels)),
+            _generate_player_header(game, Player.TWO),
+            DisplayArray(f"SCORE = {board.score(Player.ONE):0>3}"),
+            DisplayArray("\n \n".join(col_labels)),
+            DisplayArray("\n \n".join(col_labels)),
+            DisplayArray(f"SCORE = {board.score(Player.TWO):0>3}"),
+            _generate_taken_pieces(game, Player.ONE),
+            _generate_taken_pieces(game, Player.TWO),
+            DisplayArray("   ".join(row_labels)),
+            DisplayArray(jchess.__version__[:11]),
+            _generate_gutter(board),
+            DisplayArray(f"by {jchess.__author__}"),
+        )
+        for display in display_elements:
+            main_display.merge_in(display, anchor="@")
+
+        return str(main_display)
+
+
+# Defines the various on-screen elements generated from a `GameState`.
+#
+# Each display element is generated as a `DisplayArray` and then merged into the main
+# display which will already display the pieces. There are the following elements:
+# * Rank/file labels (4)
+# * Player one/two titles, score and taken pieces (6)
+# * Left, middle and right gutter messages (3)
 
 def _generate_gutter(game: "Board") -> DisplayArray:
 
@@ -181,3 +237,18 @@ MAIN_DISPLAY_TEMPLATE = """\
 | @           | @                                                       | @           |
 +-------------------------------------------------------------------------------------+\
 """
+
+
+CARDINAL_DIRECTION = {
+    Action.UP: (0, -1),
+    Action.DOWN: (0, +1),
+    Action.LEFT: (-1, 0),
+    Action.RIGHT: (+1, 0),
+}
+
+ROTATE = {
+    Action.UP: Action.LEFT,
+    Action.DOWN: Action.RIGHT,
+    Action.RIGHT: Action.UP,
+    Action.LEFT: Action.DOWN,
+}

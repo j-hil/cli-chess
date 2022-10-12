@@ -9,7 +9,7 @@ from psutil import Process
 
 from jchess.configs import CONFIG, VSC_CONFIG
 from jchess import terminal
-from jchess.game.state import GameState
+from jchess.state import GameState
 
 # attempt to detect that game is being run inside VS Code
 DEV_MODE = "debugpy" in sys.modules
@@ -30,7 +30,7 @@ def main() -> None:
 
     game = GameState(config)
     while True:
-        terminal.reset_cursor()
+        terminal.reset_console()
         print(game)
         game.evolve_state()
 

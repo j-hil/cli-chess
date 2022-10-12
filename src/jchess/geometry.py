@@ -1,21 +1,9 @@
 """Simple Vector class to facilitate easy coordinate translation.
 
-Cleaner code examples:
-
->>> delta in [Vector(1, 2), Vector(3, 4)]
-becomes
->>> delta in [(1, 2), (3, 4)]
-
->>> delta = Vector(1, 2) - Vector(3, 4)
-becomes
->>> delta = piece.coord
-
->>> x = array[Vector(1, 2)]
-becomes (if facilitated by the type(array))
->>> x = array[1, 2]
+Designed to be interchangeable with tuple.
 """
 
-from typing import Any, Iterator
+from typing import Any, Iterator, Union
 
 
 class Vector:
@@ -54,5 +42,5 @@ class Vector:
 
 
 # Conveniences for typing
-VectorLike = Vector | tuple[int, int]  # designed to be interchangeable with a tuple
+VectorLike = Union[Vector, tuple[int, int]]
 Vectors = list[Vector]

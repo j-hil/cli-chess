@@ -18,7 +18,7 @@ class Board:
 
     def __init__(self):
         """Initialise a standard chessboard layout."""
-        self.pieces = [
+        self.pieces: list[Piece] = [
             *[Piece(role, Player.TWO, (x, 0)) for x, role in enumerate(BACK_ROW)],
             *[Piece(Role.PAWN, Player.TWO, (x, 1)) for x in range(8)],
             *[Piece(Role.PAWN, Player.ONE, (x, 6)) for x in range(8)],
@@ -35,7 +35,7 @@ class Board:
 
     @property
     def active_player(self) -> Player:
-        return list(Player)[self.turn % 2]
+        return list(Player)[self.turn % 2]  # type: ignore  # (wrong as x % 2 in [0, 1])
 
     def update_targets(self):
         """Update the targets attribute for each piece on the board."""
@@ -59,7 +59,7 @@ class Board:
 
 
 def _update_targets(game: Board):
-    """Implementation of `Board.update_targets`."""
+    """Implement of `Board.update_targets`."""
 
     for attacker in game.pieces:
         targets: Vectors = []
@@ -201,7 +201,7 @@ def _pawn_targets(board: "Board", attacker: Piece) -> list[Vector]:
 
 
 def _process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> None:
-    """Implementation of `Board.process_attack`."""
+    """Implement of `Board.process_attack`."""
 
     defender = board[defender_coord]
     delta = defender_coord - attacker.coord
