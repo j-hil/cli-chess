@@ -1,46 +1,32 @@
 """Contains display settings for different consoles."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, KW_ONLY
 from colorama import Fore, Style, Back
 from jchess.pieces import Player, Role
 
 
 @dataclass
 class Config:
-    """Represents display settings."""
+    """Represents display settings, including sensible defaults."""
 
-    cursor_color: str
-    highlight_color: str
-    valid_color: str
-    role_symbol: dict[Role, str]
-    player_color: dict[Player, str]
-    board_color: dict[int, str]
+    _: KW_ONLY
+    symbols: str = "KQHIJi"
+    board_color1: str = Back.LIGHTBLACK_EX
+    board_color2: str = Back.CYAN
+    cursor_color: str = Back.LIGHTMAGENTA_EX
+    highlight_color: str = Back.LIGHTRED_EX
+    target_color: str = Back.LIGHTGREEN_EX
+    player1_color: str = Style.BRIGHT + Fore.WHITE
+    player2_color: str = Style.DIM + Fore.BLACK
 
-    # fmt: off
-    def __init__(self, *,
-        symbols: str = "KQHIJi",
-        board_color1: str, board_color2: str,
-        cursor_color: str, highlight_color: str, valid_color: str
-    ) -> None:
-        """Transform inputs into attrs better for implementation.
-
-        :param board_clr1: Background color of 'even' squares.
-        :param board_clr2: Background color of 'odd' squares.
-        :param cursor_clr: Color of player controlled cursor.
-        :param highlight_clr: Color of player selected piece.
-        :param valid_clr: Color of squares available to move too.
-        :param symbols: Characters to represent each piece; defaults to "KQHIJi"
-        """
-        self.cursor_color = cursor_color
-        self.highlight_color = highlight_color
-        self.valid_color = valid_color
-        self.role_symbol = dict(zip(Role, list(symbols)))
+    def __post_init__(self):
+        """Transform inputs into attrs better for implementation."""
+        self.role_symbol = dict(zip(Role, list(self.symbols)))
         self.player_color = {
-            Player.ONE: Style.BRIGHT + Fore.WHITE,
-            Player.TWO: Style.NORMAL + Fore.BLACK,
+            Player.ONE: self.player1_color,
+            Player.TWO: self.player2_color,
         }
-        self.board_color = {0: board_color1, 1: board_color2}
-    # fmt: on
+        self.board_color = {0: self.board_color1, 1: self.board_color2}
 
 
 # for Visual Studio Code
@@ -51,25 +37,10 @@ VSC_CONFIG = Config(
     board_color2=Back.BLACK,
     cursor_color=Back.YELLOW,
     highlight_color=Back.RED,
-    valid_color=Back.GREEN,
+    target_color=Back.GREEN,
 )
 
-# for Powershell
-PS_CONFIG = Config(
-    board_color1=Back.LIGHTBLACK_EX,
-    board_color2=Back.CYAN,
-    cursor_color=Back.LIGHTMAGENTA_EX,
-    highlight_color=Back.LIGHTRED_EX,
-    valid_color=Back.LIGHTGREEN_EX,
-)
+# this config actually works quite well across all the platforms
+CMD_CONFIG = PS_CONFIG = BASH_CONFIG = DEFAULT_CONFIG = Config()
 
-# for Command Prompt
-CMD_CONFIG = Config(
-    board_color1=Back.YELLOW,
-    board_color2=Back.GREEN,
-    cursor_color=Back.BLUE,
-    highlight_color=Back.RED,
-    valid_color=Back.CYAN,
-)
-
-CONFIG = {"cmd.exe": CMD_CONFIG, "powershell.exe": PS_CONFIG}
+CONFIG = {"cmd.exe": CMD_CONFIG, "powershell.exe": PS_CONFIG, "bash": BASH_CONFIG}

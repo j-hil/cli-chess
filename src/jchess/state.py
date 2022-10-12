@@ -8,7 +8,7 @@ import jchess
 from jchess.board import Board
 from jchess.pieces import Piece, Player
 from jchess.display import DisplayArray
-from jchess.configs import VSC_CONFIG, Config
+from jchess.configs import DEFAULT_CONFIG, Config
 from jchess.geometry import Vector, VectorLike
 from jchess.terminal import Action, get_user_action
 
@@ -22,14 +22,13 @@ class Mode(Enum):
 class GameState:
     """Interface layer between the player and chess game."""
 
-    def __init__(self, config: Config = VSC_CONFIG, board: Board | None = None):
+    def __init__(self, config: Config = DEFAULT_CONFIG):
         """Initialise a `GameState`.
 
         :param config: Controls settings such as color, symbols etc. Several pre-made
             configs available in jchess.config. Defaults to VSC_CONFIG
         """
-        if board is None:
-            self.board = Board()
+        self.board = Board()
 
         self.attacking_piece: Piece | None = None
         self.cursor_coord = Vector(4, 7)
@@ -71,7 +70,7 @@ class GameState:
 
     def __str__(self) -> str:
         """Use the helper functions below to generate the main display of the game."""
-        # TODO: generally clean
+        # TODO: generally clean - maybe add coloring functions and such
 
         game = self
         board = game.board
@@ -112,6 +111,7 @@ class GameState:
 # * Rank/file labels (4)
 # * Player one/two titles, score and taken pieces (6)
 # * Left, middle and right gutter messages (3)
+
 
 def _generate_gutter(game: "Board") -> DisplayArray:
 
@@ -163,9 +163,9 @@ def _add_pieces(game: "GameState", display: DisplayArray) -> None:
         elif game.attacking_piece is not None and coord == game.attacking_piece.coord:
             back_color = game.config.highlight_color
         elif highlight_potential_targets:
-            back_color = game.config.valid_color
+            back_color = game.config.target_color
         elif show_actual_targets:
-            back_color = game.config.valid_color
+            back_color = game.config.target_color
         else:
             back_color = game.config.board_color[(i + j) % 2]
 
@@ -204,7 +204,9 @@ def _generate_taken_pieces(game: "GameState", player: Player) -> DisplayArray:
 
 def _generate_player_header(game: "GameState", player: Player) -> DisplayArray:
     display = DisplayArray(f" Player {player.value}: ")
-    display[0, 0] = game.config.board_color[2 - player.value] + display[0, 0]
+    back = game.config.board_color[2 - player.value]
+    fore = game.config.player_color[player]
+    display[0, 0] = back + fore + display[0, 0]
     display[-1, 0] += Style.RESET_ALL
     return display
 

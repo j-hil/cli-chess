@@ -3,7 +3,10 @@ import sys
 from unittest import TestCase
 
 import jchess
+
 jchess_path = jchess.__path__[0]  # type: ignore
+
+
 class CodeQuality(TestCase):
     def test_mypy(self) -> None:
         p = run(f"{sys.executable} -m mypy .".split(), capture_output=True)

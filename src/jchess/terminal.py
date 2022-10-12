@@ -3,9 +3,6 @@
 Designed to abstract away all os/terminal dependencies from the rest of the code,
 including the collection of player input in the form of an `Action`.
 """
-# mypy: disable-error-code=attr-defined
-# (due to os dependent modules)
-
 import sys
 from enum import Enum, auto
 
@@ -71,7 +68,7 @@ try:
 
 except ImportError:
     import tty
-    from termios import tcsetattr, tcgetattr, TCSADRAIN
+    from termios import tcsetattr, tcgetattr, TCSADRAIN  # type: ignore
 
     ACTION_CHARS = {
         Action.QUIT: ["\x1b", "Q"],
@@ -91,7 +88,7 @@ except ImportError:
         fd = sys.stdin.fileno()
         old_settings = tcgetattr(fd)
         try:
-            tty.setraw(sys.stdin.fileno())
+            tty.setraw(sys.stdin.fileno())  # type: ignore
             ch = sys.stdin.read(1)
         finally:
             tcsetattr(fd, TCSADRAIN, old_settings)

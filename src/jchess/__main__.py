@@ -7,7 +7,7 @@ import sys
 import colorama
 from psutil import Process
 
-from jchess.configs import CONFIG, VSC_CONFIG
+from jchess.configs import CONFIG, DEFAULT_CONFIG, VSC_CONFIG
 from jchess import terminal
 from jchess.state import GameState
 
@@ -25,8 +25,8 @@ def main() -> None:
         config = VSC_CONFIG
     else:
         # TODO: need psutil for this one line. would be nice to remove that dependency
-        shell = Process(os.getpid()).parent().name()
-        config = CONFIG.get(shell, VSC_CONFIG)
+        shell = Process(os.getppid()).name()
+        config = CONFIG.get(shell, DEFAULT_CONFIG)
 
     game = GameState(config)
     while True:
