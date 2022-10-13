@@ -3,7 +3,6 @@
 Can be run as `python -m jchess`.
 """
 import os
-import sys
 import colorama
 from psutil import Process
 
@@ -12,13 +11,15 @@ from jchess import terminal
 from jchess.state import GameState
 
 # attempt to detect that game is being run inside VS Code
-DEV_MODE = "debugpy" in sys.modules
+DEV_MODE = os.environ.get("TERM_PROGRAM") == "vscode"
 
 
 def main() -> None:
     """Entry point to begin game. Game state updated & re-printed with each input."""
     colorama.init()
     terminal.clear()
+    terminal.resize(26, 88)
+    terminal.reset_cursor()
     terminal.hide_cursor()
 
     if DEV_MODE:
@@ -30,9 +31,9 @@ def main() -> None:
 
     game = GameState(config)
     while True:
-        terminal.reset_console()
-        print(game)
+        print(game, end="")
         game.evolve_state()
+        terminal.reset_cursor()
 
 
 if __name__ == "__main__":
