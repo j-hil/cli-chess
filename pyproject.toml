@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jchess"
-version = "22.10.70"
+version = "22.10.80"
 authors = [
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
@@ -39,8 +39,9 @@ Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
 warn_return_any = true
 warn_unused_configs = true
 show_error_codes = true
+strict = true
 # required due to a mypy issue: https://github.com/python/mypy/issues/3004
-disable_error_code = ["assignment"]
+disable_error_code = ["assignment", "comparison-overlap"]
 # required as terminal as os dependent functionality
 exclude = "terminal"
 

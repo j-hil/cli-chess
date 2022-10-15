@@ -35,19 +35,19 @@ def _toggle_vis(visible: bool):
     KERNEL32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
 
 
-def clear():
+def clear() -> None:
     os.system("cls")
 
 
-def resize(w: int, h: int):
+def resize(w: int, h: int) -> None:
     os.system(f"mode con: cols={h} lines={w}")
 
 
-def show_cursor():
+def show_cursor() -> None:
     _toggle_vis(True)
 
 
-def hide_cursor():
+def hide_cursor() -> None:
     _toggle_vis(False)
 
 

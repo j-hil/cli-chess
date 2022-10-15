@@ -1,12 +1,10 @@
-"""Program entry point.
-
-Can be run as `python -m jchess`.
-"""
+"""Program entry point; run as `python -m jchess`."""
 import os
 import colorama
 
-from jchess.configs import DEFAULT_CONFIG, VSC_CONFIG
 from jchess import terminal
+from jchess import display
+from jchess.configs import DEFAULT_CONFIG, VSC_CONFIG
 from jchess.state import GameState
 
 # attempt to detect that game is being run inside VS Code
@@ -17,14 +15,17 @@ def main() -> None:
     """Entry point to begin game. Game state updated & re-printed with each input."""
     colorama.init()
     terminal.clear()
-    terminal.resize(26, 88)
+    terminal.resize(25, 87)
     terminal.reset_cursor()
     terminal.hide_cursor()
 
     game = GameState(DEFAULT_CONFIG if not DEV_MODE else VSC_CONFIG)
+    display.init(game)
+    display.update(game)
+
     while True:
-        print(game, end="")
         game.evolve_state()
+        display.update(game)
         terminal.reset_cursor()
 
 

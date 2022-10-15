@@ -16,7 +16,7 @@ class Board:
         """Check if a coordinate is within the board bounds."""
         return coord[0] in range(8) and coord[1] in range(8)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise a standard chessboard layout."""
         self.pieces: list[Piece] = [
             *[Piece(role, Player.TWO, (x, 0)) for x, role in enumerate(BACK_ROW)],
@@ -26,7 +26,7 @@ class Board:
         ]
 
         self.passant_vulnerable_piece: Piece | None = None
-        self.turn = 0
+        self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
 
         self.protect_king = True
@@ -35,13 +35,13 @@ class Board:
 
     @property
     def active_player(self) -> Player:
-        return list(Player)[self.turn % 2]  # type: ignore  # (wrong as x % 2 in [0, 1])
+        return list(Player)[self.ply % 2]
 
-    def update_targets(self):
+    def update_targets(self) -> None:
         """Update the targets attribute for each piece on the board."""
         _update_targets(self)
 
-    def process_attack(self, attacker: Piece, defender_coord: Vector):
+    def process_attack(self, attacker: Piece, defender_coord: Vector) -> None:
         _process_attack(self, attacker, defender_coord)
 
     def score(self, player: Player) -> int:
@@ -58,7 +58,7 @@ class Board:
         self.pieces.append(value)
 
 
-def _update_targets(game: Board):
+def _update_targets(game: Board) -> None:
     """Implement of `Board.update_targets`."""
 
     for attacker in game.pieces:
@@ -251,7 +251,7 @@ def _process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> 
     if defender is not None:
         board.pieces.remove(defender)
         board.taken_pieces[board.active_player].append(defender.role)
-    board.turn += 1
+    board.ply += 1
     board.update_targets()
 
 
