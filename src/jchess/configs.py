@@ -40,7 +40,5 @@ VSC_CONFIG = Config(
     target_color=Back.GREEN,
 )
 
-# this config actually works quite well across all the platforms
-CMD_CONFIG = PS_CONFIG = BASH_CONFIG = DEFAULT_CONFIG = Config()
-
-CONFIG = {"cmd.exe": CMD_CONFIG, "powershell.exe": PS_CONFIG, "bash": BASH_CONFIG}
+# this config actually works quite well in all the terminals I've tried
+DEFAULT_CONFIG = Config()

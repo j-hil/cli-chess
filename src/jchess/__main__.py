@@ -4,9 +4,8 @@ Can be run as `python -m jchess`.
 """
 import os
 import colorama
-from psutil import Process
 
-from jchess.configs import CONFIG, DEFAULT_CONFIG, VSC_CONFIG
+from jchess.configs import DEFAULT_CONFIG, VSC_CONFIG
 from jchess import terminal
 from jchess.state import GameState
 
@@ -22,14 +21,7 @@ def main() -> None:
     terminal.reset_cursor()
     terminal.hide_cursor()
 
-    if DEV_MODE:
-        config = VSC_CONFIG
-    else:
-        # TODO: need psutil for this one line. would be nice to remove that dependency
-        shell = Process(os.getppid()).name()
-        config = CONFIG.get(shell, DEFAULT_CONFIG)
-
-    game = GameState(config)
+    game = GameState(DEFAULT_CONFIG if not DEV_MODE else VSC_CONFIG)
     while True:
         print(game, end="")
         game.evolve_state()
