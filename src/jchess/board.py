@@ -25,7 +25,7 @@ class Board:
             *[Piece(role, Player.ONE, (x, 7)) for x, role in enumerate(BACK_ROW)],
         ]
 
-        self.passant_vulnerable_piece: Piece | None = None
+        self.passant_defender: Piece | None = None
         self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
 
@@ -34,71 +34,117 @@ class Board:
         self.update_targets()
 
     @property
-    def active_player(self) -> Player:
+    def player(self) -> Player:
         return list(Player)[self.ply % 2]
 
     def update_targets(self) -> None:
         """Update the targets attribute for each piece on the board."""
-        _update_targets(self)
+        for attacker in self.pieces:
+            targets: Vectors = []
+
+            # the pawn has unique behavior warranting it's own function
+            if attacker.role is Role.PAWN:
+                targets.extend(_pawn_targets(self, attacker))
+
+            # the queen, bishop & rook always move along lines
+            for line in LINES.get(attacker.role, []):
+                for delta in line:
+                    defender_coord = attacker.coord + delta
+                    if self.has(defender_coord):
+                        defender = self[defender_coord]
+                        if defender is None:
+                            targets.append(defender_coord)
+                            continue
+                        if defender.player is not attacker.player:
+                            targets.append(defender_coord)
+                        break
+
+            # the king and knight always have fixed potential translations
+            for delta in DELTAS.get(attacker.role, []):
+                defender_coord = attacker.coord + delta
+                if self.has(defender_coord):
+                    defender = self[defender_coord]
+                    if defender is None or defender.player != attacker.player:
+                        targets.append(defender_coord)
+
+            # extra logic for castling
+            if attacker.role is Role.KING and attacker.unmoved():
+                targets.extend(_castling_targets(self, attacker))
+
+            # extra logic for check/checkmate
+            if self.protect_king:
+                bad_targets = _risky_targets(self, attacker, targets)
+                targets = [t for t in targets if t not in bad_targets]
+
+            attacker.targets = targets
 
     def process_attack(self, attacker: Piece, defender_coord: Vector) -> None:
-        _process_attack(self, attacker, defender_coord)
+        defender = self[defender_coord]
+        delta = defender_coord - attacker.coord
+
+        # remove any previous vulnerability to en passant
+        if (
+            self.passant_defender is not None
+            and self.passant_defender.player is self.player
+        ):
+            self.passant_defender = None
+
+        # add any new vulnerability to en passant
+        if attacker.role is Role.PAWN and delta in [(0, 2), (0, -2)]:
+            self.passant_defender = attacker
+
+        # en passant move chosen, so delete piece to the left/right
+        if (
+            attacker.role is Role.PAWN
+            and delta in [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+            and defender is None
+            and self.passant_defender is not None  # pleases type checkers
+        ):
+            self.pieces.remove(self.passant_defender)
+            self.taken_pieces[self.player].append(Role.PAWN)
+
+        # castling
+        if attacker.role is Role.KING:
+            y_king = attacker.coord.y
+
+            # king-side castle
+            if delta.x == 2:
+                castle = self[7, y_king]
+                if castle is None:
+                    raise RuntimeError(
+                        "King-side castling shouldn't have been available."
+                    )
+                castle.coord = (5, y_king)
+
+            # queen-side caste
+            if delta.x == -2:
+                castle = self[0, y_king]
+                if castle is None:
+                    raise RuntimeError(
+                        "Queen-side castling shouldn't have been available."
+                    )
+                castle.coord = (3, y_king)
+
+        # execute move
+        attacker.coord = defender_coord
+        if defender is not None:
+            self.pieces.remove(defender)
+            self.taken_pieces[self.player].append(defender.role)
+        self.ply += 1
+        self.update_targets()
 
     def score(self, player: Player) -> int:
         return sum(role.worth for role in self.taken_pieces[player])
 
     def __getitem__(self, key: VectorLike) -> Piece | None:
         for piece in self.pieces:
-            if piece._coord == key:
+            if piece.coord == key:
                 return piece
         return None
 
     def __setitem__(self, key: VectorLike, value: Piece) -> None:
         value.coord = key
         self.pieces.append(value)
-
-
-def _update_targets(game: Board) -> None:
-    """Implement of `Board.update_targets`."""
-
-    for attacker in game.pieces:
-        targets: Vectors = []
-
-        # the pawn has unique behavior warranting it's own function
-        if attacker.role is Role.PAWN:
-            targets.extend(_pawn_targets(game, attacker))
-
-        # the queen, bishop & rook always move along lines
-        for line in LINES.get(attacker.role, []):
-            for delta in line:
-                defender_coord = attacker.coord + delta
-                if game.has(defender_coord):
-                    defender = game[defender_coord]
-                    if defender is None:
-                        targets.append(defender_coord)
-                        continue
-                    if defender.player is not attacker.player:
-                        targets.append(defender_coord)
-                    break
-
-        # the king and knight always have fixed potential translations
-        for delta in DELTAS.get(attacker.role, []):
-            defender_coord = attacker.coord + delta
-            if game.has(defender_coord):
-                defender = game[defender_coord]
-                if defender is None or defender.player != attacker.player:
-                    targets.append(defender_coord)
-
-        # extra logic for castling
-        if attacker.role is Role.KING and attacker.has_not_moved():
-            targets.extend(_castling_targets(game, attacker))
-
-        # extra logic for check
-        if game.protect_king:
-            bad_targets = _risky_targets(game, attacker, targets)
-            targets = [t for t in targets if t not in bad_targets]
-
-        attacker.targets = targets
 
 
 def _risky_targets(board: Board, attacker: Piece, current_targets: Vectors) -> Vectors:
@@ -112,7 +158,7 @@ def _risky_targets(board: Board, attacker: Piece, current_targets: Vectors) -> V
         # initiate the attack
         board_copy.protect_king = False
         board_copy.update_targets()
-        _process_attack(board_copy, attacker_copy, defender_coord)
+        board_copy.process_attack(attacker_copy, defender_coord)
 
         for piece in board_copy.pieces:
             if piece.player is not attacker_copy.player:
@@ -125,134 +171,59 @@ def _risky_targets(board: Board, attacker: Piece, current_targets: Vectors) -> V
 
 def _castling_targets(board: Board, attacker: Piece) -> Vectors:
     """Compute the coords which the attacker (a king) can move to via castling."""
-    result = []
 
+    result = []
     y_king = attacker.coord.y
 
-    # extra logic for king-side castling
-    rook = board[(7, y_king)]
-    if (
-        # unmoved rook
-        (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
-        # empty path
-        and all(board[(x, y_king)] is None for x in [5, 6])
-        # safe path
-        and all(
-            (x, y_king) not in p.targets
-            for p, x in product(board.pieces, [4, 5, 6])
-            if p.player is not attacker.player
-        )
-    ):
-        result.append(attacker.coord + (2, 0))
+    for x_rook, sign in zip((0, 7), (+1, -1)):
+        rook = board[(x_rook, y_king)]
+        path = range(x_rook + sign, 4 + sign, sign)
 
-    # extra logic for queen-side castling
-    rook = board[(0, y_king)]
-    if (
-        # unmoved rook
-        (rook is not None and rook.role is Role.ROOK and rook.has_not_moved())
-        # empty path
-        and all(board[(x, y_king)] is None for x in [1, 2, 3])
-        # safe path
-        and all(
+        unmoved_rook = rook and rook.role is Role.ROOK and rook.unmoved()
+        empty_path = all(board[(x, y_king)] is None for x in path[:-1])
+        safe_path = all(
             (x, y_king) not in p.targets
-            for p, x in product(board.pieces, [1, 2, 3, 4])
-            if p.player is not attacker.player
+            for p, x in product(board.pieces, path)
+            if p.player is not board.player
         )
-    ):
-        result.append(attacker.coord - (2, 0))
+
+        if unmoved_rook and empty_path and safe_path:
+            result.append(attacker.coord + sign * Vector(2, 0))
+
     return result
 
 
-def _pawn_targets(board: "Board", attacker: Piece) -> list[Vector]:
+def _pawn_targets(board: "Board", attacker: Piece) -> Vectors:
     """Compute the targets of a pawn attacker."""
     result = []
+    attacker_coord = attacker.coord
 
-    # map 1 to -1 and 2 to +1; i.e up or down depending on player.
-    direction = 2 * attacker.player.value - 3
+    # map 1 to -1 and 2 to +1 (i.e up or down depending on player)
+    dy = 2 * attacker.player.value - 3
 
-    defender_coord = attacker.coord + (0, direction)
-    if board.has(defender_coord) and board[defender_coord] is None:
+    defender_coord = attacker_coord + (0, dy)
+    if board[defender_coord] is None:
         result.append(defender_coord)
 
     for dx in [1, -1]:
-        defender_coord = attacker.coord + (dx, direction)
+        defender_coord = attacker_coord + (dx, dy)
         defender = board[defender_coord]
-        en_passant_vulnerable_piece = board[attacker.coord + (dx, 0)]
-        if (
-            # standard pawn capture
-            board.has(defender_coord)
-            and defender is not None
-            and defender.player is not attacker.player
-            # en passant capture
-            or en_passant_vulnerable_piece is not None
-            and en_passant_vulnerable_piece == board.passant_vulnerable_piece
-        ):
+        passant_defender = board[attacker_coord + (dx, 0)]
+
+        can_standard_capture = defender and defender.player is not attacker.player
+        can_passant = passant_defender and passant_defender == board.passant_defender
+        if can_standard_capture or can_passant:
             result.append(defender_coord)
 
-    defender_coord = attacker.coord + (0, 2 * direction)
+    defender_coord = attacker_coord + (0, 2 * dy)
     if (
-        attacker.has_not_moved()
-        and board[defender_coord - (0, direction)] is None
+        attacker.unmoved()
+        and board[attacker_coord + (0, dy)] is None
         and board[defender_coord] is None
     ):
         result.append(defender_coord)
 
     return result
-
-
-def _process_attack(board: "Board", attacker: Piece, defender_coord: Vector) -> None:
-    """Implement of `Board.process_attack`."""
-
-    defender = board[defender_coord]
-    delta = defender_coord - attacker.coord
-
-    # remove any previous vulnerability to en passant
-    if (
-        board.passant_vulnerable_piece is not None
-        and board.passant_vulnerable_piece.player is board.active_player
-    ):
-        board.passant_vulnerable_piece = None
-
-    # add any new vulnerability to en passant
-    if attacker.role is Role.PAWN and delta in [(0, 2), (0, -2)]:
-        board.passant_vulnerable_piece = attacker
-
-    # en passant move chosen, so delete piece to the left/right
-    if (
-        attacker.role is Role.PAWN
-        and delta in [(1, 1), (1, -1), (-1, 1), (-1, -1)]
-        and defender is None
-        # not really required: pleases type checker
-        and board.passant_vulnerable_piece is not None
-    ):
-        board.pieces.remove(board.passant_vulnerable_piece)
-        board.taken_pieces[board.active_player].append(Role.PAWN)
-
-    # castling
-    if attacker.role is Role.KING:
-        y_king = attacker.coord.y
-
-        # king-side castle
-        if delta.x == 2:
-            castle = board[7, y_king]
-            if castle is None:
-                raise RuntimeError("King-side castling shouldn't have been available.")
-            castle.coord = (5, y_king)
-
-        # queen-side caste
-        if delta.x == -2:
-            castle = board[0, y_king]
-            if castle is None:
-                raise RuntimeError("Queen-side castling shouldn't have been available.")
-            castle.coord = (3, y_king)
-
-    # execute move
-    attacker.coord = defender_coord
-    if defender is not None:
-        board.pieces.remove(defender)
-        board.taken_pieces[board.active_player].append(defender.role)
-    board.ply += 1
-    board.update_targets()
 
 
 DELTAS = {

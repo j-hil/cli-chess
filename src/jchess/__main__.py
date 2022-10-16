@@ -3,7 +3,7 @@ import os
 import colorama
 
 from jchess import terminal
-from jchess import display
+from jchess.terminal import get_user_action, Action
 from jchess.configs import DEFAULT_CONFIG, VSC_CONFIG
 from jchess.state import GameState
 
@@ -20,13 +20,15 @@ def main() -> None:
     terminal.hide_cursor()
 
     game = GameState(DEFAULT_CONFIG if not DEV_MODE else VSC_CONFIG)
-    display.init(game)
-    display.update(game)
+    print(game.ctrlseq)
+    game.evolve_state(Action.IGNORE)
+    print(game.ctrlseq)
 
-    while True:
-        game.evolve_state()
-        display.update(game)
-        terminal.reset_cursor()
+    action = get_user_action()
+    while action != Action.QUIT:
+        game.evolve_state(action)
+        print(game.ctrlseq)
+        action = get_user_action()
 
 
 if __name__ == "__main__":

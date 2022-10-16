@@ -45,7 +45,7 @@ def reset_cursor() -> None:
 
 
 def ctrlseq(s: str, *, color: str = "", at: tuple[int, int]) -> str:
-    """Convert a string to a control sequence"""
+    """Convert a string to a control sequence."""
     x, y = at
     output = (
         f"{CSI}{y};{x}H"

@@ -16,4 +16,4 @@ class TestPiece(TestCase):
         queen.coord = (3, 4)
 
         self.assertEqual(queen.coord, Vector(3, 4))
-        self.assertFalse(queen.has_not_moved())
+        self.assertFalse(queen.unmoved())

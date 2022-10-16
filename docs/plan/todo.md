@@ -9,7 +9,6 @@
   - [X] Add automatic versioning using `git` describe or other
   - [X] Should probably add some tests - though might be overkill here
   - [X] Remove the need for constants.py
-  - [ ] I don't like how `black` formats functions with many parameters - replace?
   - [X] look at moving to `setuptools`
 - [X] Clean up code to reduce complexity and increase readability. In particular:
   - [X] Refactor `GameState` (see 2 TODO's in code)
@@ -24,8 +23,9 @@
   - [ ] Add checkmate functionality
   - [X] Add castling
   - [X] Add en passant
-  - [ ] Add promotion
+  - [X] Add promotion
   - [X] Prevent pawn from "jumping"
+  - [ ] Fix issue with Kings logic
 - [ ] Improve visuals
   - [X] Add boarder
   - [X] Add more color to score etc

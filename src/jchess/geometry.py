@@ -24,7 +24,15 @@ class Vector:
         return Vector(self[0] + other[0], self[1] + other[1])
 
     def __sub__(self, other: "VectorLike") -> "Vector":
-        return Vector(self[0] - other[0], self[1] - other[1])
+        return Vector(self.x - other[0], self.y - other[1])
+
+    def __mul__(self, other: int) -> "Vector":
+        return Vector(other * self.x, other * self.y)
+
+    __rmul__ = __mul__
+
+    def __mod__(self, modulus: int) -> "Vector":
+        return Vector(self.x % modulus, self.y % modulus)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, (Vector, tuple)):

@@ -19,11 +19,11 @@ class Piece:
     def coord(self, value: VectorLike) -> None:
         self._coord = Vector(*value)
 
-    def has_not_moved(self) -> bool:
+    def unmoved(self) -> bool:
         return self._initial_coord == self._coord
 
     def __repr__(self) -> str:
-        return f"Piece({self.role.value[0]}, P{self.player.value}, {self._coord})"
+        return f"Piece({self.role.value[0]}, p{self.player.value}, {self._coord})"
 
 
 class Player(Enum):
@@ -32,13 +32,20 @@ class Player(Enum):
 
 
 class Role(Enum):
-    KING = ("K", 104)
-    QUEEN = ("Q", 9)
-    ROOK = ("R", 5)
-    BISHOP = ("B", 3)
-    KNIGHT = ("N", 3)
-    PAWN = ("P", 1)
+    KING = ("King", "K", 104)
+    QUEEN = ("Queen", "Q", 9)
+    ROOK = ("Rook", "H", 5)
+    BISHOP = ("Bishop", "I", 3)
+    KNIGHT = ("Knight", "J", 3)
+    PAWN = ("Pawn", "i", 1)
+
+    @property
+    def symbol(self) -> str:
+        return self.value[1]
 
     @property
     def worth(self) -> int:
-        return self.value[1]
+        return self.value[2]
+
+    def __str__(self) -> str:
+        return self.value[0]

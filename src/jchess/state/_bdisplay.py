@@ -1,53 +1,45 @@
-"""Functions to generate various on-screen elements from a `GameState`."""
-
 from itertools import product
+from typing import TYPE_CHECKING
 
-from jchess import __version__, __author__
-from jchess.geometry import VectorLike
+from jchess import __author__ as author, __version__ as version
 from jchess.board import Board
 from jchess.pieces import Player
-from jchess.state import GameState, Mode
+from jchess.geometry import VectorLike
 from jchess.terminal import ctrlseq
 
+if TYPE_CHECKING:
+    from jchess.state._state import GameState
 
-def update(game: GameState) -> None:
-    board = game.board
+# TODO:
+#  * _gen_pieces: wildly inefficient as now game.pieces replaces game.board
+#  iterate over game.pieces instead. also just entirely rework this function
+#  * should go over this, pdisplay and config with a fine comb
+
+
+def update(game: "GameState") -> str:
     config = game.config
+    board = game.board
 
-    # Gutter message
-    output = ctrlseq(_gutter_msg(board), at=(17, 24))
-
-    # Score and taken pieces
+    output = ctrlseq(_gutter_msg(board), at=(17, 24)) + _generate_pieces(game)
     for i, p in enumerate(Player):
-        output += ctrlseq(
-            f"{board.score(p):0>3}",
+        output += ctrlseq(f"{board.score(p):0>3}",
             color=config.board_color[1 - i] + config.player_color[p],
             at=(72 * i + 11, 6),
         )
         output += _gen_taken_pieces(game, p)
-
-    # Board
-    output += _generate_pieces(game)
-
-    print(output, end="")
+    return output
 
 
-def init(game: GameState) -> None:
+def init(game: "GameState") -> str:
     config = game.config
+    row_labels = "   ".join(list("87654321"))
+    col_labels = "\n \n".join(list("abcdefgh"))
+
     output = (
         MAIN_DISPLAY_TEMPLATE
-        + ctrlseq(f"{__version__[:11]: ^11}", at=(3, 24))
-        + ctrlseq(f"by {__author__}", at=(76, 24))
+        + ctrlseq(f"{version[:11]: ^11}", at=(3, 24))
+        + ctrlseq(f"by {author}", at=(76, 24))
     )
-
-    if game.mode is Mode.TWO:
-        row_labels = "   ".join(list("abcdefgh"))
-        col_labels = "\n \n".join(list("87654321"))
-    else:
-        row_labels = "   ".join(list("87654321"))
-        col_labels = "\n \n".join(list("abcdefgh"))
-
-    # Board labels
     for i, p in enumerate(Player):
         output += (
             ctrlseq(row_labels, at=(30, 18 * i + 4))
@@ -58,43 +50,32 @@ def init(game: GameState) -> None:
                 at=(72 * i + 3, 4),
             )
         )
+    return output
 
-    print(output, end="")
 
-
-def _generate_pieces(game: GameState) -> str:
+def _generate_pieces(game: "GameState") -> str:
     output = ""
     board = game.board
 
-    if game.mode is Mode.TWO:
+    def coord_transform(v: VectorLike) -> tuple[int, int]:
+        return (29 + 4 * v[0], 6 + 2 * v[1])
 
-        # won't work at current
-        def coord_transform(v: VectorLike) -> tuple[int, int]:
-            return (30 - 4 * v[1], 1 + 2 * v[0])
-
-    else:
-
-        def coord_transform(v: VectorLike) -> tuple[int, int]:
-            return (29 + 4 * v[0], 6 + 2 * v[1])
-
-    # TODO: wildly inefficient as now game.pieces replaces game.board
-    # iterate over game.pieces instead. also just entirely rework this function
     for i, j in product(range(8), repeat=2):
         coord = (j, i)
 
-        cursor_piece = board[game.cursor_coord]
+        cursor_piece = board[game.cursor_b]
         highlight_potential_targets = (
-            game.attacking_piece is None
+            game.attacker is None
             and cursor_piece is not None
-            and cursor_piece.player is board.active_player
+            and cursor_piece.player is board.player
             and coord in cursor_piece.targets
         )
         show_actual_targets = (
-            game.attacking_piece is not None and coord in game.attacking_piece.targets
+            game.attacker is not None and coord in game.attacker.targets
         )
-        if coord == game.cursor_coord:
+        if coord == game.cursor_b:
             back_color = game.config.cursor_color
-        elif game.attacking_piece is not None and coord == game.attacking_piece.coord:
+        elif game.attacker is not None and coord == game.attacker.coord:
             back_color = game.config.highlight_color
         elif highlight_potential_targets:
             back_color = game.config.target_color
@@ -130,7 +111,7 @@ def _gutter_msg(board: Board) -> str:
     return f"{gutter_msg: ^55}"
 
 
-def _gen_taken_pieces(game: GameState, player: Player) -> str:
+def _gen_taken_pieces(game: "GameState", player: Player) -> str:
     taken_pieces = game.board.taken_pieces[player]
     symbol = game.config.role_symbol
 

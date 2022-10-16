@@ -4,7 +4,7 @@ from unittest import TestCase
 
 import jchess
 
-jchess_path = jchess.__path__[0]
+jchess_path, *_ = jchess.__path__
 
 
 class CodeQuality(TestCase):
