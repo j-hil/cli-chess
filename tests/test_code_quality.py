@@ -23,3 +23,8 @@ class CodeQuality(TestCase):
         p = run(f"{sys.executable} -m pydocstyle .".split(), capture_output=True)
         if p.returncode:
             raise RuntimeError(f"[>>] pydocstyle output:\n{p.stderr.decode()}")
+
+    def test_black(self) -> None:
+        p = run(f"{sys.executable} -m black --check .".split(), capture_output=True)
+        if p.returncode:
+            raise RuntimeError(f"[>>] black output:\n{p.stderr.decode()}")

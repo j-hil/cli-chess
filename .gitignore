@@ -1,6 +1,7 @@
 # tooling
 .venv/
 .mypy_cache/
+.coverage
 
 # editor related files
 .vscode/

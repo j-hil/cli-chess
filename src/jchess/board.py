@@ -6,6 +6,7 @@ from jchess.pieces import Piece, Role, Player
 
 K, Q, R, B, N, P = list(Role)
 BACK_ROW = [R, N, B, Q, K, B, N, R]
+# TODO: del added in testing, integrate properly
 
 
 class Board:
@@ -144,7 +145,14 @@ class Board:
 
     def __setitem__(self, key: VectorLike, value: Piece) -> None:
         value.coord = key
+        del self[key]
         self.pieces.append(value)
+
+    def __delitem__(self, key: VectorLike) -> None:
+        for i, piece in enumerate(self.pieces):
+            if piece.coord == key:
+                del self.pieces[i]
+                return
 
 
 def _risky_targets(board: Board, attacker: Piece, current_targets: Vectors) -> Vectors:

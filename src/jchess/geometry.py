@@ -1,6 +1,6 @@
 """Simple Vector class to facilitate easy coordinate translation.
 
-Designed to be interchangeable with tuple.
+Designed to be interchangeable with tuple wherever possible.
 """
 
 from typing import Any, Iterator, Union

@@ -22,8 +22,17 @@ class Piece:
     def unmoved(self) -> bool:
         return self._initial_coord == self._coord
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Piece):
+            return NotImplemented
+        return (
+            self.role == other.role
+            and self.player == other.player
+            and self.coord == other.coord
+        )
+
     def __repr__(self) -> str:
-        return f"Piece({self.role.value[0]}, p{self.player.value}, {self._coord})"
+        return f"Piece({self.role.symbol}, p{self.player.value}, {self._coord})"
 
 
 class Player(Enum):

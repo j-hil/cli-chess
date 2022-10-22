@@ -27,7 +27,7 @@ class _CursorInfo(ctypes.Structure):
     _fields_ = [("size", ctypes.c_int), ("visible", ctypes.c_byte)]
 
 
-def _toggle_vis(visible: bool):
+def _show_cursor(visible: bool):
     ci = _CursorInfo()
     handle = KERNEL32.GetStdHandle(-11)
     KERNEL32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
@@ -40,15 +40,15 @@ def clear() -> None:
 
 
 def resize(w: int, h: int) -> None:
-    os.system(f"mode con: cols={h} lines={w}")
+    os.system(f"mode con: cols={w} lines={h}")
 
 
 def show_cursor() -> None:
-    _toggle_vis(True)
+    _show_cursor(True)
 
 
 def hide_cursor() -> None:
-    _toggle_vis(False)
+    _show_cursor(False)
 
 
 def get_user_action() -> Action:

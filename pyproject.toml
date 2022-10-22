@@ -2,6 +2,7 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+
 [project]
 name = "jchess"
 version = "22.10.80"
@@ -30,10 +31,12 @@ dev = [
     "black>=22.8.0",
     "pylint>=2.15.2, <3",
     "pydocstyle[toml]>=6.1.1, <7",
+    "coverage[toml]>=6.5.0, < 7",
 ]
 
 [project.urls]
 Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
+
 
 [tool.mypy]
 warn_return_any = true
@@ -43,7 +46,8 @@ strict = true
 # required due to a mypy issue: https://github.com/python/mypy/issues/3004
 disable_error_code = ["assignment", "comparison-overlap"]
 # required as terminal as os dependent functionality
-exclude = "terminal"
+exclude = "terminal|tests"
+
 
 [tool.pylint.basic]
 # allows short names (which are to be used with due consideration):
@@ -56,7 +60,7 @@ const-rgx = "(?#CAPITAL_CASE)^[A-Z0-9]*(_[A-Z0-9]+)*_?|__[a-z]*__$"
 max-line-length=88
 
 [tool.pylint.design]
-# the defualt (7) really is too low
+# the defualt==7 really is too low
 max-attributes=12
 min-public-methods=0
 
@@ -71,6 +75,7 @@ disable = [
 [tool.pylint.reports]
 output-format = "colorized"
 
+
 [tool.pydocstyle]
 ignore = [
     "D1",  # Missing docstrings
@@ -79,5 +84,16 @@ ignore = [
     "D202",  # No blank lines allowed after function docstring
 ]
 
+
+[tool.coverage.run]
+branch = true
+source = ["./src/jchess"]
+omit = ["*/dev_tools/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:"
+]
 
 

@@ -22,7 +22,8 @@ def update(game: "GameState") -> str:
 
     output = ctrlseq(_gutter_msg(board), at=(17, 24)) + _generate_pieces(game)
     for i, p in enumerate(Player):
-        output += ctrlseq(f"{board.score(p):0>3}",
+        output += ctrlseq(
+            f"{board.score(p):0>3}",
             color=config.board_color[1 - i] + config.player_color[p],
             at=(72 * i + 11, 6),
         )
