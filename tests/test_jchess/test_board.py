@@ -1,4 +1,4 @@
-from unittest import TestCase, main as run_tests
+from unittest import TestCase
 
 from jchess.board import Board
 from jchess.geometry import Vector
@@ -33,7 +33,3 @@ class TestBoard(TestCase):
         self.board[0, 6] = rook
         self.assertEqual(rook.coord, (0, 6))
         self.assertEqual(self.board[0, 6], rook)
-
-
-if __name__ == "__main__":
-    run_tests()

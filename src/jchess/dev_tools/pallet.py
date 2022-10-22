@@ -5,7 +5,7 @@ appropriate for each console, since it varies.
 
 Original taken from https://github.com/tartley/colorama/blob/master/demos/demo01.py
 """
-from colorama import init, Fore, Back, Style
+from colorama import Back, Fore, Style, init
 
 BASE_COLORS = ["BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE"]
 LIGHT_COLORS = [f"LIGHT{color}_EX" for color in BASE_COLORS]

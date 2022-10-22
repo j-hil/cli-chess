@@ -1,5 +1,5 @@
-from subprocess import run
 import sys
+from subprocess import run
 from unittest import TestCase
 
 import jchess
@@ -26,5 +26,10 @@ class CodeQuality(TestCase):
 
     def test_black(self) -> None:
         p = run(f"{sys.executable} -m black --check .".split(), capture_output=True)
+        if p.returncode:
+            raise RuntimeError(f"[>>] black output:\n{p.stderr.decode()}")
+
+    def test_isort(self) -> None:
+        p = run(f"{sys.executable} -m isort --check .".split(), capture_output=True)
         if p.returncode:
             raise RuntimeError(f"[>>] black output:\n{p.stderr.decode()}")

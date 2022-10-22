@@ -1,12 +1,13 @@
 """Program entry point; run as `python -m jchess`."""
 
 import os
+
 import colorama
 
 from jchess import terminal
-from jchess.terminal import get_user_action, Action
 from jchess.configs import DEFAULT_CONFIG, VSC_CONFIG
 from jchess.state import GameState
+from jchess.terminal import Action, get_user_action
 
 # attempt to detect that game is being run inside VS Code
 DEV_MODE = os.environ.get("TERM_PROGRAM") == "vscode"

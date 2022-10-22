@@ -32,10 +32,14 @@ dev = [
     "pylint>=2.15.2, <3",
     "pydocstyle[toml]>=6.1.1, <7",
     "coverage[toml]>=6.5.0, < 7",
+    "isort>=5.10.1, <6",
 ]
 
 [project.urls]
 Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
+
+[project.scripts]
+jchess = "jchess.__main__:main"
 
 
 [tool.mypy]
@@ -74,6 +78,10 @@ disable = [
 
 [tool.pylint.reports]
 output-format = "colorized"
+
+
+[tool.isort]
+profile = "black"
 
 
 [tool.pydocstyle]

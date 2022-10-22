@@ -1,6 +1,7 @@
 """Contains representation of a chess piece."""
 
 from enum import Enum
+
 from jchess.geometry import Vector, VectorLike
 
 

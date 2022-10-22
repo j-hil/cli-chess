@@ -1,7 +1,9 @@
 """Contains display settings for different consoles."""
 
-from dataclasses import dataclass, KW_ONLY
-from colorama import Fore, Style, Back
+from dataclasses import KW_ONLY, dataclass
+
+from colorama import Back, Fore, Style
+
 from jchess.pieces import Player, Role
 
 

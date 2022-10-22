@@ -5,6 +5,7 @@ including the collection of player input in the form of an `Action`.
 """
 
 import os
+
 from colorama import Style
 
 __all__ = [
@@ -21,21 +22,14 @@ __all__ = [
 if os.name == "nt":
     from ._windows import (
         Action,
-        get_user_action,
         clear,
+        get_user_action,
+        hide_cursor,
         resize,
         show_cursor,
-        hide_cursor,
     )
 else:
-    from ._linux import (
-        Action,
-        get_user_action,
-        clear,
-        resize,
-        show_cursor,
-        hide_cursor,
-    )
+    from ._linux import Action, clear, get_user_action, hide_cursor, resize, show_cursor
 
 CSI = "\x1b["
 

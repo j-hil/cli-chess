@@ -1,7 +1,7 @@
 import sys
-from tty import setraw
-from termios import tcsetattr, tcgetattr, TCSADRAIN  # pylint: disable=import-error
 from enum import Enum
+from termios import TCSADRAIN, tcgetattr, tcsetattr  # pylint: disable=import-error
+from tty import setraw
 
 CSI = "\x1b["
 

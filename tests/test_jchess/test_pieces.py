@@ -1,6 +1,6 @@
 from unittest import TestCase
-from jchess.geometry import Vector
 
+from jchess.geometry import Vector
 from jchess.pieces import Piece, Player, Role
 
 

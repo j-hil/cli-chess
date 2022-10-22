@@ -3,13 +3,13 @@ from enum import Enum
 from typing import Any
 
 from jchess.board import Board
-from jchess.pieces import Piece, Role
 from jchess.configs import DEFAULT_CONFIG, Config
 from jchess.geometry import Vector
+from jchess.pieces import Piece, Role
 from jchess.terminal import Action
 
-from . import _pdisplay as pdisplay
 from . import _bdisplay as bdisplay
+from . import _pdisplay as pdisplay
 
 
 class Mode(Enum):

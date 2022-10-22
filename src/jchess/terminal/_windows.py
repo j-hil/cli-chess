@@ -1,7 +1,7 @@
-from msvcrt import getch
 import ctypes
-from enum import Enum
 import os
+from enum import Enum
+from msvcrt import getch
 
 KERNEL32 = ctypes.windll.kernel32
 

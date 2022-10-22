@@ -2,7 +2,7 @@ from copy import deepcopy
 from itertools import product
 
 from jchess.geometry import Vector, VectorLike, Vectors
-from jchess.pieces import Piece, Role, Player
+from jchess.pieces import Piece, Player, Role
 
 K, Q, R, B, N, P = list(Role)
 BACK_ROW = [R, N, B, Q, K, B, N, R]

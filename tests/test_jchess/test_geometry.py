@@ -1,6 +1,6 @@
 """Tests for `geometry.py`."""
-
 from unittest import TestCase
+
 from jchess.geometry import Vector
 
 

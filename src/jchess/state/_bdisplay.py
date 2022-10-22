@@ -1,10 +1,11 @@
 from itertools import product
 from typing import TYPE_CHECKING
 
-from jchess import __author__ as author, __version__ as version
+from jchess import __author__ as author
+from jchess import __version__ as version
 from jchess.board import Board
-from jchess.pieces import Player
 from jchess.geometry import VectorLike
+from jchess.pieces import Player
 from jchess.terminal import ctrlseq
 
 if TYPE_CHECKING:
