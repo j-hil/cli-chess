@@ -1,23 +1,8 @@
 import ctypes
 import os
-from enum import Enum
 from msvcrt import getch
 
 KERNEL32 = ctypes.windll.kernel32
-
-
-class Action(Enum):
-    QUIT = (b"\x1b", b"Q")
-    SELECT = (b" ", b"\r")
-    UP = (b"W", b"\x00H", b"\xe0H")
-    DOWN = (b"S", b"\x00P", b"\xe0P")
-    RIGHT = (b"D", b"\x00M", b"\xe0M")
-    LEFT = (b"A", b"\x00K", b"\xe0K")
-    IGNORE = ()
-
-    @property
-    def inputs(self):
-        return self.value
 
 
 class _CursorInfo(ctypes.Structure):
@@ -51,16 +36,15 @@ def hide_cursor() -> None:
     _show_cursor(False)
 
 
-def get_user_action() -> Action:
-    """Convert keystroke into a game action. Windows-compatible version."""
-    # only checked to work with keystrokes repr by 1 char, and the direction arrows
+def get_input() -> str:
+    """Convert keystroke into a char. Windows-compatible version."""
+    # only checked to work with keystrokes represented by 1 char and direction arrows
 
     user_input = getch()
-    # Hex codes for direction arrows. NB *cannot* decode b"\xe0".
-    if user_input in [b"\x00", b"\xe0"]:
-        user_input += getch()
 
-    for action in Action:
-        if user_input.upper() in action.inputs:
-            return action
-    return Action.IGNORE
+    # Hex codes for direction arrows. NB: *cannot* decode b"\xe0".
+    if user_input in [b"\x00", b"\xe0"]:
+        return {b"H": "↑", b"P": "↓", b"M": "→", b"K": "←", b"O": "⇲"}[getch()]
+
+    # Anything else is assumed to be a represented by a single decodable char
+    return user_input.decode()

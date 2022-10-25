@@ -9,27 +9,19 @@ import os
 from colorama import Style
 
 __all__ = [
-    "Action",
-    "get_user_action",
     "clear",
     "resize",
     "show_cursor",
     "hide_cursor",
     "ctrlseq",
     "reset_cursor",
+    "get_input",
 ]
 
 if os.name == "nt":
-    from ._windows import (
-        Action,
-        clear,
-        get_user_action,
-        hide_cursor,
-        resize,
-        show_cursor,
-    )
+    from ._windows import clear, get_input, hide_cursor, resize, show_cursor
 else:
-    from ._linux import Action, clear, get_user_action, hide_cursor, resize, show_cursor
+    from ._linux import clear, get_input, hide_cursor, resize, show_cursor
 
 CSI = "\x1b["
 
@@ -38,21 +30,20 @@ def reset_cursor() -> None:
     print(f"{CSI}H", end="")
 
 
-def ctrlseq(s: str, *, color: str = "", at: tuple[int, int]) -> str:
+def ctrlseq(s: str, *, clr: str = "", at: tuple[int, int]) -> str:
     """Convert a string to a control sequence."""
     x, y = at
-    output = (
+    return (
         f"{CSI}{y};{x}H"
-        + color
+        + clr
         + f"\n{CSI}{x-1}C".join(s.split("\n"))  # why is it x - 1...?
         + Style.RESET_ALL
     )
-    return output
 
 
 if __name__ == "__main__":
     # crude testing script, not sure how to move into a unittest.
     a = None
-    while a != Action.QUIT:
-        a = get_user_action()
+    while a != "\x1b":
+        a = get_input()
         print(f"{a=}")

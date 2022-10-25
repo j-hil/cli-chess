@@ -35,7 +35,7 @@ class Board:
         self.update_targets()
 
     @property
-    def player(self) -> Player:
+    def active_player(self) -> Player:
         return list(Player)[self.ply % 2]
 
     def update_targets(self) -> None:
@@ -86,7 +86,7 @@ class Board:
         # remove any previous vulnerability to en passant
         if (
             self.passant_defender is not None
-            and self.passant_defender.player is self.player
+            and self.passant_defender.player is self.active_player
         ):
             self.passant_defender = None
 
@@ -102,7 +102,7 @@ class Board:
             and self.passant_defender is not None  # pleases type checkers
         ):
             self.pieces.remove(self.passant_defender)
-            self.taken_pieces[self.player].append(Role.PAWN)
+            self.taken_pieces[self.active_player].append(Role.PAWN)
 
         # castling
         if attacker.role is Role.KING:
@@ -130,7 +130,7 @@ class Board:
         attacker.coord = defender_coord
         if defender is not None:
             self.pieces.remove(defender)
-            self.taken_pieces[self.player].append(defender.role)
+            self.taken_pieces[self.active_player].append(defender.role)
         self.ply += 1
         self.update_targets()
 
@@ -192,7 +192,7 @@ def _castling_targets(board: Board, attacker: Piece) -> Vectors:
         safe_path = all(
             (x, y_king) not in p.targets
             for p, x in product(board.pieces, path)
-            if p.player is not board.player
+            if p.player is not board.active_player
         )
 
         if unmoved_rook and empty_path and safe_path:

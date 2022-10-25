@@ -1,23 +1,9 @@
 import sys
-from enum import Enum
 from termios import TCSADRAIN, tcgetattr, tcsetattr  # pylint: disable=import-error
 from tty import setraw
 
 CSI = "\x1b["
-
-
-class Action(Enum):
-    QUIT = ("\x1b", "Q")
-    SELECT = (" ", "\r")
-    UP = ("W", "\x00H", CSI + "A")
-    DOWN = ("S", "\x00P", CSI + "B")
-    RIGHT = ("D", "\x00M", CSI + "C")
-    LEFT = ("A", "\x00K", CSI + "D")
-    IGNORE = ()
-
-    @property
-    def inputs(self):
-        return self.value
+# TODO: bring back in line with windows version
 
 
 def clear():
@@ -40,7 +26,7 @@ def hide_cursor():
     print(CSI + "?25l", end="")
 
 
-def _linux_getch() -> str:
+def getch() -> str:
     """Get a single character string from the user. Linux-compatible version."""
     # taken from https://stackoverflow.com/questions/71548267/
 
@@ -56,17 +42,19 @@ def _linux_getch() -> str:
     return ch
 
 
-def get_user_action() -> Action:
+def get_input() -> str:
     """Convert keystroke into a game action. Linux-compatible version."""
     # only checked to work with keystrokes repr by 1 char, and the direction arrows
 
-    user_input = _linux_getch()
-    # Account for direction keys.
-    if user_input == "\x1b":
-        user_input += _linux_getch()
-        user_input += _linux_getch()
+    user_input = getch()
 
-    for action in Action:
-        if user_input.upper() in action.inputs:
-            return action
-    return Action.IGNORE
+    # Direction keys in vscode
+    if user_input == "\x00":
+        return {"H": "↑", "P": "↓", "M": "→", "K": "←", "O": "⇲"}[getch()]
+
+    # Direction keys in usual console
+    # TODO: replace "?" as appropriate
+    if user_input + getch() == CSI:
+        return {"A": "↑", "B": "↓", "C": "→", "D": "←", "?": "⇲"}[getch()]
+
+    return user_input

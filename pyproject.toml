@@ -39,7 +39,7 @@ dev = [
 Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
 
 [project.scripts]
-jchess = "jchess.__main__:main"
+jchess = "jchess:run"
 
 
 [tool.mypy]
