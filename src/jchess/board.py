@@ -84,10 +84,7 @@ class Board:
         delta = defender_coord - attacker.coord
 
         # remove any previous vulnerability to en passant
-        if (
-            self.passant_defender is not None
-            and self.passant_defender.player is self.active_player
-        ):
+        if self.passant_defender and self.passant_defender.player is self.active_player:
             self.passant_defender = None
 
         # add any new vulnerability to en passant

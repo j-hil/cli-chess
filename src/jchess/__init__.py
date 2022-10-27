@@ -4,12 +4,9 @@ import os
 import colorama
 
 from jchess import terminal
-from jchess.configs import DEFAULT_PALLET, DEFAULT_SYMBOLS, UTF8_SYMBOLS, VSC_PALLET
+from jchess.configs import DEFAULT_PALLET, DEFAULT_SYMBOLS
 from jchess.display import Display
 from jchess.state import GameState
-
-# attempt to detect that game is being run inside VS Code
-DEV_MODE = os.environ.get("TERM_PROGRAM") == "vscode"
 
 
 def run() -> None:
@@ -24,9 +21,6 @@ def run() -> None:
         terminal.hide_cursor()
 
         display = Display(DEFAULT_PALLET, DEFAULT_SYMBOLS)
-        if DEV_MODE:
-            display = Display(VSC_PALLET, UTF8_SYMBOLS)
-
         game = GameState()
         while True:
             print(display.ctrlseq(game))

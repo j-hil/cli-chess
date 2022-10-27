@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 
 from jchess.terminal import get_input
 
@@ -6,13 +6,16 @@ CSI = "\x1b["
 
 
 class Action(Enum):
-    SELECT = auto()
-    UP = auto()
-    DOWN = auto()
-    RIGHT = auto()
-    LEFT = auto()
-    IGNORE = auto()
-    QUIT = auto()
+    SELECT = "↲"
+    UP = "↑"
+    DOWN = "↓"
+    RIGHT = "→"
+    LEFT = "←"
+    IGNORE = "~"
+    QUIT = "!"
+
+    def __repr__(self) -> str:
+        return self.value
 
 
 def get_action_rhs() -> Action:
