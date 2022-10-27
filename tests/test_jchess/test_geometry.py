@@ -12,24 +12,26 @@ class TestVector(TestCase):
 
     def test_getitem(self) -> None:
         u = Vector(2, 7)
-        self.assertEqual(u[0], 2)
-        self.assertEqual(u[1], 7)
+        self.assertEqual((u[-2], u[-1], u[0], u[1]), (2, 7, 2, 7))
         with self.assertRaises(IndexError):
-            u[-1]
+            u[-3]
         with self.assertRaises(IndexError):
             u[2]
 
     def test_add(self) -> None:
         self.assertEqual(Vector(1, 2) + Vector(5, 6), Vector(6, 8))
         self.assertEqual(Vector(-1, 11) + (1, 4), Vector(0, 15))
+        self.assertEqual((1, 4) + Vector(-1, 11), Vector(0, 15))
 
     def test_sub(self) -> None:
         self.assertEqual(Vector(1, 2) - Vector(5, 6), Vector(-4, -4))
         self.assertEqual(Vector(-1, 11) - (1, 4), Vector(-2, 7))
+        self.assertEqual((-1, 11) - Vector(1, 4), Vector(-2, 7))
 
     def test_mul(self) -> None:
         self.assertEqual(2 * Vector(1, 2), Vector(2, 4))
         self.assertEqual(-3 * Vector(1, 2), Vector(-3, -6))
+        self.assertEqual(Vector(1, 2) * -3, Vector(-3, -6))
 
     def test_unpacking(self) -> None:
         self.assertEqual(Vector(*Vector(1, 2)), Vector(1, 2))
@@ -40,6 +42,7 @@ class TestVector(TestCase):
         self.assertIn(Vector(1, 2), [(1, 2), (3, 4)])
         self.assertIn((1, 2), [Vector(1, 2), Vector(3, 4)])
         self.assertFalse(Vector(1, 2) == object())
+        self.assertFalse(Vector(1, 2) == (1, 2, 3))
 
     def test_list_removal(self) -> None:
 
