@@ -21,7 +21,6 @@ class Mode(Enum):
     SPM = "Simple Single-Player"  # TODO: implement
     # RMP = "Remote Multi-Player"
     # VAI = "Versus AI"
-    DEV = "Development Mode"
 
 
 class GameState:
@@ -49,8 +48,6 @@ class GameState:
 
     def get_action(self) -> Action:
         player = self.board.active_player
-        if self.mode is Mode.DEV:
-            return get_action_rhs()
         return get_action_rhs() if player == Player.ONE else get_action_lhs()
 
     def __setattr__(self, name: str, value: Any) -> None:

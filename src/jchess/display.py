@@ -3,7 +3,7 @@ from itertools import product
 from jchess.__pkginfo__ import __author__ as author
 from jchess.__pkginfo__ import __version__ as version
 from jchess.board import Board
-from jchess.configs import DEFAULT_PALLET, DEFAULT_SYMBOLS, Pallet, SymbolDict
+from jchess.configs import Pallet, SymbolDict
 from jchess.geometry import VectorLike
 from jchess.pieces import Player
 from jchess.state import PROMOTION_OPTIONS, GameState, Mode, Status
@@ -16,9 +16,7 @@ from jchess.terminal import ctrlseq
 
 
 class Display:
-    def __init__(
-        self, pallet: Pallet = DEFAULT_PALLET, symbols: SymbolDict = DEFAULT_SYMBOLS
-    ) -> None:
+    def __init__(self, pallet: Pallet, symbols: SymbolDict) -> None:
         self.pallet = pallet
         self.symbol = symbols
 
