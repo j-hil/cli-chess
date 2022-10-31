@@ -1,9 +1,9 @@
 import os
 
-import jchess
+import jchess.run
 import jchess.display
 import jchess.state
-from jchess import run
+from jchess.run import run
 from jchess.action import Action, get_action_rhs
 from jchess.configs import UTF8_SYMBOLS, VSC_PALLET
 from jchess.state import GameState
@@ -24,14 +24,15 @@ def hack_get_action(self: GameState) -> Action:
 
 
 def main() -> None:
-    if not DEV_MODE or True:
+    if not DEV_MODE:
         print("Warning: running `jchess` this way is intended only for development.")
         input("Press any key to continue.")
+    else:
+        jchess.run.DEFAULT_PALLET = VSC_PALLET  # type: ignore
+        jchess.run.DEFAULT_SYMBOLS = UTF8_SYMBOLS  # type: ignore
 
     jchess.display.ROW_LABELS = "   ".join(list("01234567"))
     jchess.display.COL_LABELS = "\n \n".join(list("01234567"))
-    jchess.DEFAULT_PALLET = VSC_PALLET  # type: ignore
-    jchess.DEFAULT_SYMBOLS = UTF8_SYMBOLS  # type: ignore
     jchess.state.GameState.get_action = hack_get_action
 
     try:

@@ -1,4 +1,4 @@
 """Allow program can be run as `python -m jchess`."""
-import jchess
+from jchess.run import run
 
-jchess.run()
+run()

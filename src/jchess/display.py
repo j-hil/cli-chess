@@ -1,7 +1,7 @@
 from itertools import product
 
-from jchess.__pkginfo__ import __author__ as author
-from jchess.__pkginfo__ import __version__ as version
+from jchess import __author__ as author
+from jchess import __version__ as version
 from jchess.board import Board
 from jchess.configs import Pallet, SymbolDict
 from jchess.geometry import VectorLike
