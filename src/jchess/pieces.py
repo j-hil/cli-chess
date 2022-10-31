@@ -1,39 +1,9 @@
 """Contains representation of a chess piece."""
 
+from dataclasses import dataclass, field
 from enum import Enum
 
-from jchess.geometry import Vector, VectorLike
-
-
-class Piece:
-    def __init__(self, role: "Role", player: "Player", coord: VectorLike):
-        self.role = role
-        self.player = player
-        self._coord = self._initial_coord = Vector(*coord)
-        self.targets: list[Vector] = []
-
-    @property
-    def coord(self) -> Vector:
-        return self._coord
-
-    @coord.setter
-    def coord(self, value: VectorLike) -> None:
-        self._coord = Vector(*value)
-
-    def unmoved(self) -> bool:
-        return self._initial_coord == self._coord
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Piece):
-            return NotImplemented
-        return (
-            self.role == other.role
-            and self.player == other.player
-            and self.coord == other.coord
-        )
-
-    def __repr__(self) -> str:
-        return f"Piece({self.role.symbol}, p{self.player.value}, {self._coord})"
+from jchess.geometry import Vector
 
 
 class Player(Enum):
@@ -50,6 +20,10 @@ class Role(Enum):
     PAWN = ("Pawn", "i", 1)
 
     @property
+    def name(self) -> str:
+        return self.value[0]
+
+    @property
     def symbol(self) -> str:
         return self.value[1]
 
@@ -57,5 +31,26 @@ class Role(Enum):
     def worth(self) -> int:
         return self.value[2]
 
-    def __str__(self) -> str:
-        return self.value[0]
+    def __repr__(self) -> str:
+        return f"Role[{self.symbol}]"
+
+
+
+@dataclass
+class Piece:
+
+    role: Role
+    player: Player
+
+    # coord and targets are managed by the containing Board class
+    coord: Vector
+    targets: list[Vector] = field(default_factory=list, init=False, compare=False)
+
+    def __post_init__(self) -> None:
+        self._initial_coord = self.coord
+
+    def unmoved(self) -> bool:
+        return self._initial_coord == self.coord
+
+    def __repr__(self) -> str:
+        return f"Piece({self.role.symbol}, p{self.player.value}, {self.coord})"
