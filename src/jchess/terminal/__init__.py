@@ -3,10 +3,14 @@
 Designed to abstract away all os/terminal dependencies from the rest of the code,
 including the collection of player input in the form of an `Action`.
 """
-
-import os
+import sys
 
 from colorama import Style
+
+if sys.platform == "win32":
+    from ._windows import clear, get_input, hide_cursor, resize, show_cursor
+else:
+    from ._linux import clear, get_input, hide_cursor, resize, show_cursor
 
 __all__ = [
     "clear",
@@ -17,11 +21,6 @@ __all__ = [
     "reset_cursor",
     "get_input",
 ]
-
-if os.name == "nt":
-    from ._windows import clear, get_input, hide_cursor, resize, show_cursor
-else:
-    from ._linux import clear, get_input, hide_cursor, resize, show_cursor
 
 CSI = "\x1b["
 
@@ -42,8 +41,6 @@ def ctrlseq(s: str, *, clr: str = "", at: tuple[int, int]) -> str:
 
 
 if __name__ == "__main__":
-    # crude testing script, not sure how to move into a unittest.
-    a = None
-    while a != "\x1b":
-        a = get_input()
+    # crude testing script, not obvious how to move into a unittest.
+    while (a := get_input()) != "\x1b":
         print(f"{a=}")

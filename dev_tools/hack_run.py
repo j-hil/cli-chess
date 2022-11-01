@@ -1,11 +1,12 @@
+# type: ignore
 import os
 
-import jchess.run
 import jchess.display
+import jchess.run
 import jchess.state
-from jchess.run import run
 from jchess.action import Action, get_action_rhs
 from jchess.configs import UTF8_SYMBOLS, VSC_PALLET
+from jchess.run import run
 from jchess.state import GameState
 
 inputs: list[str] = []
@@ -28,8 +29,8 @@ def main() -> None:
         print("Warning: running `jchess` this way is intended only for development.")
         input("Press any key to continue.")
     else:
-        jchess.run.DEFAULT_PALLET = VSC_PALLET  # type: ignore
-        jchess.run.DEFAULT_SYMBOLS = UTF8_SYMBOLS  # type: ignore
+        jchess.run.DEFAULT_PALLET = VSC_PALLET
+        jchess.run.DEFAULT_SYMBOLS = UTF8_SYMBOLS
 
     jchess.display.ROW_LABELS = "   ".join(list("01234567"))
     jchess.display.COL_LABELS = "\n \n".join(list("01234567"))
@@ -42,7 +43,7 @@ def main() -> None:
         output = " ".join(inputs)
         n = 76
         for i in range(len(output) // n):
-            print(f'"{output[n * i : n * (i + 1)]}"')
+            print(f"{output[n * i : n * (i + 1)]}")
 
 
 if __name__ == "__main__":

@@ -13,9 +13,9 @@ class SymbolDict(dict[Role, str]):
         super().__init__()
 
 
-UTF8_SYMBOLS = SymbolDict("♚♛♜♝♞♟")  # options to try/add: '♔♕♖♗♘♙'
-DEFAULT_SYMBOLS = SymbolDict("KQHIJi")
-STANDARD_SYMBOLS = SymbolDict("KQRBNi")
+UTF8_SYMBOLS = SymbolDict("♚♛♜♝♞♟ ")  # options to try/add: '♔♕♖♗♘♙'
+DEFAULT_SYMBOLS = SymbolDict("KQHIJi ")
+STANDARD_SYMBOLS = SymbolDict("KQRBNi ")
 
 
 @dataclass

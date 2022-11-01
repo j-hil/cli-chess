@@ -18,10 +18,7 @@ class Role(Enum):
     BISHOP = ("Bishop", "I", 3)
     KNIGHT = ("Knight", "J", 3)
     PAWN = ("Pawn", "i", 1)
-
-    @property
-    def name(self) -> str:
-        return self.value[0]
+    BLANK = ("Blank", " ", 0)
 
     @property
     def symbol(self) -> str:
@@ -31,13 +28,20 @@ class Role(Enum):
     def worth(self) -> int:
         return self.value[2]
 
+    def __str__(self) -> str:
+        return self.value[0]
+
     def __repr__(self) -> str:
         return f"Role[{self.symbol}]"
 
 
-
 @dataclass
 class Piece:
+    # TODO: pieces should probably be a frozen, slotted dataclass
+    # attrs: role, player, unmoved = False,
+    # problems:
+    #  * targets would have to become a dict[Vector, Vectors] on Board
+    #  * removing access to coord would be a pain
 
     role: Role
     player: Player

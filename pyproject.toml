@@ -39,7 +39,7 @@ dev = [
 Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
 
 [project.scripts]
-jchess = "jchess:run"
+jchess = "jchess.run:run"
 
 
 [tool.mypy]
@@ -47,10 +47,6 @@ warn_return_any = true
 warn_unused_configs = true
 show_error_codes = true
 strict = true
-# required due to a mypy issue: https://github.com/python/mypy/issues/3004
-disable_error_code = ["assignment", "comparison-overlap"]
-# required as terminal as os dependent functionality
-exclude = "terminal|tests"
 
 
 [tool.pylint.basic]
@@ -59,14 +55,15 @@ argument-rgx = "(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
 variable-rgx = "(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
 attr-rgx = "(?#snake_case)^[a-z0-9]*(_[a-z0-9]+)*_?$"
 const-rgx = "(?#CAPITAL_CASE)^[A-Z0-9]*(_[A-Z0-9]+)*_?|__[a-z]*__$"
+class-rgx = "(?#PascalCase)^_?([A-Z][a-z]+)*[A-Z]?_?$"
 
 [tool.pylint.format]
-max-line-length=88
+max-line-length = 88
 
 [tool.pylint.design]
-# the defualt==7 really is too low
-max-attributes=12
-min-public-methods=0
+max-attributes = 10  # (default = 7)
+min-public-methods = 0  # (default = 2)
+max-branches = 15  # (default = 12)
 
 [tool.pylint.messages_control]
 # I decide if something needs a docstring, not pylint or pydocstyle :|
@@ -96,12 +93,14 @@ ignore = [
 [tool.coverage.run]
 branch = true
 source = ["./src/jchess"]
-omit = ["*/dev_tools/*"]
+omit = ["*/dev_tools/*", "*/__main__.py"]
 
 [tool.coverage.report]
 exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
     "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:"
+    "if TYPE_CHECKING:",
 ]
 
 

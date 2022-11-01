@@ -1,3 +1,7 @@
+import sys
+
+assert sys.platform == "win32"
+
 import ctypes
 import os
 from msvcrt import getch
@@ -12,7 +16,7 @@ class _CursorInfo(ctypes.Structure):
     _fields_ = [("size", ctypes.c_int), ("visible", ctypes.c_byte)]
 
 
-def _show_cursor(visible: bool):
+def _show_cursor(visible: bool) -> None:
     ci = _CursorInfo()
     handle = KERNEL32.GetStdHandle(-11)
     KERNEL32.GetConsoleCursorInfo(handle, ctypes.byref(ci))

@@ -1,18 +1,16 @@
-from itertools import product
-
 from jchess import __author__ as author
 from jchess import __version__ as version
 from jchess.board import Board
 from jchess.configs import Pallet, SymbolDict
-from jchess.geometry import VectorLike
-from jchess.pieces import Player
+from jchess.geometry import Vector
+from jchess.pieces import Player, Role
 from jchess.state import PROMOTION_OPTIONS, GameState, Mode, Status
 from jchess.terminal import ctrlseq
 
-# TODO:
-#  * _gen_pieces: wildly inefficient as now game.pieces replaces game.board
-#  iterate over game.pieces instead. also just entirely rework this function
+# TODO: display needs cleaning
 #  * should go over this, pdisplay and config with a fine comb
+#  * clean constants at bottom - probably replace with full strings
+#  * add separator comments
 
 
 class Display:
@@ -67,45 +65,33 @@ class Display:
         return "".join(parts)
 
     def gen_board(self, game: GameState) -> str:
-        output = ""
         board = game.board
         pallet = self.pallet
+        focus = game.board[game.bcursor]
 
-        def coord_transform(v: VectorLike) -> tuple[int, int]:
-            return (29 + 4 * v[0], 6 + 2 * v[1])
-
-        for coord in product(range(8), range(8)):
-
-            cursor_piece = board[game.bcursor]
+        parts = []
+        for coord, piece in board.items():
             highlight_potential_targets = (
-                game.attacker is None
-                and cursor_piece is not None
-                and cursor_piece.player is board.active_player
-                and coord in cursor_piece.targets
+                not game.attacker
+                and focus
+                and focus.player is board.active_player
+                and coord in focus.targets
             )
-            show_actual_targets = (
-                game.attacker is not None and coord in game.attacker.targets
-            )
+            show_actual_targets = game.attacker and coord in game.attacker.targets
+
             if coord == game.bcursor:
                 back = pallet.cursor
-            elif game.attacker is not None and coord == game.attacker.coord:
+            elif game.attacker and coord == game.attacker.coord:
                 back = pallet.focus
             elif highlight_potential_targets or show_actual_targets:
                 back = pallet.target
             else:
                 back = pallet.board[sum(coord) % 2]
 
-            piece = board[coord]
-            if piece is not None:
-                fore = pallet.piece[piece.player]
-                symbol = self.symbol[piece.role]
-            else:
-                fore = ""
-                symbol = " "
-
-            display_position = coord_transform(coord)
-            output += ctrlseq(f" {symbol} ", clr=(back + fore), at=display_position)
-        return output
+            fore = pallet.piece[piece.player] if piece else ""
+            square = f" {self.symbol[piece.role]} " if piece else "   "
+            parts.append(ctrlseq(square, clr=(back + fore), at=coord_transform(coord)))
+        return "".join(parts)
 
     def gen_taken(self, game: GameState, player: Player) -> str:
         taken_pieces = game.board.taken_pieces[player]
@@ -114,17 +100,18 @@ class Display:
 
         parts = []
         for i in range(15):
-            try:
-                p = taken_pieces[i]
-                s = symbol[p]
-            except IndexError:
-                s = " "
+            (role,) = taken_pieces[i : i + 1] or [Role.BLANK]
+            s = symbol[role]
 
             parts.append(f" {s}")
             if i % 5 == 4:
                 parts.append(" \n")
 
         return ctrlseq("".join(parts), clr=color, at=(72 * player.value - 69, 8))
+
+
+def coord_transform(v: Vector) -> tuple[int, int]:
+    return (29 + 4 * v[0], 6 + 2 * v[1])
 
 
 def gutter_msg(board: Board) -> str:

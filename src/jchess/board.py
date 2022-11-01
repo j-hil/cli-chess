@@ -1,35 +1,40 @@
 from copy import deepcopy
 from itertools import product
 
-from jchess.geometry import Vector, VectorLike, Vectors
+from jchess.geometry import V, Vector, Vectors
 from jchess.pieces import Piece, Player, Role
 
-K, Q, R, B, N, P = list(Role)
-BACK_ROW = [R, N, B, Q, K, B, N, R]
-# TODO: del added in testing, integrate properly
+K, Q, R, B, N, _, _ = list(Role)
+_P2_BACK_ROW = list((V(x, 0), r) for x, r in enumerate((R, N, B, Q, K, B, N, R)))
+_P1_BACK_ROW = list((V(x, 7), r) for x, r in enumerate((R, N, B, Q, K, B, N, R)))
+
+_KNIGHT_DELTAS = tuple(product((-1, 1), (-2, 2))) + tuple(product((-2, 2), (-1, 1)))
+DELTAS = {
+    Role.KING: tuple(V(x, y) for x, y in tuple(product([-1, 0, +1], [-1, 0, +1]))),
+    Role.KNIGHT: tuple(V(x, y) for x, y in _KNIGHT_DELTAS),
+}
+
+_CARDINAL_DIRECTIONS = ((1, 0), (0, 1), (-1, 0), (0, -1))
+_L = tuple(tuple(d * V(*v) for d in range(1, 8)) for v in _CARDINAL_DIRECTIONS)
+_M = tuple(tuple(d * V(*v) for d in range(1, 8)) for v in product((1, -1), (1, -1)))
+LINES = {Role.QUEEN: _L + _M, Role.ROOK: _L, Role.BISHOP: _M}
 
 
-class Board:
+class Board(dict[Vector, Piece | None]):
     """Represents the state of chess game & implements it's logic."""
 
-    @staticmethod
-    def has(coord: VectorLike) -> bool:
-        """Check if a coordinate is within the board bounds."""
-        return coord[0] in range(8) and coord[1] in range(8)
-
     def __init__(self) -> None:
-        """Initialise a standard chessboard layout."""
-        self.pieces: list[Piece] = [
-            *[Piece(role, Player.TWO, (x, 0)) for x, role in enumerate(BACK_ROW)],
-            *[Piece(Role.PAWN, Player.TWO, (x, 1)) for x in range(8)],
-            *[Piece(Role.PAWN, Player.ONE, (x, 6)) for x in range(8)],
-            *[Piece(role, Player.ONE, (x, 7)) for x, role in enumerate(BACK_ROW)],
-        ]
+        self.update(
+            {v: Piece(role, Player.TWO, v) for v, role in _P2_BACK_ROW}
+            | {V(x, 1): Piece(Role.PAWN, Player.TWO, V(x, 1)) for x in range(8)}
+            | {V(x, y): None for x, y in product(range(8), range(2, 6))}
+            | {V(x, 6): Piece(Role.PAWN, Player.ONE, V(x, 6)) for x in range(8)}
+            | {v: Piece(role, Player.ONE, v) for v, role in _P1_BACK_ROW}
+        )
 
         self.passant_defender: Piece | None = None
         self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
-
         self.protect_king = True
 
         self.update_targets()
@@ -38,210 +43,185 @@ class Board:
     def active_player(self) -> Player:
         return list(Player)[self.ply % 2]
 
+    def score(self, player: Player) -> int:
+        return sum(role.worth for role in self.taken_pieces[player])
+
     def update_targets(self) -> None:
-        """Update the targets attribute for each piece on the board."""
-        for attacker in self.pieces:
+        """Update the `targets` attr of each piece."""
+        # TODO: king seems to be wrong in specific situations eg after promoted knight
+
+        for coord, attacker in self.items():
+            if not attacker:
+                continue
             targets: Vectors = []
 
-            # the pawn has unique behavior warranting it's own function
             if attacker.role is Role.PAWN:
-                targets.extend(_pawn_targets(self, attacker))
+                targets.extend(self._pawn_targets(attacker))
 
             # the queen, bishop & rook always move along lines
             for line in LINES.get(attacker.role, []):
                 for delta in line:
-                    defender_coord = attacker.coord + delta
-                    if self.has(defender_coord):
-                        defender = self[defender_coord]
-                        if defender is None:
-                            targets.append(defender_coord)
-                            continue
-                        if defender.player is not attacker.player:
-                            targets.append(defender_coord)
-                        break
+                    target = coord + delta
+                    if target not in self:
+                        continue
+                    defender = self[target]
+                    if not defender:
+                        targets.append(target)
+                        continue
+                    if defender.player is not attacker.player:
+                        targets.append(target)
+                    break
 
             # the king and knight always have fixed potential translations
             for delta in DELTAS.get(attacker.role, []):
-                defender_coord = attacker.coord + delta
-                if self.has(defender_coord):
-                    defender = self[defender_coord]
-                    if defender is None or defender.player != attacker.player:
-                        targets.append(defender_coord)
+                target = coord + delta
+                if target in self:
+                    defender = self[target]
+                    if not defender or defender.player != attacker.player:
+                        targets.append(target)
 
             # extra logic for castling
             if attacker.role is Role.KING and attacker.unmoved():
-                targets.extend(_castling_targets(self, attacker))
+                targets.extend(self._casting_targets(attacker))
 
-            # extra logic for check/checkmate
+            # extra logic exclude moves resulting in check/checkmate
             if self.protect_king:
-                bad_targets = _risky_targets(self, attacker, targets)
-                targets = [t for t in targets if t not in bad_targets]
+                risky_targets = self._risky_targets(attacker, targets)
+                targets = [t for t in targets if t not in risky_targets]
 
             attacker.targets = targets
 
-    def process_attack(self, attacker: Piece, defender_coord: Vector) -> None:
-        defender = self[defender_coord]
-        delta = defender_coord - attacker.coord
+    def process_move(self, attacker: Piece, target: Vector) -> None:
+
+        defender = self[target]
+        delta = target - attacker.coord
 
         # remove any previous vulnerability to en passant
         if self.passant_defender and self.passant_defender.player is self.active_player:
             self.passant_defender = None
 
-        # add any new vulnerability to en passant
-        if attacker.role is Role.PAWN and delta in [(0, 2), (0, -2)]:
-            self.passant_defender = attacker
+        if attacker.role is Role.PAWN:
+            if abs(delta.y) == 2:
+                # add any new vulnerability to en passant
+                self.passant_defender = attacker
+            elif not defender and delta in [V(1, 1), V(1, -1), V(-1, 1), V(-1, -1)]:
+                # en passant chosen, so delete piece to left/right
+                self[attacker.coord + V(delta.x, 0)] = None
+                self.taken_pieces[self.active_player].append(Role.PAWN)
 
-        # en passant move chosen, so delete piece to the left/right
-        if (
-            attacker.role is Role.PAWN
-            and delta in [(1, 1), (1, -1), (-1, 1), (-1, -1)]
-            and defender is None
-            and self.passant_defender is not None  # pleases type checkers
-        ):
-            self.pieces.remove(self.passant_defender)
-            self.taken_pieces[self.active_player].append(Role.PAWN)
-
-        # castling
-        if attacker.role is Role.KING:
+        if attacker.role is Role.KING and abs(delta.x) == 2:
             y_king = attacker.coord.y
 
-            # king-side castle
-            if delta.x == 2:
-                castle = self[7, y_king]
-                if castle is None:
-                    raise RuntimeError(
-                        "King-side castling shouldn't have been available."
-                    )
-                castle.coord = (5, y_king)
+            old_coord = V(7, y_king) if delta.x == 2 else V(0, y_king)
+            new_coord = V(5, y_king) if delta.x == 2 else V(3, y_king)
 
-            # queen-side caste
-            if delta.x == -2:
-                castle = self[0, y_king]
-                if castle is None:
-                    raise RuntimeError(
-                        "Queen-side castling shouldn't have been available."
-                    )
-                castle.coord = (3, y_king)
+            # this section could be simplified if use pieces are frozen dataclass
+            rook = self[old_coord]
+            assert rook, f"Must be rook at {old_coord}."
+            rook.coord = new_coord
+            self[new_coord] = rook
+            self[old_coord] = None
 
         # execute move
-        attacker.coord = defender_coord
-        if defender is not None:
-            self.pieces.remove(defender)
+        if defender:
             self.taken_pieces[self.active_player].append(defender.role)
+        self[attacker.coord] = None
+        attacker.coord = target
+        self[target] = attacker
         self.ply += 1
         self.update_targets()
 
-    def score(self, player: Player) -> int:
-        return sum(role.worth for role in self.taken_pieces[player])
+    def __repr__(self) -> str:
+        parts = []
+        for y, x in product(range(8), range(8)):
+            key = V(x, y)
+            if piece := self[key]:
+                parts.append(f"{piece.role.symbol}{piece.player.value}")
+            else:
+                parts.append("--")
+            parts.append(" " if x != 7 else "\n")
+        return "".join(parts)
 
-    def __getitem__(self, key: VectorLike) -> Piece | None:
-        for piece in self.pieces:
-            if piece.coord == key:
-                return piece
-        return None
+    # Helper methods for `self.update_targets` --------------------------------------- #
 
-    def __setitem__(self, key: VectorLike, value: Piece) -> None:
-        value.coord = key
-        del self[key]
-        self.pieces.append(value)
+    def _pawn_targets(self, pawn: Piece) -> Vectors:
 
-    def __delitem__(self, key: VectorLike) -> None:
-        for i, piece in enumerate(self.pieces):
-            if piece.coord == key:
-                del self.pieces[i]
-                return
+        assert pawn.role is Role.PAWN, "Only call this function on a PAWN."
+        targets = []
 
+        pawn_coord = pawn.coord
+        dy = -1 if pawn.player is Player.ONE else 1
 
-def _risky_targets(board: Board, attacker: Piece, current_targets: Vectors) -> Vectors:
-    """Compute the targets which, if attacked, would leave the king in check."""
-    result = []
+        # standard forward step
+        step_target = pawn_coord + V(0, dy)
+        if step_target in self and not self[step_target]:
+            targets.append(step_target)
 
-    for defender_coord in current_targets:
-        board_copy = deepcopy(board)
-        attacker_copy = deepcopy(attacker)
+        # double step (aka jump) move
+        jump_target = pawn_coord + 2 * V(0, dy)
+        can_jump = pawn.unmoved() and not self[step_target] and not self[jump_target]
+        if can_jump:
+            targets.append(jump_target)
 
-        # initiate the attack
-        board_copy.protect_king = False
-        board_copy.update_targets()
-        board_copy.process_attack(attacker_copy, defender_coord)
+        # standard and passant captures
+        for dx in [1, -1]:
+            capture_target = pawn_coord + V(dx, dy)
 
-        for piece in board_copy.pieces:
-            if piece.player is not attacker_copy.player:
-                for coord in piece.targets:
-                    target = board_copy[coord]
-                    if target is not None and target.role is Role.KING:
-                        result.append(defender_coord)
-    return result
+            std_defender = self.get(capture_target, None)
+            passant_defender = self.get(pawn_coord + V(dx, 0), None)
 
+            can_std_capture = std_defender and std_defender.player is not pawn.player
+            can_passant = passant_defender and passant_defender is self.passant_defender
+            if can_std_capture or can_passant:
+                targets.append(capture_target)
 
-def _castling_targets(board: Board, attacker: Piece) -> Vectors:
-    """Compute the coords which the attacker (a king) can move to via castling."""
+        return targets
 
-    result = []
-    y_king = attacker.coord.y
+    def _casting_targets(self, king: Piece) -> Vectors:
 
-    for x_rook, sign in zip((0, 7), (+1, -1)):
-        rook = board[(x_rook, y_king)]
-        path = range(x_rook + sign, 4 + sign, sign)
+        assert king.role is Role.KING, "Only call this function on a KING."
+        y_king = king.coord.y
 
-        unmoved_rook = rook and rook.role is Role.ROOK and rook.unmoved()
-        empty_path = all(board[(x, y_king)] is None for x in path[:-1])
-        safe_path = all(
-            (x, y_king) not in p.targets
-            for p, x in product(board.pieces, path)
-            if p.player is not board.active_player
-        )
+        targets = []
+        for x_rook, sign in zip((0, 7), (1, -1)):
+            rook = self[V(x_rook, y_king)]
+            path_xvals = range(x_rook + sign, 4 + sign, sign)
+            if (
+                (rook and rook.role is Role.ROOK and rook.unmoved())  # unmoved rook
+                and all(not self[V(x, y_king)] for x in path_xvals[:-1])  # empty path
+                and all(  # safe path
+                    V(x, y_king) not in p.targets
+                    for p, x in product(self.values(), path_xvals)
+                    if p and p.player is not self.active_player
+                )
+            ):
+                targets.append(king.coord + sign * V(2, 0))
+        return targets
 
-        if unmoved_rook and empty_path and safe_path:
-            result.append(attacker.coord + sign * Vector(2, 0))
+    def _risky_targets(self, attacker: Piece, current_targets: Vectors) -> Vectors:
+        # TODO: add a test for risky targets
+        risky_targets = []
 
-    return result
+        for target in current_targets:
 
+            board_copy = deepcopy(self)
 
-def _pawn_targets(board: "Board", attacker: Piece) -> Vectors:
-    """Compute the targets of a pawn attacker."""
-    result = []
-    attacker_coord = attacker.coord
+            # wouldn't be necessary to copy if Piece were frozen dataclass
+            attacker_copy = board_copy[attacker.coord]
+            assert attacker_copy, "`attacker != None` => `attacker_copy != None`"
 
-    # map 1 to -1 and 2 to +1 (i.e up or down depending on player)
-    dy = 2 * attacker.player.value - 3
+            # try out the attack without concern for check/checkmate
+            board_copy.protect_king = False
+            board_copy.update_targets()
+            board_copy.process_move(attacker_copy, target)
 
-    defender_coord = attacker_coord + (0, dy)
-    if board[defender_coord] is None:
-        result.append(defender_coord)
+            # note if the move caused check/checkmate
+            for piece in board_copy.values():
+                if piece and piece.player is not attacker_copy.player:
+                    if any(
+                        (defender := self[next_target]) and defender.role is Role.KING
+                        for next_target in piece.targets
+                    ):
+                        risky_targets.append(target)
 
-    for dx in [1, -1]:
-        defender_coord = attacker_coord + (dx, dy)
-        defender = board[defender_coord]
-        passant_defender = board[attacker_coord + (dx, 0)]
-
-        can_standard_capture = defender and defender.player is not attacker.player
-        can_passant = passant_defender and passant_defender == board.passant_defender
-        if can_standard_capture or can_passant:
-            result.append(defender_coord)
-
-    defender_coord = attacker_coord + (0, 2 * dy)
-    if (
-        attacker.unmoved()
-        and board[attacker_coord + (0, dy)] is None
-        and board[defender_coord] is None
-    ):
-        result.append(defender_coord)
-
-    return result
-
-
-DELTAS = {
-    Role.KING: list(product([-1, 0, +1], [-1, 0, +1])),
-    Role.KNIGHT: list(product((-1, 1), (-2, 2))) + list(product((-2, 2), (-1, 1))),
-}
-
-
-CARDINAL_DIRECTIONS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-L1 = [[(s * d, t * d) for d in range(1, 8)] for s, t in CARDINAL_DIRECTIONS]
-L2 = [[(s * d, t * d) for d in range(1, 8)] for s, t in product([1, -1], repeat=2)]
-LINES = {
-    Role.QUEEN: L1 + L2,
-    Role.ROOK: L1,
-    Role.BISHOP: L2,
-}
+        return risky_targets

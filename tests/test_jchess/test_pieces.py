@@ -29,8 +29,6 @@ class TestPiece(TestCase):
 class TestRole(TestCase):
     """Test `jchess.pieces.Role`."""
 
-    # mostly tested through TestPieces
-
-    def test_wroth(self):
+    def test_worth(self) -> None:
         self.assertEqual(Role.QUEEN.worth, 9)
         self.assertEqual(Role.PAWN.worth, 1)

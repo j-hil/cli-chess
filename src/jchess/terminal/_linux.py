@@ -1,28 +1,33 @@
 import sys
+
+assert sys.platform != "win32"
+
 from termios import TCSADRAIN, tcgetattr, tcsetattr  # pylint: disable=import-error
 from tty import setraw
 
 CSI = "\x1b["
+
 # TODO: bring back in line with windows version
+# eg replace '?' on line max-3
 
 
-def clear():
+def clear() -> None:
     print(CSI + "2J")
 
 
-def resize(w: int, h: int):
+def resize(w: int, h: int) -> None:
     print(f"{CSI}8;{h};{w}t")
 
 
-def reset_cursor():
+def reset_cursor() -> None:
     print(CSI + "H")
 
 
-def show_cursor():
+def show_cursor() -> None:
     print(CSI + "?25h", end="")
 
 
-def hide_cursor():
+def hide_cursor() -> None:
     print(CSI + "?25l", end="")
 
 
@@ -53,7 +58,6 @@ def get_input() -> str:
         return {"H": "↑", "P": "↓", "M": "→", "K": "←", "O": "⇲"}[getch()]
 
     # Direction keys in usual console
-    # TODO: replace "?" as appropriate
     if user_input + getch() == CSI:
         return {"A": "↑", "B": "↓", "C": "→", "D": "←", "?": "⇲"}[getch()]
 

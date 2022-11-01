@@ -1,21 +1,20 @@
 from unittest import TestCase
-from unittest.mock import DEFAULT, patch
+from unittest.mock import DEFAULT, Mock, patch
 
-import jchess
+import jchess.run
 from jchess.action import Action
+from jchess.run import run
 
 
 class TestMain(TestCase):
     """Smoke test for main script."""
 
-    # mocked to simulate player
-    @patch("jchess.GameState.get_action")
-    # mocked to prevent writing to stdout
-    @patch.multiple("jchess", os=DEFAULT, terminal=DEFAULT, print=DEFAULT)
-    def test_main(self, get_action, print, terminal, os):
+    @patch.multiple(jchess.run.GameState, get_action=DEFAULT)  # type: ignore
+    @patch.multiple(jchess.run, os=DEFAULT, terminal=DEFAULT, print=DEFAULT)
+    def test_run(self, get_action: Mock, print: Mock, terminal: Mock, os: Mock) -> None:
         get_action.side_effect = list(Action)  # relies on order of Action
         with self.assertRaises(SystemExit):
-            jchess.run()
+            run()
 
         self.assertEqual(get_action.call_count, len(Action))
         self.assertEqual(print.call_count, len(Action))

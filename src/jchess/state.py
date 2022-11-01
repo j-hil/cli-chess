@@ -5,7 +5,7 @@ from typing import Any
 
 from jchess.action import Action, get_action_lhs, get_action_rhs
 from jchess.board import Board
-from jchess.geometry import Vector
+from jchess.geometry import V, Vector
 from jchess.pieces import Piece, Player, Role
 
 
@@ -38,13 +38,13 @@ class GameState:
         self.attacker: Piece | None = None
 
         self.scursor = 0
-        self.bcursor = Vector(4, 7)
+        self.bcursor = V(4, 7)
         self.pcursor = 0
 
         self.status_prev = Status.UNINITIALIZED
         self.status = Status.START_MENU
 
-        self.mode = None
+        self.mode: Mode | None = None
 
     def get_action(self) -> Action:
         player = self.board.active_player
@@ -54,38 +54,37 @@ class GameState:
         if name == "bcursor":
             value %= 8
         elif name == "pcursor":
-            value %= 4
+            value %= len(PROMOTION_OPTIONS)
         elif name == "scursor":
             value %= len(Mode)
         super().__setattr__(name, value)
 
     def evolve_state(self) -> None:
-        # pylint: disable=too-many-branches  # TODO: fix!
 
         board = self.board
-        self.status_prev = self.status
-
         action = self.get_action()
+        self.status_prev = status = self.status
 
         if action is Action.QUIT:
             sys.exit()
 
         # while in mode selection menu
-        if self.status == Status.START_MENU:
+        if status is Status.START_MENU:
             if action in CARDINAL_DIRECTION:
-                self.scursor += CARDINAL_DIRECTION[action][1]
+                self.scursor += CARDINAL_DIRECTION[action].y
             if action is Action.SELECT:
                 self.mode = list(Mode)[self.scursor]
-                self.status_prev = self.status
                 self.status = Status.BOARD_FOCUS
 
-        # while in promotion menu (`and self.attacker` helps type checker)
-        elif self.status is Status.PROMOTING and self.attacker:
+        # while in promotion menu
+        # TODO: add a test for promotion
+        elif status is Status.PROMOTING:
+            assert self.attacker, "Can only promote if an attacker is selected"
             if action in CARDINAL_DIRECTION:
-                self.pcursor += CARDINAL_DIRECTION[action][1]
+                self.pcursor += CARDINAL_DIRECTION[action].y
             elif action is Action.SELECT:
                 self.attacker.role = PROMOTION_OPTIONS[self.pcursor]
-                board.process_attack(self.attacker, self.bcursor)
+                board.process_move(self.attacker, self.bcursor)
                 self.attacker = None
                 self.status = Status.BOARD_FOCUS
 
@@ -93,10 +92,10 @@ class GameState:
         elif self.status is Status.BOARD_FOCUS:
             if action in CARDINAL_DIRECTION:
                 self.bcursor += CARDINAL_DIRECTION[action]
-
             elif action is Action.SELECT:
                 attacker = self.attacker
-                focus = board[self.bcursor]
+                cursor = self.bcursor
+                focus = board[cursor]
 
                 if (
                     not attacker
@@ -106,7 +105,7 @@ class GameState:
                 ):
                     self.attacker = focus
 
-                elif attacker and self.bcursor in attacker.targets:
+                elif attacker and cursor in attacker.targets:
                     if (
                         attacker.role is Role.PAWN
                         and attacker.coord.y in [1, 6]
@@ -114,15 +113,15 @@ class GameState:
                     ):
                         self.status = Status.PROMOTING
                     else:
-                        board.process_attack(attacker, self.bcursor)
+                        board.process_move(attacker, self.bcursor)
                         self.attacker = None
 
 
-CARDINAL_DIRECTION: dict[Action, tuple[int, int]] = {
-    Action.UP: (0, -1),
-    Action.DOWN: (0, +1),
-    Action.LEFT: (-1, 0),
-    Action.RIGHT: (+1, 0),
+CARDINAL_DIRECTION: dict[Action, Vector] = {
+    Action.UP: V(0, -1),
+    Action.DOWN: V(0, +1),
+    Action.LEFT: V(-1, 0),
+    Action.RIGHT: V(+1, 0),
 }
 
 ROTATE = {

@@ -23,14 +23,17 @@ class V:
     def __mul__(self, other: int) -> "V":
         return V(self.x * other, self.y * other)
 
-    # typing doesn't seem to like simpler `__rmul__ = __mul__`
+    # typing doesn't seem to like the simpler `__rmul__ = __mul__`
     def __rmul__(self, other: int) -> "V":
         return V(other * self.x, other * self.y)
+
+    def __mod__(self, other: int) -> "V":
+        return V(self.x % other, self.y % other)
 
     def __getitem__(self, index: int) -> int:
         return (self.x, self.y)[index]
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[int]:
         return iter((self.x, self.y))
 
     def __repr__(self) -> str:
