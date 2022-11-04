@@ -1,30 +1,39 @@
-# type: ignore
 import os
+from typing import no_type_check
 
 import jchess.display
 import jchess.run
-import jchess.state
 from jchess.action import Action, get_action_rhs
 from jchess.configs import UTF8_SYMBOLS, VSC_PALLET
 from jchess.run import run
 from jchess.state import GameState
-
-inputs: list[str] = []
+from jchess.testutils import board_to_ssv
 
 # attempt to detect that game is being run inside VS Code
 DEV_MODE = os.environ.get("TERM_PROGRAM") == "vscode"
 
 
-def hack_get_action(self: GameState) -> Action:
+class HackedGame(GameState):
 
-    action = get_action_rhs()
-    global inputs
-    inputs.append(action.value)
+    singleton = None
+    inputs: list[str] = []
 
-    return action
+    def __new__(cls: type["HackedGame"]) -> "HackedGame":
+        if cls.singleton is None:
+            cls.singleton = super().__new__(cls)
+        return cls.singleton
+
+    def get_action(self) -> Action:
+        action = get_action_rhs()
+        self.inputs.append(action.value)
+        return action
 
 
-def main() -> None:
+hacked_game = HackedGame()
+
+
+@no_type_check
+def hack() -> None:
     if not DEV_MODE:
         print("Warning: running `jchess` this way is intended only for development.")
         input("Press any key to continue.")
@@ -32,18 +41,26 @@ def main() -> None:
         jchess.run.DEFAULT_PALLET = VSC_PALLET
         jchess.run.DEFAULT_SYMBOLS = UTF8_SYMBOLS
 
-    jchess.display.ROW_LABELS = "   ".join(list("01234567"))
-    jchess.display.COL_LABELS = "\n \n".join(list("01234567"))
-    jchess.state.GameState.get_action = hack_get_action
+    jchess.display.ROW_LABELS = "0   1   2   3   4   5   6   7"
+    jchess.display.COL_LABELS = "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
+    jchess.run.GameState = HackedGame
 
+
+def main() -> None:
     try:
+        hack()
         run()
     finally:
         print("Actions were:")
-        output = " ".join(inputs)
+        output = " ".join(hacked_game.inputs)
         n = 76
-        for i in range(len(output) // n):
+        for i in range(len(output) // n + 1):
             print(f"{output[n * i : n * (i + 1)]}")
+
+        print("Final State")
+        board = hacked_game.board
+        targets = board.targets[hacked_game.bcursor]
+        print(board_to_ssv(board, targets))
 
 
 if __name__ == "__main__":

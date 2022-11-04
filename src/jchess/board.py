@@ -20,6 +20,8 @@ _L = tuple(tuple(d * V(*v) for d in range(1, 8)) for v in _CARDINAL_DIRECTIONS)
 _M = tuple(tuple(d * V(*v) for d in range(1, 8)) for v in product((1, -1), (1, -1)))
 LINES = {Role.QUEEN: _L + _M, Role.ROOK: _L, Role.BISHOP: _M}
 
+DIAGONALS = (V(1, 1), V(1, -1), V(-1, 1), V(-1, -1))
+
 
 class Board(dict[Vector, Piece | None]):
     """Represents the state of chess game & implements it's logic."""
@@ -107,14 +109,10 @@ class Board(dict[Vector, Piece | None]):
         if self.passant and self.passant.piece.player is self.active_player:
             self.passant = None
 
-        if attacker.role is Role.PAWN:
-            if abs(delta.y) == 2:
-                # add any new vulnerability to en passant
-                self.passant = Square(attacker, target)
-            elif not defender and delta in [V(1, 1), V(1, -1), V(-1, 1), V(-1, -1)]:
-                # en passant chosen, so delete piece to left/right
-                self[source + V(delta.x, 0)] = None
-                self.taken_pieces[self.active_player].append(Role.PAWN)
+        # en passant capture
+        if attacker.role is Role.PAWN and not defender and delta in DIAGONALS:
+            self[source + V(delta.x, 0)] = None
+            self.taken_pieces[self.active_player].append(Role.PAWN)
 
         # castling
         if attacker.role is Role.KING and abs(delta.x) == 2:
@@ -125,12 +123,18 @@ class Board(dict[Vector, Piece | None]):
             self[new_coord] = Piece(Role.ROOK, attacker.player, moved=True)
             self[old_coord] = None
 
-        # execute move
+        # execute standard move/capture
         if defender:
             self.taken_pieces[self.active_player].append(defender.role)
         self[source] = None
-        self[target] = Piece(promote_to or attacker.role, attacker.player, moved=True)
+        attacker = Piece(promote_to or attacker.role, attacker.player, moved=True)
+        self[target] = attacker
         self.ply += 1
+
+        # add any en passant vulnerability
+        if attacker.role is Role.PAWN and abs(delta.y) == 2:
+            self.passant = Square(attacker, target)
+
         self.update_targets()
 
     def __repr__(self) -> str:
@@ -204,25 +208,28 @@ class Board(dict[Vector, Piece | None]):
         return targets
 
     def _risky_targets(self, source: Vector, current_targets: Vectors) -> Vectors:
-        # TODO: add a test for risky targets
         attacker = self[source]
         assert attacker, f"Only call if there is a piece at {source=}"
-        risky_targets = []
+        risky_targets: Vectors = []
 
-        for target in current_targets:
+        for current_target in current_targets:
             # try out the attack without concern for check/checkmate
             board_copy = deepcopy(self)
             board_copy.protect_king = False
             board_copy.update_targets()
-            board_copy.process_move(source, target)
+            board_copy.process_move(source, current_target)
 
             # note if the move caused check/checkmate
-            for coord, piece in board_copy.items():
-                if piece and piece.player is not attacker.player:
-                    if any(
-                        (defender := self[next_target]) and defender.role is Role.KING
-                        for next_target in board_copy.targets[coord]
-                    ):
-                        risky_targets.append(target)
+            if board_copy.in_check(attacker.player):
+                risky_targets.append(current_target)
+                continue
 
         return risky_targets
+
+    def in_check(self, player: Player):
+        # ap = attacking_piece, tp = target_piece
+        return any(
+            (ap and ap.player is not player)
+            and any((tp := self[t]) and tp.role is K for t in self.targets[v])
+            for v, ap in self.items()
+        )

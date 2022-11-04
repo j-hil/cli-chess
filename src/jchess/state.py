@@ -59,7 +59,6 @@ class GameState:
         super().__setattr__(name, value)
 
     def evolve_state(self) -> None:
-
         action = self.get_action()
         board = self.board
         status = self.status_prev = self.status
@@ -70,19 +69,16 @@ class GameState:
 
         # while in mode selection menu
         if status is Status.START_MENU:
-            if action in CARDINAL_DIRECTION:
-                self.scursor += CARDINAL_DIRECTION[action].y
+            self.scursor += CARDINAL_DIRECTION.get(action, V(0, 0)).y
             if action is Action.SELECT:
                 self.mode = list(Mode)[self.scursor]
                 self.status = Status.BOARD_FOCUS
 
         # while in promotion menu
-        # TODO: add a test for promotion
         elif status is Status.PROMOTING:
             assert attacker, "Can only promote if an attacker is selected"
-            if action in CARDINAL_DIRECTION:
-                self.pcursor += CARDINAL_DIRECTION[action].y
-            elif action is Action.SELECT:
+            self.pcursor += CARDINAL_DIRECTION.get(action, V(0, 0)).y
+            if action is Action.SELECT:
                 board.process_move(
                     attacker.coord,
                     self.bcursor,
@@ -92,10 +88,9 @@ class GameState:
                 self.status = Status.BOARD_FOCUS
 
         # while in board screen
-        elif self.status is Status.BOARD_FOCUS:
-            if action in CARDINAL_DIRECTION:
-                self.bcursor += CARDINAL_DIRECTION[action]
-            elif action is Action.SELECT:
+        else:  # (status is Status.BOARD_FOCUS)
+            self.bcursor += CARDINAL_DIRECTION.get(action, V(0, 0))
+            if action is Action.SELECT:
                 cursor = self.bcursor
                 focus = board[cursor]
                 if (
