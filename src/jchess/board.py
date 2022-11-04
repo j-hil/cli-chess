@@ -1,8 +1,9 @@
 from copy import deepcopy
 from itertools import product
+from typing import cast
 
 from jchess.geometry import V, Vector, Vectors
-from jchess.pieces import Piece, Player, Role
+from jchess.pieces import Piece, Player, Role, Square
 
 K, Q, R, B, N, _, _ = list(Role)
 _P2_BACK_ROW = list((V(x, 0), r) for x, r in enumerate((R, N, B, Q, K, B, N, R)))
@@ -25,14 +26,15 @@ class Board(dict[Vector, Piece | None]):
 
     def __init__(self) -> None:
         self.update(
-            {v: Piece(role, Player.TWO, v) for v, role in _P2_BACK_ROW}
-            | {V(x, 1): Piece(Role.PAWN, Player.TWO, V(x, 1)) for x in range(8)}
+            {v: Piece(role, Player.TWO) for v, role in _P2_BACK_ROW}
+            | {V(x, 1): Piece(Role.PAWN, Player.TWO) for x in range(8)}
             | {V(x, y): None for x, y in product(range(8), range(2, 6))}
-            | {V(x, 6): Piece(Role.PAWN, Player.ONE, V(x, 6)) for x in range(8)}
-            | {v: Piece(role, Player.ONE, v) for v, role in _P1_BACK_ROW}
+            | {V(x, 6): Piece(Role.PAWN, Player.ONE) for x in range(8)}
+            | {v: Piece(role, Player.ONE) for v, role in _P1_BACK_ROW}
         )
 
-        self.passant_defender: Piece | None = None
+        self.targets = {V(*v): cast(Vectors, []) for v in product(range(8), range(8))}
+        self.passant: Square | None = None
         self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
         self.protect_king = True
@@ -52,11 +54,12 @@ class Board(dict[Vector, Piece | None]):
 
         for coord, attacker in self.items():
             if not attacker:
+                self.targets[coord] = []
                 continue
             targets: Vectors = []
 
             if attacker.role is Role.PAWN:
-                targets.extend(self._pawn_targets(attacker))
+                targets.extend(self._pawn_targets(coord))
 
             # the queen, bishop & rook always move along lines
             for line in LINES.get(attacker.role, []):
@@ -81,53 +84,52 @@ class Board(dict[Vector, Piece | None]):
                         targets.append(target)
 
             # extra logic for castling
-            if attacker.role is Role.KING and attacker.unmoved():
-                targets.extend(self._casting_targets(attacker))
+            if attacker.role is Role.KING and not attacker.moved:
+                targets.extend(self._casting_targets(coord))
 
             # extra logic exclude moves resulting in check/checkmate
             if self.protect_king:
-                risky_targets = self._risky_targets(attacker, targets)
+                risky_targets = self._risky_targets(coord, targets)
                 targets = [t for t in targets if t not in risky_targets]
 
-            attacker.targets = targets
+            self.targets[coord] = targets
 
-    def process_move(self, attacker: Piece, target: Vector) -> None:
-
+    def process_move(
+        self, source: Vector, target: Vector, *, promote_to: Role | None = None
+    ) -> None:
+        attacker = self[source]
         defender = self[target]
-        delta = target - attacker.coord
+        delta = target - source
+
+        assert attacker, f"Move only processed when a piece is at {source=}."
 
         # remove any previous vulnerability to en passant
-        if self.passant_defender and self.passant_defender.player is self.active_player:
-            self.passant_defender = None
+        if self.passant and self.passant.piece.player is self.active_player:
+            self.passant = None
 
         if attacker.role is Role.PAWN:
             if abs(delta.y) == 2:
                 # add any new vulnerability to en passant
-                self.passant_defender = attacker
+                self.passant = Square(attacker, target)
             elif not defender and delta in [V(1, 1), V(1, -1), V(-1, 1), V(-1, -1)]:
                 # en passant chosen, so delete piece to left/right
-                self[attacker.coord + V(delta.x, 0)] = None
+                self[source + V(delta.x, 0)] = None
                 self.taken_pieces[self.active_player].append(Role.PAWN)
 
+        # castling
         if attacker.role is Role.KING and abs(delta.x) == 2:
-            y_king = attacker.coord.y
-
+            y_king = source.y
             old_coord = V(7, y_king) if delta.x == 2 else V(0, y_king)
             new_coord = V(5, y_king) if delta.x == 2 else V(3, y_king)
 
-            # this section could be simplified if use pieces are frozen dataclass
-            rook = self[old_coord]
-            assert rook, f"Must be rook at {old_coord}."
-            rook.coord = new_coord
-            self[new_coord] = rook
+            self[new_coord] = Piece(Role.ROOK, attacker.player, moved=True)
             self[old_coord] = None
 
         # execute move
         if defender:
             self.taken_pieces[self.active_player].append(defender.role)
-        self[attacker.coord] = None
-        attacker.coord = target
-        self[target] = attacker
+        self[source] = None
+        self[target] = Piece(promote_to or attacker.role, attacker.player, moved=True)
         self.ply += 1
         self.update_targets()
 
@@ -144,13 +146,12 @@ class Board(dict[Vector, Piece | None]):
 
     # Helper methods for `self.update_targets` --------------------------------------- #
 
-    def _pawn_targets(self, pawn: Piece) -> Vectors:
+    def _pawn_targets(self, pawn_coord: Vector) -> Vectors:
 
-        assert pawn.role is Role.PAWN, "Only call this function on a PAWN."
-        targets = []
-
-        pawn_coord = pawn.coord
+        pawn = self[pawn_coord]
+        assert pawn and pawn.role is Role.PAWN, "Only call this function on a PAWN."
         dy = -1 if pawn.player is Player.ONE else 1
+        targets = []
 
         # standard forward step
         step_target = pawn_coord + V(0, dy)
@@ -159,68 +160,68 @@ class Board(dict[Vector, Piece | None]):
 
         # double step (aka jump) move
         jump_target = pawn_coord + 2 * V(0, dy)
-        can_jump = pawn.unmoved() and not self[step_target] and not self[jump_target]
+        can_jump = not pawn.moved and not self[step_target] and not self[jump_target]
         if can_jump:
             targets.append(jump_target)
 
-        # standard and passant captures
+        # standard and en passant captures
         for dx in [1, -1]:
             capture_target = pawn_coord + V(dx, dy)
+            passant_coord = pawn_coord + V(dx, 0)
 
-            std_defender = self.get(capture_target, None)
-            passant_defender = self.get(pawn_coord + V(dx, 0), None)
+            defender = self.get(capture_target, None)
+            neighbor = self.get(passant_coord, None)
 
-            can_std_capture = std_defender and std_defender.player is not pawn.player
-            can_passant = passant_defender and passant_defender is self.passant_defender
+            can_std_capture = defender and defender.player is not pawn.player
+            can_passant = neighbor and self.passant == Square(neighbor, passant_coord)
             if can_std_capture or can_passant:
                 targets.append(capture_target)
 
         return targets
 
-    def _casting_targets(self, king: Piece) -> Vectors:
-
-        assert king.role is Role.KING, "Only call this function on a KING."
-        y_king = king.coord.y
+    def _casting_targets(self, coord: Vector) -> Vectors:
+        king = self[coord]
+        assert king and king.role is Role.KING, "Only call this function on a KING."
+        y_king = coord.y
 
         targets = []
         for x_rook, sign in zip((0, 7), (1, -1)):
             rook = self[V(x_rook, y_king)]
             path_xvals = range(x_rook + sign, 4 + sign, sign)
             if (
-                (rook and rook.role is Role.ROOK and rook.unmoved())  # unmoved rook
-                and all(not self[V(x, y_king)] for x in path_xvals[:-1])  # empty path
-                and all(  # safe path
-                    V(x, y_king) not in p.targets
-                    for p, x in product(self.values(), path_xvals)
-                    if p and p.player is not self.active_player
+                # unmoved rook
+                (rook and rook.role is Role.ROOK and not rook.moved)
+                # empty path
+                and all(not self[V(x, y_king)] for x in path_xvals[:-1])
+                # safe path
+                and all(
+                    V(x, y_king) not in self.targets[v]
+                    for v, x in product(self, path_xvals)
+                    if (p := self[v]) and p.player is not self.active_player
                 )
             ):
-                targets.append(king.coord + sign * V(2, 0))
+                targets.append(coord + sign * V(2, 0))
         return targets
 
-    def _risky_targets(self, attacker: Piece, current_targets: Vectors) -> Vectors:
+    def _risky_targets(self, source: Vector, current_targets: Vectors) -> Vectors:
         # TODO: add a test for risky targets
+        attacker = self[source]
+        assert attacker, f"Only call if there is a piece at {source=}"
         risky_targets = []
 
         for target in current_targets:
-
-            board_copy = deepcopy(self)
-
-            # wouldn't be necessary to copy if Piece were frozen dataclass
-            attacker_copy = board_copy[attacker.coord]
-            assert attacker_copy, "`attacker != None` => `attacker_copy != None`"
-
             # try out the attack without concern for check/checkmate
+            board_copy = deepcopy(self)
             board_copy.protect_king = False
             board_copy.update_targets()
-            board_copy.process_move(attacker_copy, target)
+            board_copy.process_move(source, target)
 
             # note if the move caused check/checkmate
-            for piece in board_copy.values():
-                if piece and piece.player is not attacker_copy.player:
+            for coord, piece in board_copy.items():
+                if piece and piece.player is not attacker.player:
                     if any(
                         (defender := self[next_target]) and defender.role is Role.KING
-                        for next_target in piece.targets
+                        for next_target in board_copy.targets[coord]
                     ):
                         risky_targets.append(target)
 

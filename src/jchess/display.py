@@ -65,19 +65,21 @@ class Display:
         return "".join(parts)
 
     def gen_board(self, game: GameState) -> str:
-        board = game.board
         pallet = self.pallet
-        focus = game.board[game.bcursor]
+        board = game.board
+        cursor = game.bcursor
+        focus = game.board[cursor]
+        attacker = game.attacker
 
         parts = []
         for coord, piece in board.items():
             highlight_potential_targets = (
-                not game.attacker
+                not attacker
                 and focus
                 and focus.player is board.active_player
-                and coord in focus.targets
+                and coord in board.targets[cursor]
             )
-            show_actual_targets = game.attacker and coord in game.attacker.targets
+            show_actual_targets = attacker and coord in board.targets[attacker.coord]
 
             if coord == game.bcursor:
                 back = pallet.cursor

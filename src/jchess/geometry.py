@@ -37,7 +37,7 @@ class V:
         return iter((self.x, self.y))
 
     def __repr__(self) -> str:
-        return f"V({self.x}, {self.y})"
+        return V.__name__ + f"({self.x}, {self.y})"
 
 
 # Conveniences for typing

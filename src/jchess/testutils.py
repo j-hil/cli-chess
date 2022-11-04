@@ -19,14 +19,14 @@ ACTION_LOOKUP = {action.value: action for action in Action}
 ROLE_LOOKUP = {role.symbol: role for role in Role}
 PLAYER_LOOKUP = {str(player.value): player for player in Player}
 
-SYMBOLS = "".join(role.symbol for role in Role)
-CELL_PATTERN = rf"""
+assert "".join(role.symbol for role in Role) == "KQHIJi ", "Update symbols in regex."
+CELL_PATTERN = r"""
 ^
     (?:
-        ([{SYMBOLS}])([-x])([12])  # Match [SYMBOL][FLAG][PLAYER_NUMBER] ...
+        ([KQHIJi])([12])([-x])m([TF])   # Match [SYMBOL][PLAYER_NUM][FLAG]m[MOVED] ...
     )
     |
-    -([-x])-                       # ... or [-][FLAG][-]
+    --([-x])--                          # ... or --[FLAG]--
 $
 """
 CELL_REGEX = re.compile(CELL_PATTERN, re.X)
@@ -68,17 +68,23 @@ def board_from_ssv(path: Path) -> tuple[Board, Vectors]:
 
                 match = CELL_REGEX.match(cell)
                 if not match:
-                    raise RuntimeError(f"{cell=} at {coord} :\n{CELL_REGEX.pattern}")
-                sym, flag1, num, flag2 = match.groups()
+                    msg = f"{cell=} at {coord} doesn't match:\n{CELL_REGEX.pattern}"
+                    raise RuntimeError(msg)
+                sym, num, target_flag1, moved, target_flag2 = match.groups()
 
-                if not sym and not flag1 and not num and flag2:
-                    board[coord] = None
-                elif sym and flag1 and num and not flag2:
-                    board[coord] = Piece(ROLE_LOOKUP[sym], PLAYER_LOOKUP[num], coord)
-                else:
-                    assert False, f"Bad vals: {sym=}, {flag1=}, {num=}, {flag2=}"
+                # check the regex is working
+                if __debug__:
+                    *a, b = match.groups()
+                    msg = f"Bad vals: {sym=}, {target_flag1=}, {num=}, {target_flag2=}"
+                    assert (all(a) and not b) or (not any(a) and b), msg
 
-                if "x" in [flag1, flag2]:
+                board[coord] = (
+                    Piece(ROLE_LOOKUP[sym], PLAYER_LOOKUP[num], moved == "T")
+                    if target_flag1
+                    else None
+                )
+
+                if "x" in [target_flag1, target_flag2]:
                     targets.append(coord)
 
     board.update_targets()
@@ -88,11 +94,14 @@ def board_from_ssv(path: Path) -> tuple[Board, Vectors]:
 def board_to_ssv(board: Board, targets: Vectors) -> str:
     parts = []
     for y, x in product(range(8), range(8)):
-        key = V(x, y)
-        flag = "x" if key in targets else "-"
-        if piece := board[key]:
-            parts.append(f"{piece.role.symbol}{flag}{piece.player.value}")
+        coord = V(x, y)
+        flag = "x" if coord in targets else "-"
+        if piece := board[coord]:
+            sym = piece.role.symbol
+            num = piece.player.value
+            moved = "T" if piece.moved else "F"
+            parts.append(f"{sym}{num}{flag}m{moved}")
         else:
-            parts.append(f"-{flag}-")
-        parts.append(" " if x != 7 else "\n")
+            parts.append(f"--{flag}--")
+        parts.append(" " if coord.x != 7 else "\n")
     return "".join(parts)

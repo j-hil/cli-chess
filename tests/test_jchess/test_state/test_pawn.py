@@ -8,26 +8,26 @@ from jchess.testutils import patch_inputs
 
 class TestPawnLogic(TestCase):
     @patch_inputs("↲ ↑ ↲ ↑ ↑ ↲ ← ← ↑ ↑ ↑ ↲ ↓ ↲")
-    def test_1(self, game: GameState) -> None:
+    def test_step_and_jump(self, game: GameState) -> None:
         """Checks standard 2 space and 1 space move."""
-        self.assertEqual(game.board[V(2, 2)], Piece(Role.PAWN, Player.TWO, V(2, 2)))
-        self.assertEqual(game.board[V(4, 4)], Piece(Role.PAWN, Player.ONE, V(4, 4)))
+        self.assertEqual(game.board[V(2, 2)], Piece(Role.PAWN, Player.TWO, moved=True))
+        self.assertEqual(game.board[V(4, 4)], Piece(Role.PAWN, Player.ONE, moved=True))
 
     @patch_inputs("↲ ↑ ↲ ↑ ↑ ↲ ↑ ↑ ↑ ← ↲ ↓ ↓ ↲ ↓ → ↲ ← ↑ ↲ ↑ ↑ → ↲ ↓ ↓ ↲ ← ↲ ↑ → ↲ ")
-    def test_2(self, game: GameState) -> None:
+    def test_take_and_passant(self, game: GameState) -> None:
         """Checks standard 'take' and 'en passant'."""
-        self.assertEqual(game.board[V(4, 2)], Piece(Role.PAWN, Player.ONE, V(4, 2)))
+        self.assertEqual(game.board[V(4, 2)], Piece(Role.PAWN, Player.ONE, moved=True))
         taken = game.board.taken_pieces[Player.ONE]
         self.assertEqual(taken, [Role.PAWN, Role.PAWN])
 
-    @patch_inputs(
-        """
-            ↲ ↑ ↲ ↑ ↑ ↲ ↑ ↑ ↑ → ↲ ↓ ↓ ↲ ↓ ← ↲ ↑ → ↲ ↑ ↑ → ↲ ↓ ↲ ↓ ← ↲ ↑ → ↲ ↑ ← ← →
-            → ↑ ↲ ↓ ↓ ← ↲ → ↲ ↑ → ↲ ↑ ↲ ← ↲ ↓ → ↲ ↑ ↲ ↓ ↓ ↲
-        """
-    )
-    def test_3(self, game: GameState) -> None:
+    inputs = """
+        ↲ ↑ ↲ ↑ ↑ ↲ ↑ ↑ ↑ → ↲ ↓ ↓ ↲ ↓ ← ↲ ↑ → ↲ ↑ ↑ → ↲ ↓ ↲ ↓ ← ↲ ↑ → ↲ ↑ ← ← →
+        → ↑ ↲ ↓ ↓ ← ↲ → ↲ ↑ → ↲ ↑ ↲ ← ↲ ↓ → ↲ ↑ ↲ ↓ ↓ ↲
+    """
+
+    @patch_inputs(inputs)
+    def test_promotion(self, game: GameState) -> None:
         """Checks promotion mechanic."""
-        self.assertEqual(game.board[V(7, 7)], Piece(Role.ROOK, Player.ONE, V(7, 7)))
+        self.assertEqual(game.board[V(7, 7)], Piece(Role.ROOK, Player.ONE, moved=False))
         taken = game.board.taken_pieces[Player.ONE]
         self.assertEqual(taken, [Role.PAWN, Role.PAWN, Role.PAWN])

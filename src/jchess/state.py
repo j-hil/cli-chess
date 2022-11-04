@@ -6,7 +6,7 @@ from typing import Any
 from jchess.action import Action, get_action_lhs, get_action_rhs
 from jchess.board import Board
 from jchess.geometry import V, Vector
-from jchess.pieces import Piece, Player, Role
+from jchess.pieces import Player, Role, Square
 
 
 class Status(Enum):
@@ -34,8 +34,7 @@ class GameState:
         """
         self.board = Board()
 
-        # in board screen
-        self.attacker: Piece | None = None
+        self.attacker: Square | None = None
 
         self.scursor = 0
         self.bcursor = V(4, 7)
@@ -61,9 +60,10 @@ class GameState:
 
     def evolve_state(self) -> None:
 
-        board = self.board
         action = self.get_action()
-        self.status_prev = status = self.status
+        board = self.board
+        status = self.status_prev = self.status
+        attacker = self.attacker
 
         if action is Action.QUIT:
             sys.exit()
@@ -79,12 +79,15 @@ class GameState:
         # while in promotion menu
         # TODO: add a test for promotion
         elif status is Status.PROMOTING:
-            assert self.attacker, "Can only promote if an attacker is selected"
+            assert attacker, "Can only promote if an attacker is selected"
             if action in CARDINAL_DIRECTION:
                 self.pcursor += CARDINAL_DIRECTION[action].y
             elif action is Action.SELECT:
-                self.attacker.role = PROMOTION_OPTIONS[self.pcursor]
-                board.process_move(self.attacker, self.bcursor)
+                board.process_move(
+                    attacker.coord,
+                    self.bcursor,
+                    promote_to=PROMOTION_OPTIONS[self.pcursor],
+                )
                 self.attacker = None
                 self.status = Status.BOARD_FOCUS
 
@@ -93,27 +96,25 @@ class GameState:
             if action in CARDINAL_DIRECTION:
                 self.bcursor += CARDINAL_DIRECTION[action]
             elif action is Action.SELECT:
-                attacker = self.attacker
                 cursor = self.bcursor
                 focus = board[cursor]
-
                 if (
                     not attacker
                     and focus
                     and focus.player is board.active_player
-                    and focus.targets
+                    and board.targets[cursor]
                 ):
-                    self.attacker = focus
+                    self.attacker = Square(focus, cursor)
 
-                elif attacker and cursor in attacker.targets:
+                elif attacker and cursor in board.targets[attacker.coord]:
                     if (
-                        attacker.role is Role.PAWN
+                        attacker.piece.role is Role.PAWN
                         and attacker.coord.y in [1, 6]
-                        and not attacker.unmoved()
+                        and attacker.piece.moved
                     ):
                         self.status = Status.PROMOTING
                     else:
-                        board.process_move(attacker, self.bcursor)
+                        board.process_move(attacker.coord, self.bcursor)
                         self.attacker = None
 
 

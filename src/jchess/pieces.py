@@ -1,6 +1,6 @@
 """Contains representation of a chess piece."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from jchess.geometry import Vector
@@ -35,26 +35,23 @@ class Role(Enum):
         return f"Role[{self.symbol}]"
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Piece:
-    # TODO: pieces should probably be a frozen, slotted dataclass
-    # attrs: role, player, unmoved = False,
-    # problems:
-    #  * targets would have to become a dict[Vector, Vectors] on Board
-    #  * removing access to coord would be a pain
 
     role: Role
     player: Player
-
-    # coord and targets are managed by the containing Board class
-    coord: Vector
-    targets: list[Vector] = field(default_factory=list, init=False, compare=False)
-
-    def __post_init__(self) -> None:
-        self._initial_coord = self.coord
-
-    def unmoved(self) -> bool:
-        return self._initial_coord == self.coord
+    moved: bool = False
 
     def __repr__(self) -> str:
-        return f"Piece({self.role.symbol}, p{self.player.value}, {self.coord})"
+        m = "T" if self.moved else "F"
+        return Piece.__name__ + f"({self.role.symbol}, p{self.player.value}, {m=!s})"
+
+
+@dataclass(slots=True, frozen=True)
+class Square:
+    piece: Piece
+    coord: Vector
+
+    def __repr__(self) -> str:
+
+        return f"[{self.piece} @ {self.coord}]"
