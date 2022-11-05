@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 
 from jchess.action import Action
 from jchess.board import Board
+from jchess.game import Game
 from jchess.geometry import V, Vectors
 from jchess.pieces import Piece, Player, Role
-from jchess.state import GameState
 
 # TODO: move to pytest
 
@@ -41,10 +41,10 @@ def patch_inputs(cmdstr: str) -> Func:
 
     def decorator(func: Func) -> Func:
         @functools.wraps(func)
-        @patch("jchess.state.GameState.get_action")
+        @patch("jchess.game.Game.get_action")
         def wrapper(self: TestCase, mock_get_action: Mock) -> Any:
             mock_get_action.side_effect = actions
-            game = GameState()
+            game = Game()
             for _ in actions:
                 game.evolve_state()
             return func(self, game)

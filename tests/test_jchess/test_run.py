@@ -9,7 +9,7 @@ from jchess.run import run
 class TestMain(TestCase):
     """Smoke test for main script."""
 
-    @patch.multiple(jchess.run.GameState, get_action=DEFAULT)  # type: ignore
+    @patch.multiple(jchess.run.Game, get_action=DEFAULT)  # type: ignore
     @patch.multiple(jchess.run, os=DEFAULT, terminal=DEFAULT, print=DEFAULT)
     def test_run(self, get_action: Mock, print: Mock, terminal: Mock, os: Mock) -> None:
         get_action.side_effect = list(Action)  # relies on order of Action

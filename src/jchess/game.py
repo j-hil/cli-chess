@@ -5,8 +5,13 @@ from typing import Any
 
 from jchess.action import Action, get_action_lhs, get_action_rhs
 from jchess.board import Board
-from jchess.geometry import V, Vector
+from jchess.geometry import V
 from jchess.pieces import Player, Role, Square
+
+SELECT, UP, DOWN, RIGHT, LEFT, IGNORE, QUIT = list(Action)
+AXIS_LOOKUP = {UP: V(0, -1), DOWN: V(0, +1), LEFT: V(-1, 0), RIGHT: V(+1, 0)}
+ROTATE = {UP: LEFT, DOWN: RIGHT, RIGHT: UP, LEFT: DOWN}
+PROMOTION_OPTIONS = (Role.QUEEN, Role.KNIGHT, Role.ROOK, Role.BISHOP)
 
 
 class Status(Enum):
@@ -23,7 +28,7 @@ class Mode(Enum):
     # VAI = "Versus AI"
 
 
-class GameState:
+class Game:
     """Interface layer between the player and chess game."""
 
     def __init__(self) -> None:
@@ -64,20 +69,20 @@ class GameState:
         status = self.status_prev = self.status
         attacker = self.attacker
 
-        if action is Action.QUIT:
+        if action is QUIT:
             sys.exit()
 
         # while in mode selection menu
         if status is Status.START_MENU:
-            self.scursor += CARDINAL_DIRECTION.get(action, V(0, 0)).y
-            if action is Action.SELECT:
+            self.scursor += AXIS_LOOKUP.get(action, V(0, 0)).y
+            if action is SELECT:
                 self.mode = list(Mode)[self.scursor]
                 self.status = Status.BOARD_FOCUS
 
         # while in promotion menu
         elif status is Status.PROMOTING:
             assert attacker, "Can only promote if an attacker is selected"
-            self.pcursor += CARDINAL_DIRECTION.get(action, V(0, 0)).y
+            self.pcursor += AXIS_LOOKUP.get(action, V(0, 0)).y
             if action is Action.SELECT:
                 board.process_move(
                     attacker.coord,
@@ -89,8 +94,8 @@ class GameState:
 
         # while in board screen
         else:  # (status is Status.BOARD_FOCUS)
-            self.bcursor += CARDINAL_DIRECTION.get(action, V(0, 0))
-            if action is Action.SELECT:
+            self.bcursor += AXIS_LOOKUP.get(action, V(0, 0))
+            if action is SELECT:
                 cursor = self.bcursor
                 focus = board[cursor]
                 if (
@@ -111,20 +116,3 @@ class GameState:
                     else:
                         board.process_move(attacker.coord, self.bcursor)
                         self.attacker = None
-
-
-CARDINAL_DIRECTION: dict[Action, Vector] = {
-    Action.UP: V(0, -1),
-    Action.DOWN: V(0, +1),
-    Action.LEFT: V(-1, 0),
-    Action.RIGHT: V(+1, 0),
-}
-
-ROTATE = {
-    Action.UP: Action.LEFT,
-    Action.DOWN: Action.RIGHT,
-    Action.RIGHT: Action.UP,
-    Action.LEFT: Action.DOWN,
-}
-
-PROMOTION_OPTIONS = (Role.QUEEN, Role.KNIGHT, Role.ROOK, Role.BISHOP)

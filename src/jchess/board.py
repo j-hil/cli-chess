@@ -5,42 +5,36 @@ from typing import cast
 from jchess.geometry import V, Vector, Vectors
 from jchess.pieces import Piece, Player, Role, Square
 
-K, Q, R, B, N, _, _ = list(Role)
-_P2_BACK_ROW = list((V(x, 0), r) for x, r in enumerate((R, N, B, Q, K, B, N, R)))
-_P1_BACK_ROW = list((V(x, 7), r) for x, r in enumerate((R, N, B, Q, K, B, N, R)))
+KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, _ = list(Role)
 
-_KNIGHT_DELTAS = tuple(product((-1, 1), (-2, 2))) + tuple(product((-2, 2), (-1, 1)))
-DELTAS = {
-    Role.KING: tuple(V(x, y) for x, y in tuple(product([-1, 0, +1], [-1, 0, +1]))),
-    Role.KNIGHT: tuple(V(x, y) for x, y in _KNIGHT_DELTAS),
-}
+BACK_ROW_ROLES = (ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK)
+BOARD_TEMPLATE = (
+    *((V(x, 0), Piece(role, Player.TWO)) for x, role in enumerate(BACK_ROW_ROLES)),
+    *((V(x, 1), Piece(PAWN, Player.TWO)) for x in range(8)),
+    *((V(x, y), None) for x, y in product(range(8), range(2, 6))),
+    *((V(x, 6), Piece(PAWN, Player.ONE)) for x in range(8)),
+    *((V(x, 7), Piece(role, Player.ONE)) for x, role in enumerate(BACK_ROW_ROLES)),
+)
 
-_CARDINAL_DIRECTIONS = ((1, 0), (0, 1), (-1, 0), (0, -1))
-_L = tuple(tuple(d * V(*v) for d in range(1, 8)) for v in _CARDINAL_DIRECTIONS)
-_M = tuple(tuple(d * V(*v) for d in range(1, 8)) for v in product((1, -1), (1, -1)))
-LINES = {Role.QUEEN: _L + _M, Role.ROOK: _L, Role.BISHOP: _M}
-
-DIAGONALS = (V(1, 1), V(1, -1), V(-1, 1), V(-1, -1))
+DIAGONAL_VECS = V(1, 1), V(1, -1), V(-1, 1), V(-1, -1)
+CARDINAL_VECS = V(1, 0), V(0, 1), V(-1, 0), V(0, -1)
+L_VECS = V(-1, -2), V(-1, 2), V(1, -2), V(1, 2), V(-2, -1), V(-2, 1), V(2, -1), V(2, 1)
+DIAGONALS = tuple(tuple(d * v for d in range(1, 8)) for v in DIAGONAL_VECS)
+AXES = tuple(tuple(d * v for d in range(1, 8)) for v in CARDINAL_VECS)
+DELTAS = {KING: DIAGONAL_VECS + CARDINAL_VECS, KNIGHT: L_VECS}
+LINES = {QUEEN: DIAGONALS + AXES, ROOK: AXES, BISHOP: DIAGONALS}
 
 
 class Board(dict[Vector, Piece | None]):
     """Represents the state of chess game & implements it's logic."""
 
     def __init__(self) -> None:
-        self.update(
-            {v: Piece(role, Player.TWO) for v, role in _P2_BACK_ROW}
-            | {V(x, 1): Piece(Role.PAWN, Player.TWO) for x in range(8)}
-            | {V(x, y): None for x, y in product(range(8), range(2, 6))}
-            | {V(x, 6): Piece(Role.PAWN, Player.ONE) for x in range(8)}
-            | {v: Piece(role, Player.ONE) for v, role in _P1_BACK_ROW}
-        )
-
+        self.update(BOARD_TEMPLATE)
         self.targets = {V(*v): cast(Vectors, []) for v in product(range(8), range(8))}
         self.passant: Square | None = None
         self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
         self.protect_king = True
-
         self.update_targets()
 
     @property
@@ -52,7 +46,6 @@ class Board(dict[Vector, Piece | None]):
 
     def update_targets(self) -> None:
         """Update the `targets` attr of each piece."""
-        # TODO: king seems to be wrong in specific situations eg after promoted knight
 
         for coord, attacker in self.items():
             if not attacker:
@@ -110,7 +103,7 @@ class Board(dict[Vector, Piece | None]):
             self.passant = None
 
         # en passant capture
-        if attacker.role is Role.PAWN and not defender and delta in DIAGONALS:
+        if attacker.role is Role.PAWN and not defender and delta in DIAGONAL_VECS:
             self[source + V(delta.x, 0)] = None
             self.taken_pieces[self.active_player].append(Role.PAWN)
 
@@ -226,10 +219,10 @@ class Board(dict[Vector, Piece | None]):
 
         return risky_targets
 
-    def in_check(self, player: Player):
+    def in_check(self, player: Player) -> bool:
         # ap = attacking_piece, tp = target_piece
         return any(
             (ap and ap.player is not player)
-            and any((tp := self[t]) and tp.role is K for t in self.targets[v])
+            and any((tp := self[t]) and tp.role is KING for t in self.targets[v])
             for v, ap in self.items()
         )

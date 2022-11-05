@@ -1,19 +1,19 @@
 import os
-from typing import no_type_check
+from typing import Self, no_type_check
 
 import jchess.display
 import jchess.run
 from jchess.action import Action, get_action_rhs
 from jchess.configs import UTF8_SYMBOLS, VSC_PALLET
+from jchess.game import Game
 from jchess.run import run
-from jchess.state import GameState
 from jchess.testutils import board_to_ssv
 
 # attempt to detect that game is being run inside VS Code
 DEV_MODE = os.environ.get("TERM_PROGRAM") == "vscode"
 
 
-class HackedGame(GameState):
+class HackedGame(Game):
 
     singleton = None
     inputs: list[str] = []
@@ -43,7 +43,7 @@ def hack() -> None:
 
     jchess.display.ROW_LABELS = "0   1   2   3   4   5   6   7"
     jchess.display.COL_LABELS = "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
-    jchess.run.GameState = HackedGame
+    jchess.run.Game = HackedGame
 
 
 def main() -> None:
@@ -56,11 +56,13 @@ def main() -> None:
         n = 76
         for i in range(len(output) // n + 1):
             print(f"{output[n * i : n * (i + 1)]}")
+        print()
 
         print("Final State")
         board = hacked_game.board
         targets = board.targets[hacked_game.bcursor]
         print(board_to_ssv(board, targets))
+        print()
 
 
 if __name__ == "__main__":

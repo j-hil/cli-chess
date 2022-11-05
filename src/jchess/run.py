@@ -7,7 +7,7 @@ import colorama
 from jchess import terminal
 from jchess.configs import DEFAULT_PALLET, DEFAULT_SYMBOLS
 from jchess.display import Display
-from jchess.state import GameState
+from jchess.game import Game
 
 
 def run() -> None:
@@ -22,7 +22,7 @@ def run() -> None:
         terminal.hide_cursor()
 
         display = Display(DEFAULT_PALLET, DEFAULT_SYMBOLS)
-        game = GameState()
+        game = Game()
         while True:
             print(display.ctrlseq(game))
             game.evolve_state()
