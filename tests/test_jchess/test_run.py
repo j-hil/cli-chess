@@ -1,20 +1,23 @@
-from unittest import TestCase
 from unittest.mock import DEFAULT, Mock, patch
+
+from pytest import raises
 
 import jchess.run
 from jchess.action import Action
 from jchess.run import run
 
 
-class TestMain(TestCase):
-    """Smoke test for main script."""
+@patch.multiple(jchess.run, os=DEFAULT, terminal=DEFAULT, print=DEFAULT)
+@patch.multiple(jchess.run.Game, get_action=DEFAULT)  # type: ignore
+def _test_run(get_action: Mock, print: Mock, terminal: Mock, os: Mock) -> None:
+    get_action.side_effect = list(Action)  # relies on order of Action
+    with raises(SystemExit):
+        run()
 
-    @patch.multiple(jchess.run.Game, get_action=DEFAULT)  # type: ignore
-    @patch.multiple(jchess.run, os=DEFAULT, terminal=DEFAULT, print=DEFAULT)
-    def test_run(self, get_action: Mock, print: Mock, terminal: Mock, os: Mock) -> None:
-        get_action.side_effect = list(Action)  # relies on order of Action
-        with self.assertRaises(SystemExit):
-            run()
+    assert get_action.call_count == len(Action)
+    assert print.call_count == len(Action)
 
-        self.assertEqual(get_action.call_count, len(Action))
-        self.assertEqual(print.call_count, len(Action))
+
+def test_run():
+    # I don't know why, but it is necessary to wrap the patched function
+    _test_run()

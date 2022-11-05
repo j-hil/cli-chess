@@ -28,11 +28,12 @@ dependencies = [
 dev = [
     "mypy>=0.971, <1",
     "types-colorama>=0.4.15, <1",
-    "black>=22.8.0",
+    "black>=22.8.0, <23",
     "pylint>=2.15.2, <3",
     "pydocstyle[toml]>=6.1.1, <7",
     "coverage[toml]>=6.5.0, < 7",
     "isort>=5.10.1, <6",
+    "pytest>=7.2.0, <8",
 ]
 
 [project.urls]

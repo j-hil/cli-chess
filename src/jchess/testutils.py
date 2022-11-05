@@ -4,7 +4,6 @@ import re
 from itertools import product
 from pathlib import Path
 from typing import Any, Callable
-from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from jchess.action import Action
@@ -42,12 +41,12 @@ def patch_inputs(cmdstr: str) -> Func:
     def decorator(func: Func) -> Func:
         @functools.wraps(func)
         @patch("jchess.game.Game.get_action")
-        def wrapper(self: TestCase, mock_get_action: Mock) -> Any:
+        def wrapper(mock_get_action: Mock) -> Any:
             mock_get_action.side_effect = actions
             game = Game()
             for _ in actions:
                 game.evolve_state()
-            return func(self, game)
+            return func(game)
 
         return wrapper
 
