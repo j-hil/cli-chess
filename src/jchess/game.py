@@ -1,12 +1,15 @@
 """Contains the class representing the internal state of the game."""
+import random
 import sys
+from collections.abc import Iterator
 from enum import Enum, auto
+from time import sleep
 from typing import Any
 
 from jchess.action import Action, get_action_lhs, get_action_rhs
 from jchess.board import Board
-from jchess.geometry import V
-from jchess.pieces import Player, Role, Square
+from jchess.geometry import V, Vector
+from jchess.pieces import LocPiece, Player, Role
 
 SELECT, UP, DOWN, RIGHT, LEFT, IGNORE, QUIT = list(Action)
 AXIS_LOOKUP = {UP: V(0, -1), DOWN: V(0, +1), LEFT: V(-1, 0), RIGHT: V(+1, 0)}
@@ -22,8 +25,9 @@ class Status(Enum):
 
 
 class Mode(Enum):
-    LMP = "Local Multi-Player"
-    SPM = "Simple Single-Player"  # TODO: implement
+    VDB = "Versus Dumb Bot"
+    LTP = "Local Two-Player"
+    TDB = "Two Dumb Bots"
     # RMP = "Remote Multi-Player"
     # VAI = "Versus AI"
 
@@ -31,15 +35,13 @@ class Mode(Enum):
 class Game:
     """Interface layer between the player and chess game."""
 
-    def __init__(self) -> None:
-        """Initialise a `GameState`.
+    # TODO: add win condition on checkmate or draw on Turn == 50 & just kings
 
-        :param config: Controls settings such as color, symbols etc. Several pre-made
-            configs available in jchess.config. Defaults to VSC_CONFIG
-        """
+    def __init__(self) -> None:
+        """Initialise a `GameState`."""
         self.board = Board()
 
-        self.attacker: Square | None = None
+        self.attacker: LocPiece | None = None
 
         self.scursor = 0
         self.bcursor = V(4, 7)
@@ -49,10 +51,7 @@ class Game:
         self.status = Status.START_MENU
 
         self.mode: Mode | None = None
-
-    def get_action(self) -> Action:
-        player = self.board.active_player
-        return get_action_rhs() if player == Player.ONE else get_action_lhs()
+        self.bot_action = self.action_generator()
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "bcursor":
@@ -62,6 +61,15 @@ class Game:
         elif name == "scursor":
             value %= len(Mode)
         super().__setattr__(name, value)
+
+    def get_action(self) -> Action:
+        player = self.board.active_player
+        if self.mode is Mode.TDB:
+            return next(self.bot_action)
+        if self.mode is Mode.VDB:
+            return get_action_rhs() if player is Player.ONE else next(self.bot_action)
+        # else mode is LTP
+        return get_action_rhs() if player is Player.ONE else get_action_lhs()
 
     def evolve_state(self) -> None:
         action = self.get_action()
@@ -97,16 +105,10 @@ class Game:
             self.bcursor += AXIS_LOOKUP.get(action, V(0, 0))
             if action is SELECT:
                 cursor = self.bcursor
-                focus = board[cursor]
-                if (
-                    not attacker
-                    and focus
-                    and focus.player is board.active_player
-                    and board.targets[cursor]
-                ):
-                    self.attacker = Square(focus, cursor)
+                if not attacker and board.can_move_from(cursor):
+                    self.attacker = LocPiece(board[cursor], cursor)  # type: ignore
 
-                elif attacker and cursor in board.targets[attacker.coord]:
+                elif attacker and cursor in board.targets_of[attacker.coord]:
                     if (
                         attacker.piece.role is Role.PAWN
                         and attacker.coord.y in [1, 6]
@@ -116,3 +118,30 @@ class Game:
                     else:
                         board.process_move(attacker.coord, self.bcursor)
                         self.attacker = None
+
+    def action_generator(self) -> Iterator[Action]:
+        while True:
+            board = self.board
+
+            attacker_coord = random.choice([v for v in board if board.can_move_from(v)])
+            yield from self._path_to(attacker_coord)
+
+            assert self.attacker, "Attacker should have been set by previous moves."
+            target = random.choice(list(board.targets_of[self.attacker.coord]))
+            yield from self._path_to(target)
+
+            if self.status is Status.PROMOTING:
+                for _ in range(random.randint(0, 3)):
+                    yield Action.DOWN
+                yield Action.SELECT
+
+    def _path_to(self, destination: Vector) -> Iterator[Action]:
+        dx, dy = destination - self.bcursor
+        for _ in range(abs(dy)):
+            sleep(0.2)
+            yield Action.UP if dy < 0 else Action.DOWN
+        for _ in range(abs(dx)):
+            sleep(0.2)
+            yield Action.RIGHT if dx > 0 else Action.LEFT
+        sleep(0.2)
+        yield Action.SELECT

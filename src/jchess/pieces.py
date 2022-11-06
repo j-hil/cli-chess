@@ -48,10 +48,11 @@ class Piece:
 
 
 @dataclass(slots=True, frozen=True)
-class Square:
+class LocPiece:
+    """A 'Located Piece'; a piece with it's coordinate."""
+
     piece: Piece
     coord: Vector
 
     def __repr__(self) -> str:
-
         return f"[{self.piece} @ {self.coord}]"

@@ -4,7 +4,7 @@ Designed to be interchangeable with tuple wherever possible.
 """
 
 from dataclasses import dataclass
-from typing import Iterator, TypeAlias, Union
+from typing import Iterator, TypeAlias
 
 
 @dataclass(slots=True, frozen=True)
@@ -42,5 +42,4 @@ class V:
 
 # Conveniences for typing
 Vector: TypeAlias = "V"
-VectorLike = Union[Vector, tuple[int, int]]
-Vectors = list[Vector]
+VectorSet = set[V]

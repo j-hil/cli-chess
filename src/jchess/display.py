@@ -70,9 +70,9 @@ class Display:
                 not attacker
                 and focus
                 and focus.player is board.active_player
-                and coord in board.targets[cursor]
+                and coord in board.targets_of[cursor]
             )
-            show_actual_targets = attacker and coord in board.targets[attacker.coord]
+            show_actual_targets = attacker and coord in board.targets_of[attacker.coord]
 
             if coord == game.bcursor:
                 back = pallet.cursor

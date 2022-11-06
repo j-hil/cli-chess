@@ -9,10 +9,8 @@ from unittest.mock import Mock, patch
 from jchess.action import Action
 from jchess.board import Board
 from jchess.game import Game
-from jchess.geometry import V, Vectors
+from jchess.geometry import V, VectorSet
 from jchess.pieces import Piece, Player, Role
-
-# TODO: move to pytest
 
 ACTION_LOOKUP = {action.value: action for action in Action}
 ROLE_LOOKUP = {role.symbol: role for role in Role}
@@ -53,12 +51,12 @@ def patch_inputs(cmdstr: str) -> Func:
     return decorator
 
 
-def board_from_ssv(path: Path) -> tuple[Board, Vectors]:
+def board_from_ssv(path: Path) -> tuple[Board, VectorSet]:
     """Construct a `Board` from a ".ssv" file."""
 
     # initializes with pieces in default position, but these are all overridden
     board = Board()
-    targets = []
+    targets = VectorSet()
 
     with open(path, encoding="utf-8") as csvfh:
         for y, row in enumerate(csv.reader(csvfh, delimiter=" ")):
@@ -84,13 +82,13 @@ def board_from_ssv(path: Path) -> tuple[Board, Vectors]:
                 )
 
                 if "x" in [target_flag1, target_flag2]:
-                    targets.append(coord)
+                    targets.add(coord)
 
     board.update_targets()
     return board, targets
 
 
-def board_to_ssv(board: Board, targets: Vectors) -> str:
+def board_to_ssv(board: Board, targets: VectorSet) -> str:
     parts = []
     for y, x in product(range(8), range(8)):
         coord = V(x, y)

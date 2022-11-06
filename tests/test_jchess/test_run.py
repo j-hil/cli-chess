@@ -18,6 +18,6 @@ def _test_run(get_action: Mock, print: Mock, terminal: Mock, os: Mock) -> None:
     assert print.call_count == len(Action)
 
 
-def test_run():
+def test_run() -> None:
     # I don't know why, but it is necessary to wrap the patched function
     _test_run()

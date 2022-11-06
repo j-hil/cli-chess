@@ -1,9 +1,10 @@
 import os
-from typing import Self, no_type_check
+from typing import no_type_check
 
 import jchess.display
+import jchess.game
 import jchess.run
-from jchess.action import Action, get_action_rhs
+from jchess.action import get_action_rhs
 from jchess.configs import UTF8_SYMBOLS, VSC_PALLET
 from jchess.game import Game
 from jchess.run import run
@@ -23,11 +24,6 @@ class HackedGame(Game):
             cls.singleton = super().__new__(cls)
         return cls.singleton
 
-    def get_action(self) -> Action:
-        action = get_action_rhs()
-        self.inputs.append(action.value)
-        return action
-
 
 hacked_game = HackedGame()
 
@@ -41,6 +37,7 @@ def hack() -> None:
         jchess.run.DEFAULT_PALLET = VSC_PALLET
         jchess.run.DEFAULT_SYMBOLS = UTF8_SYMBOLS
 
+    jchess.game.get_action_lhs = get_action_rhs
     jchess.display.ROW_LABELS = "0   1   2   3   4   5   6   7"
     jchess.display.COL_LABELS = "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
     jchess.run.Game = HackedGame
@@ -60,7 +57,7 @@ def main() -> None:
 
         print("Final State")
         board = hacked_game.board
-        targets = board.targets[hacked_game.bcursor]
+        targets = board.targets_of[hacked_game.bcursor]
         print(board_to_ssv(board, targets))
         print()
 

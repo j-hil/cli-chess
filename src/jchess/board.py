@@ -1,9 +1,8 @@
 from copy import deepcopy
 from itertools import product
-from typing import cast
 
-from jchess.geometry import V, Vector, Vectors
-from jchess.pieces import Piece, Player, Role, Square
+from jchess.geometry import V, Vector, VectorSet
+from jchess.pieces import LocPiece, Piece, Player, Role
 
 KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, _ = list(Role)
 
@@ -30,8 +29,8 @@ class Board(dict[Vector, Piece | None]):
 
     def __init__(self) -> None:
         self.update(BOARD_TEMPLATE)
-        self.targets = {V(*v): cast(Vectors, []) for v in product(range(8), range(8))}
-        self.passant: Square | None = None
+        self.targets_of = {V(*v): VectorSet() for v in product(range(8), range(8))}
+        self.passant: LocPiece | None = None
         self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
         self.protect_king = True
@@ -44,17 +43,21 @@ class Board(dict[Vector, Piece | None]):
     def score(self, player: Player) -> int:
         return sum(role.worth for role in self.taken_pieces[player])
 
+    def can_move_from(self, v: Vector) -> bool:
+        piece = self[v]
+        return bool(piece and piece.player is self.active_player and self.targets_of[v])
+
     def update_targets(self) -> None:
         """Update the `targets` attr of each piece."""
 
         for coord, attacker in self.items():
             if not attacker:
-                self.targets[coord] = []
+                self.targets_of[coord] = VectorSet()
                 continue
-            targets: Vectors = []
+            targets = VectorSet()
 
             if attacker.role is Role.PAWN:
-                targets.extend(self._pawn_targets(coord))
+                targets.update(self._pawn_targets(coord))
 
             # the queen, bishop & rook always move along lines
             for line in LINES.get(attacker.role, []):
@@ -64,10 +67,10 @@ class Board(dict[Vector, Piece | None]):
                         continue
                     defender = self[target]
                     if not defender:
-                        targets.append(target)
+                        targets.add(target)
                         continue
                     if defender.player is not attacker.player:
-                        targets.append(target)
+                        targets.add(target)
                     break
 
             # the king and knight always have fixed potential translations
@@ -76,27 +79,25 @@ class Board(dict[Vector, Piece | None]):
                 if target in self:
                     defender = self[target]
                     if not defender or defender.player != attacker.player:
-                        targets.append(target)
+                        targets.add(target)
 
             # extra logic for castling
             if attacker.role is Role.KING and not attacker.moved:
-                targets.extend(self._casting_targets(coord))
+                targets.update(self._casting_targets(coord))
 
             # extra logic exclude moves resulting in check/checkmate
             if self.protect_king:
                 risky_targets = self._risky_targets(coord, targets)
-                targets = [t for t in targets if t not in risky_targets]
+                targets = {t for t in targets if t not in risky_targets}
 
-            self.targets[coord] = targets
+            self.targets_of[coord] = targets
 
-    def process_move(
-        self, source: Vector, target: Vector, *, promote_to: Role | None = None
-    ) -> None:
-        attacker = self[source]
-        defender = self[target]
-        delta = target - source
+    def process_move(self, src: V, dst: V, *, promote_to: Role | None = None) -> None:
+        attacker = self[src]
+        defender = self[dst]
+        delta = dst - src
 
-        assert attacker, f"Move only processed when a piece is at {source=}."
+        assert attacker, f"Move only processed when a piece is at {src=}."
 
         # remove any previous vulnerability to en passant
         if self.passant and self.passant.piece.player is self.active_player:
@@ -104,12 +105,12 @@ class Board(dict[Vector, Piece | None]):
 
         # en passant capture
         if attacker.role is Role.PAWN and not defender and delta in DIAGONAL_VECS:
-            self[source + V(delta.x, 0)] = None
+            self[src + V(delta.x, 0)] = None
             self.taken_pieces[self.active_player].append(Role.PAWN)
 
         # castling
         if attacker.role is Role.KING and abs(delta.x) == 2:
-            y_king = source.y
+            y_king = src.y
             old_coord = V(7, y_king) if delta.x == 2 else V(0, y_king)
             new_coord = V(5, y_king) if delta.x == 2 else V(3, y_king)
 
@@ -119,14 +120,14 @@ class Board(dict[Vector, Piece | None]):
         # execute standard move/capture
         if defender:
             self.taken_pieces[self.active_player].append(defender.role)
-        self[source] = None
+        self[src] = None
         attacker = Piece(promote_to or attacker.role, attacker.player, moved=True)
-        self[target] = attacker
+        self[dst] = attacker
         self.ply += 1
 
         # add any en passant vulnerability
         if attacker.role is Role.PAWN and abs(delta.y) == 2:
-            self.passant = Square(attacker, target)
+            self.passant = LocPiece(attacker, dst)
 
         self.update_targets()
 
@@ -143,23 +144,23 @@ class Board(dict[Vector, Piece | None]):
 
     # Helper methods for `self.update_targets` --------------------------------------- #
 
-    def _pawn_targets(self, pawn_coord: Vector) -> Vectors:
+    def _pawn_targets(self, pawn_coord: Vector) -> VectorSet:
 
         pawn = self[pawn_coord]
         assert pawn and pawn.role is Role.PAWN, "Only call this function on a PAWN."
         dy = -1 if pawn.player is Player.ONE else 1
-        targets = []
+        targets = VectorSet()
 
         # standard forward step
         step_target = pawn_coord + V(0, dy)
         if step_target in self and not self[step_target]:
-            targets.append(step_target)
+            targets.add(step_target)
 
         # double step (aka jump) move
         jump_target = pawn_coord + 2 * V(0, dy)
         can_jump = not pawn.moved and not self[step_target] and not self[jump_target]
         if can_jump:
-            targets.append(jump_target)
+            targets.add(jump_target)
 
         # standard and en passant captures
         for dx in [1, -1]:
@@ -170,18 +171,18 @@ class Board(dict[Vector, Piece | None]):
             neighbor = self.get(passant_coord, None)
 
             can_std_capture = defender and defender.player is not pawn.player
-            can_passant = neighbor and self.passant == Square(neighbor, passant_coord)
+            can_passant = neighbor and self.passant == LocPiece(neighbor, passant_coord)
             if can_std_capture or can_passant:
-                targets.append(capture_target)
+                targets.add(capture_target)
 
         return targets
 
-    def _casting_targets(self, coord: Vector) -> Vectors:
+    def _casting_targets(self, coord: Vector) -> VectorSet:
         king = self[coord]
         assert king and king.role is Role.KING, "Only call this function on a KING."
         y_king = coord.y
 
-        targets = []
+        targets = VectorSet()
         for x_rook, sign in zip((0, 7), (1, -1)):
             rook = self[V(x_rook, y_king)]
             path_xvals = range(x_rook + sign, 4 + sign, sign)
@@ -192,18 +193,18 @@ class Board(dict[Vector, Piece | None]):
                 and all(not self[V(x, y_king)] for x in path_xvals[:-1])
                 # safe path
                 and all(
-                    V(x, y_king) not in self.targets[v]
-                    for v, x in product(self, path_xvals)
-                    if (p := self[v]) and p.player is not self.active_player
+                    V(x, y_king) not in self.targets_of[v]
+                    for (v, p), x in product(self.items(), path_xvals)
+                    if p and p.player is not self.active_player
                 )
             ):
-                targets.append(coord + sign * V(2, 0))
+                targets.add(coord + sign * V(2, 0))
         return targets
 
-    def _risky_targets(self, source: Vector, current_targets: Vectors) -> Vectors:
+    def _risky_targets(self, source: Vector, current_targets: VectorSet) -> VectorSet:
         attacker = self[source]
         assert attacker, f"Only call if there is a piece at {source=}"
-        risky_targets: Vectors = []
+        risky_targets = VectorSet()
 
         for current_target in current_targets:
             # try out the attack without concern for check/checkmate
@@ -214,7 +215,7 @@ class Board(dict[Vector, Piece | None]):
 
             # note if the move caused check/checkmate
             if board_copy.in_check(attacker.player):
-                risky_targets.append(current_target)
+                risky_targets.add(current_target)
                 continue
 
         return risky_targets
@@ -223,6 +224,6 @@ class Board(dict[Vector, Piece | None]):
         # ap = attacking_piece, tp = target_piece
         return any(
             (ap and ap.player is not player)
-            and any((tp := self[t]) and tp.role is KING for t in self.targets[v])
+            and any((tp := self[t]) and tp.role is KING for t in self.targets_of[v])
             for v, ap in self.items()
         )

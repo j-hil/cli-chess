@@ -34,6 +34,7 @@ dev = [
     "coverage[toml]>=6.5.0, < 7",
     "isort>=5.10.1, <6",
     "pytest>=7.2.0, <8",
+    "ipykernel>=6.17.0, <7",
 ]
 
 [project.urls]
