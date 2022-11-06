@@ -4,8 +4,21 @@ from jchess import __author__ as author
 from jchess import __version__ as version
 from jchess.configs import Pallet, SymbolDict
 from jchess.game import PROMOTION_OPTIONS, Game, Mode, Status
+from jchess.geometry import V
 from jchess.pieces import Player, Role
 from jchess.terminal import ctrlseq
+
+from ._constants import (
+    COL_LABELS,
+    INFO_TEMPLATE,
+    MAIN_DISPLAY_TEMPLATE,
+    PROMOTION_CLEAR,
+    PROMOTION_TEMPLATE,
+    ROW_LABELS,
+    START_MENU_ANCHOR,
+    START_MENU_CLEAR,
+    START_MENU_TEMPLATE,
+)
 
 
 @dataclass(slots=True, frozen=True)
@@ -15,14 +28,14 @@ class Display:
 
     def ctrlseq(self, game: Game) -> str:
         pallet = self.pallet
-        parts = []
+        parts = [ctrlseq(" ", at=(0, 0))]
 
         # adjust for previous status of GameState
         if game.status is not game.status_prev:
             if game.status_prev is Status.UNINITIALIZED:
-                parts.append(ctrlseq(START_MENU_CLEAR, at=(1, 1)))
+                parts.append(ctrlseq(START_MENU_CLEAR, at=START_MENU_ANCHOR))
             elif game.status_prev is Status.START_MENU:
-                parts.append(MAIN_DISPLAY_TEMPLATE)
+                parts.append(ctrlseq(MAIN_DISPLAY_TEMPLATE, at=(0, 0)))
                 parts.append(ctrlseq(f"{version: ^11}", at=(3, 24)))
                 parts.append(ctrlseq(f"by {author}", at=(76, 24)))
                 for i, p in enumerate(Player):
@@ -34,9 +47,10 @@ class Display:
                 parts.append(ctrlseq(PROMOTION_CLEAR, at=(3, 12)))
 
         if game.status is Status.START_MENU:
-            parts.append(ctrlseq(START_MENU_TEMPLATE, at=(0, 1)))
-            mode_str = f"(+) {list(Mode)[game.scursor]}"
-            parts.append(ctrlseq(mode_str, clr=pallet.cursor, at=(1, 3 + game.scursor)))
+            parts.append(ctrlseq(START_MENU_TEMPLATE, at=START_MENU_ANCHOR))
+            mode_str = f"(+) {list(Mode)[game.scursor].value}"
+            coord = START_MENU_ANCHOR + V(2, 3 + game.scursor)
+            parts.append(ctrlseq(mode_str, clr=pallet.cursor, at=coord))
 
         elif game.status is Status.BOARD_FOCUS:
             parts.append(self.__gutter_msg(game))
@@ -116,54 +130,3 @@ class Display:
         else:
             msg = f"Turn {turn}. Players ONE & TWO are equal in score."
         return ctrlseq(f"{msg: ^55}", at=(17, 24))
-
-
-# Printing templates ----------------------------------------------------------------- #
-# fmt: off
-START_MENU_TEMPLATE = """\
-Pick a game mode:
-=================
-""" + "\n".join(f"(+) {m}" for m in Mode)
-START_MENU_CLEAR = "".join(" " if c != "\n" else "\n" for c in START_MENU_TEMPLATE)
-
-INFO_TEMPLATE = """\
-Player {}:
-===========
-SCORE = 000\
-"""
-
-PROMOTION_TEMPLATE = """\
-Promote to:
-===========
-""" + "\n".join(f"({r.symbol}) {r}" for r in PROMOTION_OPTIONS)
-PROMOTION_CLEAR = "".join(" " if c != "\n" else "\n" for c in PROMOTION_TEMPLATE)
-
-ROW_LABELS = "8   7   6   5   4   3   2   1"
-COL_LABELS = "a\n \nb\n \nc\n \nd\n \ne\n \nf\n \ng\n \nh"
-MAIN_DISPLAY_TEMPLATE = """\
-+-------------------------------------------------------------------------------------+
-| Welcome to J-Chess! Controls: arrows to navigate, space to select, and 'q' to quit. |
-+-------------------------------------------------------------------------------------+
-|             |                                                         |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-+-------------+            +---+---+---+---+---+---+---+---+            +-------------+
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-+-------------+            +---+---+---+---+---+---+---+---+            +-------------+
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |                                                         |             |
-+-------------+---------------------------------------------------------+-------------+
-|             |                                                         |             |
-+-------------------------------------------------------------------------------------+\
-"""

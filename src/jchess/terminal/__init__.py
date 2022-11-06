@@ -7,6 +7,8 @@ import sys
 
 from colorama import Style
 
+from jchess.geometry import V
+
 if sys.platform == "win32":
     from ._windows import clear, get_input, hide_cursor, resize, show_cursor
 else:
@@ -29,13 +31,13 @@ def reset_cursor() -> None:
     print(f"{CSI}H", end="")
 
 
-def ctrlseq(s: str, *, clr: str = "", at: tuple[int, int]) -> str:
+def ctrlseq(s: str, *, clr: str = "", at: tuple[int, int] | V) -> str:
     """Convert a string to a control sequence."""
     x, y = at
     return (
         f"{CSI}{y};{x}H"
         + clr
-        + f"\n{CSI}{x-1}C".join(s.split("\n"))  # why is it x - 1...?
+        + f"\n{CSI}{x - 1}C".join(s.split("\n"))  # why is it x - 1...?
         + Style.RESET_ALL
     )
 

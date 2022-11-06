@@ -27,6 +27,9 @@ class V:
     def __rmul__(self, other: int) -> "V":
         return V(other * self.x, other * self.y)
 
+    def __floordiv__(self, other: int) -> "V":
+        return V(self.x // other, self.y // other)
+
     def __mod__(self, other: int) -> "V":
         return V(self.x % other, self.y % other)
 
