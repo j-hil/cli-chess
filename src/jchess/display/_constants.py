@@ -67,7 +67,43 @@ START_MENU_TEMPLATE, START_MENU_ANCHOR = _make_start_menu()
 START_MENU_CLEAR = "".join(" " if c != "\n" else "\n" for c in START_MENU_TEMPLATE)
 
 
-# Other constants --------------------------------------------------------------- #
+# Player column constants ------------------------------------------------------------ #
+HELP_LH = """\
+** HELP: **
+===========
+Arrows
+-> move
+Enter/Space
+-> select
+End/Esc
+-> forfeit
+"""
+
+HELP_RH = """\
+** HELP: **
+===========
+W/A/S/D
+-> move
+Tab/Space
+-> select
+Q/Esc
+-> forfeit
+"""
+
+HELP_BOT = """\
+** HELP: **
+===========
+Player {}
+is a 'dumb
+bot' - it
+randomly
+selects its
+next move.
+
+Spam CTRL+C
+to quit.
+"""
+
 INFO_TEMPLATE = """\
 Player {}:
 ===========
@@ -82,5 +118,11 @@ Promote to:
 )
 PROMOTION_CLEAR = "".join(" " if c != "\n" else "\n" for c in PROMOTION_TEMPLATE)
 
+INFO_W = len(PROMOTION_TEMPLATE.split("\n", maxsplit=1)[0])
+for t in [HELP_LH, INFO_TEMPLATE, PROMOTION_TEMPLATE, PROMOTION_CLEAR]:
+    assert INFO_W == len(t.split("\n", maxsplit=2)[1])
+
+
+# Other constants -------------------------------------------------------------------- #
 ROW_LABELS = "8   7   6   5   4   3   2   1"
 COL_LABELS = "a\n \nb\n \nc\n \nd\n \ne\n \nf\n \ng\n \nh"

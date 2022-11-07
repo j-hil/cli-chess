@@ -1,7 +1,7 @@
 """Suite of terminal manipulation functions.
 
 Designed to abstract away all os/terminal dependencies from the rest of the code,
-including the collection of player input in the form of an `Action`.
+including the collection of player input.
 """
 import sys
 

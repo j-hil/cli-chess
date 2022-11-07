@@ -7,12 +7,25 @@ from jchess.geometry import Vector
 
 
 class Player(Enum):
+    """Role enum. Contains associated data."""
+
     ONE = 1
     TWO = 2
 
+    def __str__(self) -> str:
+        return "ONE" if int(self) == 1 else "TWO"
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __invert__(self) -> "Player":
+        return Player.ONE if self is Player.TWO else Player.TWO
+
 
 class Role(Enum):
-    KING = ("King", "K", 104)
+    """Role enum. Contains associated data."""
+
+    KING = ("King", "K", -1)
     QUEEN = ("Queen", "Q", 9)
     ROOK = ("Rook", "H", 5)
     BISHOP = ("Bishop", "I", 3)
@@ -37,9 +50,11 @@ class Role(Enum):
 
 @dataclass(slots=True, frozen=True)
 class Piece:
+    """Internal representation of a chess piece."""
 
     role: Role
     player: Player
+    # `moved` is only used for pawns, castles and kings.
     moved: bool = False
 
     def __repr__(self) -> str:

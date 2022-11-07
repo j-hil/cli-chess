@@ -74,3 +74,10 @@ def test_check_prevention() -> None:
     coord = V(4, 3)
     assert board[coord] == Piece(Role.QUEEN, Player.TWO, moved=True)
     assert expected_targets == board.targets_of[coord]
+
+
+def test_stalemate() -> None:
+    board, _ = board_from_ssv(DATA / "stalemate.ssv")
+    board.ply = 11
+    board.update_targets()
+    print(not board.can_move() and not board.in_check())

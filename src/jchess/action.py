@@ -1,9 +1,13 @@
+"""Enum to restrict/define user inputs and functions to get & translate inputs."""
+
 from enum import Enum
 
 from jchess.terminal import get_input
 
 
 class Action(Enum):
+    """Allowed user inputs."""
+
     SELECT = "↲"
     UP = "↑"
     DOWN = "↓"
@@ -17,6 +21,7 @@ class Action(Enum):
 
 
 def get_action_rhs() -> Action:
+    """Get input form the right hand side of keyboard (arrow, enter and end keys)."""
     x = get_input()
     return {
         # Specific to rhs:
@@ -33,6 +38,7 @@ def get_action_rhs() -> Action:
 
 
 def get_action_lhs() -> Action:
+    """Get input from the left hand side of keyboard (WASD, tab and Q keys)."""
     x = get_input().lower()
     return {
         # Specific to lhs:

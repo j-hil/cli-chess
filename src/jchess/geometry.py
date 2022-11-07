@@ -1,6 +1,7 @@
-"""Simple Vector class to facilitate easy coordinate translation.
+"""Minimal class representing a 2D Vector over the integers.
 
-Designed to be interchangeable with tuple wherever possible.
+Primarily used to facilitate easy coordinate translation. Supports expected operations
+(+, -, *, //, ==) as well as some other convenience (indexing, unpacking and %).
 """
 
 from dataclasses import dataclass

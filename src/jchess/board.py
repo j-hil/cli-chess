@@ -29,7 +29,7 @@ class Board(dict[Vector, Piece | None]):
 
     def __init__(self) -> None:
         self.update(BOARD_TEMPLATE)
-        self.targets_of = {V(*v): VectorSet() for v in product(range(8), range(8))}
+        self.targets_of = {V(x, y): VectorSet() for x, y in product(range(8), range(8))}
         self.passant: LocPiece | None = None
         self.ply = 0
         self.taken_pieces: dict[Player, list[Role]] = {Player.ONE: [], Player.TWO: []}
@@ -40,12 +40,28 @@ class Board(dict[Vector, Piece | None]):
     def active_player(self) -> Player:
         return list(Player)[self.ply % 2]
 
+    # Utility methods ---------------------------------------------------------------- #
+
     def score(self, player: Player) -> int:
         return sum(role.worth for role in self.taken_pieces[player])
 
     def can_move_from(self, v: Vector) -> bool:
         piece = self[v]
         return bool(piece and piece.player is self.active_player and self.targets_of[v])
+
+    def in_check(self, player: Player | None = None) -> bool:
+        player = player or self.active_player
+        return any(
+            (attacking_piece and attacking_piece.player is not player)
+            # t = target & tp = target piece.
+            and any((tp := self[t]) and tp.role is KING for t in self.targets_of[v])
+            for v, attacking_piece in self.items()
+        )
+
+    def can_move(self) -> bool:
+        return any(self.can_move_from(v) for v in self)
+
+    # Core public methods ------------------------------------------------------------ #
 
     def update_targets(self) -> None:
         """Update the `targets` attr of each piece."""
@@ -57,7 +73,7 @@ class Board(dict[Vector, Piece | None]):
             targets = VectorSet()
 
             if attacker.role is Role.PAWN:
-                targets.update(self._pawn_targets(coord))
+                targets.update(self.__pawn_targets(coord))
 
             # the queen, bishop & rook always move along lines
             for line in LINES.get(attacker.role, []):
@@ -83,21 +99,31 @@ class Board(dict[Vector, Piece | None]):
 
             # extra logic for castling
             if attacker.role is Role.KING and not attacker.moved:
-                targets.update(self._casting_targets(coord))
+                targets.update(self.__casting_targets(coord))
 
             # extra logic exclude moves resulting in check/checkmate
             if self.protect_king:
-                risky_targets = self._risky_targets(coord, targets)
+                risky_targets = self.__risky_targets(coord, targets)
                 targets = {t for t in targets if t not in risky_targets}
 
             self.targets_of[coord] = targets
 
     def process_move(self, src: V, dst: V, *, promote_to: Role | None = None) -> None:
+        """Move piece at `src` to `dst`.
+
+        Function assumes the move is valid, and will make modifications to board (eg
+        deleting pieces as appropriate).
+
+        :param src: Initial 'source' coordinate to move *from*
+        :param dst: Final 'destination' coordinate to move *to*
+        :param promote_to: Role to convert piece to after the move (ignored if None)
+        """
         attacker = self[src]
         defender = self[dst]
         delta = dst - src
 
-        assert attacker, f"Move only processed when a piece is at {src=}."
+        if not attacker:
+            raise RuntimeError(f"Move can only be processed when a piece is at {src=}.")
 
         # remove any previous vulnerability to en passant
         if self.passant and self.passant.piece.player is self.active_player:
@@ -131,20 +157,9 @@ class Board(dict[Vector, Piece | None]):
 
         self.update_targets()
 
-    def __repr__(self) -> str:
-        parts = []
-        for y, x in product(range(8), range(8)):
-            key = V(x, y)
-            if piece := self[key]:
-                parts.append(f"{piece.role.symbol}{piece.player.value}")
-            else:
-                parts.append("--")
-            parts.append(" " if x != 7 else "\n")
-        return "".join(parts)
-
     # Helper methods for `self.update_targets` --------------------------------------- #
 
-    def _pawn_targets(self, pawn_coord: Vector) -> VectorSet:
+    def __pawn_targets(self, pawn_coord: Vector) -> VectorSet:
 
         pawn = self[pawn_coord]
         assert pawn and pawn.role is Role.PAWN, "Only call this function on a PAWN."
@@ -177,7 +192,7 @@ class Board(dict[Vector, Piece | None]):
 
         return targets
 
-    def _casting_targets(self, coord: Vector) -> VectorSet:
+    def __casting_targets(self, coord: Vector) -> VectorSet:
         king = self[coord]
         assert king and king.role is Role.KING, "Only call this function on a KING."
         y_king = coord.y
@@ -195,16 +210,17 @@ class Board(dict[Vector, Piece | None]):
                 and all(
                     V(x, y_king) not in self.targets_of[v]
                     for (v, p), x in product(self.items(), path_xvals)
-                    if p and p.player is not self.active_player
+                    if p and p.player is not king.player
                 )
             ):
-                targets.add(coord + sign * V(2, 0))
+                targets.add(coord - sign * V(2, 0))
         return targets
 
-    def _risky_targets(self, source: Vector, current_targets: VectorSet) -> VectorSet:
+    def __risky_targets(self, source: Vector, current_targets: VectorSet) -> VectorSet:
         attacker = self[source]
-        assert attacker, f"Only call if there is a piece at {source=}"
         risky_targets = VectorSet()
+
+        assert attacker, f"Only call if there is a piece at {source=}"
 
         for current_target in current_targets:
             # try out the attack without concern for check/checkmate
@@ -220,10 +236,15 @@ class Board(dict[Vector, Piece | None]):
 
         return risky_targets
 
-    def in_check(self, player: Player) -> bool:
-        # ap = attacking_piece, tp = target_piece
-        return any(
-            (ap and ap.player is not player)
-            and any((tp := self[t]) and tp.role is KING for t in self.targets_of[v])
-            for v, ap in self.items()
-        )
+    # Developer tools ---------------------------------------------------------------- #
+
+    def __repr__(self) -> str:
+        parts = []
+        for y, x in product(range(8), range(8)):
+            key = V(x, y)
+            if piece := self[key]:
+                parts.append(f"{piece.role.symbol}{piece.player.value}")
+            else:
+                parts.append("--")
+            parts.append(" " if x != 7 else "\n")
+        return "".join(parts)

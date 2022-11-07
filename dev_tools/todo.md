@@ -1,8 +1,8 @@
 # My project checklist
 
-- [ ] Improve accessability
+- [X] Improve accessability
   - [X] Add compatibility for different consoles (see `psutils`) within windows
-  - [ ] Test & implement linux functionality
+  - [X] Test & implement linux functionality
   - [X] Put on PyPI
   - [X] Rename to j-chess or fix readme
 - [ ] Improve dev workflow
@@ -16,16 +16,16 @@
   - [X] Update pallet code
 - [ ] Add features
   - [ ] Add simple multiplayer - no idea how this would work.
-  - [ ] Add a simple 1 player mode (based on random moves)
+  - [X] Add a simple 1 player mode (based on random moves)
   - [ ] [Look into Algebraic notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
 - [ ] Complete game-play functionality
   - [X] Add check
-  - [ ] Add checkmate functionality
+  - [X] Add checkmate functionality
   - [X] Add castling
   - [X] Add en passant
   - [X] Add promotion
   - [X] Prevent pawn from "jumping"
-  - [ ] Fix issue with Kings logic
+  - [X] Fix issue with Kings logic
 - [ ] Improve visuals
   - [X] Add boarder
   - [X] Add more color to score etc

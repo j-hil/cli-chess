@@ -10,7 +10,7 @@ We'll have 3 core aspects:
     based on the usual 1, 3, 3, 5, 9 system.
 - [X] A render function which will translate the game state into something
     visually pleasing.
-- [ ] A UI for the changing the game state.
+- [X] A UI for the changing the game state.
 
 
 ## Cosmetics

@@ -1,3 +1,5 @@
+"""Linux implementation of some `terminal` functionality."""
+
 import sys
 
 assert sys.platform != "win32"

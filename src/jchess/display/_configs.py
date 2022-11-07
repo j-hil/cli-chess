@@ -1,4 +1,4 @@
-"""Contains display settings for different consoles."""
+"""Configuration classes and presets for `Display`."""
 
 from dataclasses import KW_ONLY, dataclass
 
@@ -13,7 +13,8 @@ class SymbolDict(dict[Role, str]):
         super().__init__()
 
 
-UTF8_SYMBOLS = SymbolDict("♚♛♜♝♞♟ ")  # options to try/add: '♔♕♖♗♘♙'
+DARK_UTF8_SYMBOLS = SymbolDict("♔♕♖♗♘♙ ")
+LIGHT_UTF8_SYMBOLS = SymbolDict("♚♛♜♝♞♟ ")
 DEFAULT_SYMBOLS = SymbolDict("KQHIJi ")
 STANDARD_SYMBOLS = SymbolDict("KQRBNi ")
 

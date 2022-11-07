@@ -2,14 +2,17 @@ from dataclasses import dataclass
 
 from jchess import __author__ as author
 from jchess import __version__ as version
-from jchess.configs import Pallet, SymbolDict
-from jchess.game import PROMOTION_OPTIONS, Game, Mode, Status
+from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
 from jchess.geometry import V
 from jchess.pieces import Player, Role
 from jchess.terminal import ctrlseq
 
+from ._configs import Pallet, SymbolDict
 from ._constants import (
     COL_LABELS,
+    HELP_BOT,
+    HELP_LH,
+    HELP_RH,
     INFO_TEMPLATE,
     MAIN_DISPLAY_TEMPLATE,
     PROMOTION_CLEAR,
@@ -20,6 +23,8 @@ from ._constants import (
     START_MENU_TEMPLATE,
 )
 
+P_ONE, P_TWO = list(Player)
+
 
 @dataclass(slots=True, frozen=True)
 class Display:
@@ -28,7 +33,7 @@ class Display:
 
     def ctrlseq(self, game: Game) -> str:
         pallet = self.pallet
-        parts = [ctrlseq(" ", at=(0, 0))]
+        parts = []
 
         # adjust for previous status of GameState
         if game.status is not game.status_prev:
@@ -41,24 +46,32 @@ class Display:
                 for i, p in enumerate(Player):
                     parts.append(ctrlseq(ROW_LABELS, at=(30, 18 * i + 4)))
                     parts.append(ctrlseq(COL_LABELS, at=(36 * i + 26, 6)))
-                    info = INFO_TEMPLATE.format("ONE" if i == 0 else "TWO")
+                    info = INFO_TEMPLATE.format(str(p))
                     parts.append(ctrlseq(info, clr=pallet.text[p], at=(72 * i + 3, 4)))
             elif game.status_prev is Status.PROMOTING:
                 parts.append(ctrlseq(PROMOTION_CLEAR, at=(3, 12)))
 
-        if game.status is Status.START_MENU:
+        if game.status is Status.GAME_OVER:
+            parts.append(self.__gutter_msg(game))
+
+        elif game.status is Status.START_MENU:
             parts.append(ctrlseq(START_MENU_TEMPLATE, at=START_MENU_ANCHOR))
             mode_str = f"(+) {list(Mode)[game.scursor].value}"
             coord = START_MENU_ANCHOR + V(2, 3 + game.scursor)
             parts.append(ctrlseq(mode_str, clr=pallet.cursor, at=coord))
 
         elif game.status is Status.BOARD_FOCUS:
+            help_templates = {
+                P_ONE: HELP_BOT.format(P_ONE) if game.mode is Mode.TDB else HELP_LH,
+                P_TWO: HELP_RH if game.mode is Mode.LTP else HELP_BOT.format(P_TWO),
+            }
             parts.append(self.__gutter_msg(game))
             parts.append(self.__board_ctrlseq(game))
             for i, p in enumerate(Player):
                 score = f"{game.board.score(p):0>3}"
                 parts.append(ctrlseq(score, clr=pallet.text[p], at=(72 * i + 11, 6)))
                 parts.append(self.__taken_ctrlseq(game, p))
+                parts.append(ctrlseq(help_templates[p], at=(72 * i + 3, 12)))
 
         elif game.status is Status.PROMOTING:
             role = PROMOTION_OPTIONS[game.pcursor]
@@ -119,14 +132,30 @@ class Display:
 
         return ctrlseq("".join(parts), clr=color, at=(72 * player.value - 69, 8))
 
-    @staticmethod
-    def __gutter_msg(game: Game) -> str:
-        b = game.board
-        s1, s2, turn = b.score(Player.ONE), b.score(Player.TWO), b.ply // 2 + 1
-        if s1 > s2:
-            msg = f"Turn {turn}. Player ONE leads by {s1 - s2} point(s)."
-        if s2 > s1:
-            msg = f"Turn {turn}. Player TWO leads by {s2 - s1} point(s)."
+    def __gutter_msg(self, game: Game) -> str:
+        board = game.board
+        t, max_t = board.ply // 2 + 1, MAX_PLY_COUNT // 2
+        s1, s2 = board.score(Player.ONE), board.score(Player.TWO)
+
+        if game.status is not Status.GAME_OVER:
+
+            color = ""
+            if s1 > s2:
+                msg = f"Turn {t} of {max_t}. Player ONE leads by {s1 - s2} point(s)."
+            elif s2 > s1:
+                msg = f"Turn {t} of {max_t}. Player TWO leads by {s2 - s1} point(s)."
+            else:
+                msg = f"Turn {t} of {max_t}. Players ONE & TWO are equal in score."
         else:
-            msg = f"Turn {turn}. Players ONE & TWO are equal in score."
-        return ctrlseq(f"{msg: ^55}", at=(17, 24))
+            player = board.active_player
+            color = self.pallet.cursor
+            if board.ply >= MAX_PLY_COUNT:
+                msg = f"Draw: {max_t} turn limit reached."
+            elif not board.can_move() and board.in_check():
+                msg = f"Player {player} wins by checkmate!"
+            elif not board.can_move() and not board.in_check():
+                msg = "Draw: Stalemate."
+            else:
+                msg = f"Player {~player} wins by forfeit."
+            msg += " Hit enter to quit."
+        return ctrlseq(f"{msg: ^55}", clr=color, at=(17, 24))

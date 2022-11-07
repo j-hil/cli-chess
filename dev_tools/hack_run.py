@@ -1,11 +1,11 @@
 import os
 from typing import no_type_check
 
-import jchess.display
+import jchess.display._class
 import jchess.game
 import jchess.run
 from jchess.action import get_action_rhs
-from jchess.configs import UTF8_SYMBOLS, VSC_PALLET
+from jchess.display import LIGHT_UTF8_SYMBOLS, VSC_PALLET
 from jchess.game import Game
 from jchess.run import run
 from jchess.testutils import board_to_ssv
@@ -35,11 +35,11 @@ def hack() -> None:
         input("Press any key to continue.")
     else:
         jchess.run.DEFAULT_PALLET = VSC_PALLET
-        jchess.run.DEFAULT_SYMBOLS = UTF8_SYMBOLS
+        jchess.run.DEFAULT_SYMBOLS = LIGHT_UTF8_SYMBOLS
 
     jchess.game.get_action_lhs = get_action_rhs
-    jchess.display.ROW_LABELS = "0   1   2   3   4   5   6   7"
-    jchess.display.COL_LABELS = "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
+    jchess.display._class.ROW_LABELS = "0   1   2   3   4   5   6   7"
+    jchess.display._class.COL_LABELS = "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
     jchess.run.Game = HackedGame
 
 
