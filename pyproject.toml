@@ -6,14 +6,14 @@ build-backend = "hatchling.build"
 [project]
 name = "jchess"
 # Version is '0.N' for N = commit count; Simple & allows different versioning later.
-version = "0.9"
+version = "0.94"
 authors = [
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
 description = "Chess in the command line."
 readme = "README.md"
 license = {text="GNU General Public License v3 (GPLv3)"}
-keywords = ["chess", "terminal"]
+keywords = ["chess", "terminal", "console"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

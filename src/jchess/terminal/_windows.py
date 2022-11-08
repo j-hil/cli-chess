@@ -44,13 +44,21 @@ def hide_cursor() -> None:
 
 def get_input() -> str:
     """Convert keystroke into a char. Windows-compatible version."""
-    # only checked to work with keystrokes represented by 1 char and direction arrows
+    # only checked to work with keystrokes represented by 1 char and a few others
 
     user_input = getch()
 
     # Hex codes for direction arrows. NB: *cannot* decode b"\xe0".
     if user_input in [b"\x00", b"\xe0"]:
-        return {b"H": "↑", b"P": "↓", b"M": "→", b"K": "←", b"O": "⇲"}[getch()]
+        return {
+            b"H": "UP",
+            b"P": "DOWN",
+            b"K": "LEFT",
+            b"M": "RIGHT",
+            b"O": "END",
+            b";": "F1",
+            b"\x86": "F12",
+        }[getch()]
 
     # Anything else is assumed to be a represented by a single decodable char
     return user_input.decode()

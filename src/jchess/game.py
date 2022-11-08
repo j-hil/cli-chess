@@ -6,11 +6,10 @@ internally controlled by `Game`. Both aid `Game`'s logic flow.
 import random
 from collections.abc import Iterator
 from enum import Enum, auto
-from getpass import getpass
 from time import sleep
 from typing import Any
 
-from jchess.action import Action, ExitGame, get_action_lhs, get_action_rhs
+from jchess.action import Action, ExitGame, get_action, get_action_lhs, get_action_rhs
 from jchess.board import Board
 from jchess.geometry import V, Vector
 from jchess.pieces import LocPiece, Player, Role
@@ -75,11 +74,10 @@ class Game:
     def evolve_state(self) -> None:
         """Get next action and update the game accordingly."""
 
+        action = self.get_action()
         if self.status is Status.GAME_OVER:
-            getpass()  # used over `input` as it doesn't show what user types.
             raise ExitGame
 
-        action = self.get_action()
         board = self.board
         status = self.status_prev = self.status
         attacker = self.attacker
@@ -134,8 +132,10 @@ class Game:
             return next(self.bot_action)
         if self.mode is Mode.VDB:
             return get_action_rhs() if player is Player.ONE else next(self.bot_action)
-        # else mode is LTP
-        return get_action_rhs() if player is Player.ONE else get_action_lhs()
+        if self.mode is Mode.LTP:
+            return get_action_lhs() if player is Player.ONE else get_action_rhs()
+        # else mode unset, so in the start menu
+        return get_action()
 
     def __action_generator(self) -> Iterator[Action]:
         """Generate a sequence of `Action`s forming a valid (but random) chess move."""

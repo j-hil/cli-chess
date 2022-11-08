@@ -9,7 +9,7 @@ from jchess import __author__ as author
 from jchess import __version__ as version
 from jchess import terminal
 from jchess.action import ExitGame
-from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
+from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Status
 from jchess.geometry import V
 from jchess.pieces import Player, Role
 from jchess.terminal import ctrlseq
@@ -17,11 +17,10 @@ from jchess.terminal import ctrlseq
 from ._configs import Pallet, SymbolDict
 from ._constants import (
     COL_LABELS,
-    HELP_BOT,
-    HELP_LH,
-    HELP_RH,
+    HELP_TEMPLATES,
     INFO_TEMPLATE,
     MAIN_DISPLAY_TEMPLATE,
+    MODE_STRINGS,
     PROMOTION_CLEAR,
     PROMOTION_TEMPLATE,
     ROW_LABELS,
@@ -29,8 +28,6 @@ from ._constants import (
     START_MENU_CLEAR,
     START_MENU_TEMPLATE,
 )
-
-P_ONE, P_TWO = list(Player)
 
 
 @dataclass()
@@ -92,22 +89,20 @@ class Display:
 
         elif game.status is Status.START_MENU:
             parts.append(ctrlseq(START_MENU_TEMPLATE, at=START_MENU_ANCHOR))
-            mode_str = f"(+) {list(Mode)[game.scursor].value}"
+            mode_str = MODE_STRINGS[game.scursor]
             coord = START_MENU_ANCHOR + V(2, 3 + game.scursor)
             parts.append(ctrlseq(mode_str, clr=pallet.cursor, at=coord))
 
         elif game.status is Status.BOARD_FOCUS:
-            help_templates = {
-                P_ONE: HELP_BOT.format(P_ONE) if game.mode is Mode.TDB else HELP_LH,
-                P_TWO: HELP_RH if game.mode is Mode.LTP else HELP_BOT.format(P_TWO),
-            }
+
             parts.append(self.__gutter_msg(game))
             parts.append(self.__board_ctrlseq(game))
             for i, p in enumerate(Player):
                 score = f"{game.board.score(p):0>3}"
                 parts.append(ctrlseq(score, clr=pallet.text[p], at=(72 * i + 11, 6)))
                 parts.append(self.__taken_ctrlseq(game, p))
-                parts.append(ctrlseq(help_templates[p], at=(72 * i + 3, 12)))
+                assert game.mode, "Mode should be set by this point in the game."
+                parts.append(ctrlseq(HELP_TEMPLATES[p][game.mode], at=(72 * i + 3, 12)))
 
         elif game.status is Status.PROMOTING:
             role = PROMOTION_OPTIONS[game.pcursor]
@@ -155,7 +150,7 @@ class Display:
     def __taken_ctrlseq(self, game: Game, player: Player) -> str:
         taken_pieces = game.board.taken_pieces[player]
         symbol = self.symbol
-        color = self.pallet.text[player]
+        color = self.pallet.piece[~player] + self.pallet.board[player.value % 2]
 
         parts = []
         for i in range(15):
@@ -184,7 +179,7 @@ class Display:
                 msg = f"Turn {t} of {max_t}. Players ONE & TWO are equal in score."
         else:
             player = board.active_player
-            color = self.pallet.cursor
+            color = self.pallet.focus
             if board.ply >= MAX_PLY_COUNT:
                 msg = f"Draw: {max_t} turn limit reached."
             elif not board.can_move() and board.in_check():
@@ -193,5 +188,5 @@ class Display:
                 msg = "Draw: Stalemate."
             else:
                 msg = f"Player {~player} wins by forfeit."
-            msg += " Hit enter to quit."
+            msg += " Hit any key to quit."
         return ctrlseq(f"{msg: ^55}", clr=color, at=(17, 24))

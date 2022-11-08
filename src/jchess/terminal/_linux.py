@@ -9,8 +9,7 @@ from tty import setraw
 
 CSI = "\x1b["
 
-# TODO: bring back in line with windows version
-# eg replace '?' on line max-3
+# TODO: bring back in line with windows version esp get action
 
 
 def clear() -> None:
@@ -57,10 +56,10 @@ def get_input() -> str:
 
     # Direction keys in vscode
     if user_input == "\x00":
-        return {"H": "↑", "P": "↓", "M": "→", "K": "←", "O": "⇲"}[getch()]
+        return {"H": "↑", "P": "↓", "M": "→", "K": "←", "O": "END"}[getch()]
 
     # Direction keys in usual console
     if user_input + getch() == CSI:
-        return {"A": "↑", "B": "↓", "C": "→", "D": "←", "?": "⇲"}[getch()]
+        return {"A": "↑", "B": "↓", "C": "→", "D": "←", "?": ""}[getch()]
 
     return user_input

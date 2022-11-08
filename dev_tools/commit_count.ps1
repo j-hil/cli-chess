@@ -1,1 +1,2 @@
-git rev-list --all --count
+# used in version number
+git rev-list --count main

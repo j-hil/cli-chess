@@ -15,8 +15,9 @@ class SymbolDict(dict[Role, str]):
 
 DARK_UTF8_SYMBOLS = SymbolDict("♔♕♖♗♘♙ ")
 LIGHT_UTF8_SYMBOLS = SymbolDict("♚♛♜♝♞♟ ")
-DEFAULT_SYMBOLS = SymbolDict("KQHIJi ")
-STANDARD_SYMBOLS = SymbolDict("KQRBNi ")
+# used to be KQHIJi: testutils, ssv files and Role enum reflect that
+DEFAULT_SYMBOLS = SymbolDict("KQRBJi ")
+STANDARD_SYMBOLS = SymbolDict("KQRBNp ")
 
 
 @dataclass
