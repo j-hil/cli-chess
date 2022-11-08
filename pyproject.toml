@@ -5,7 +5,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jchess"
-version = "22.10.80"
+# Version is '0.N' for N = commit count; Simple & allows different versioning later.
+version = "0.9"
 authors = [
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]
@@ -17,7 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
-    "Development Status :: 2 - Pre-Alpha"
+    "Development Status :: 4 - Beta"
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -43,6 +44,13 @@ Homepage = "https://j-hil@github.com/j-hil/cli-chess.git"
 [project.scripts]
 jchess = "jchess.run:run"
 
+
+[tool.hatch.build]
+include = ["*.py", "py.typed"]
+exclude = ["testutils.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jchess"]
 
 [tool.mypy]
 warn_redundant_casts = true

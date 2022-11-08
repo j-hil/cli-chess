@@ -1,5 +1,7 @@
 # J-Chess: Play chess in the console!
 
+## Features.
+
 A project which enables you to play chess from within your console. Just a pet project
 and lacking a lot of features (see [`TODO.md`](docs/plan/todo.md)) it is functional
 if you want to play a game with a friend locally (or just play yourself?).
@@ -11,3 +13,7 @@ Enjoy!
 
 Python features used: generators, context managers, dataclasses, typing, regexes, OOP
 patterns.
+
+Packaging - incluiding using pypi
+
+WSL, git/github

@@ -8,8 +8,8 @@ import colorama
 from jchess import __author__ as author
 from jchess import __version__ as version
 from jchess import terminal
-from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
 from jchess.action import ExitGame
+from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
 from jchess.geometry import V
 from jchess.pieces import Player, Role
 from jchess.terminal import ctrlseq
