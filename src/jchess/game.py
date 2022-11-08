@@ -4,13 +4,13 @@
 internally controlled by `Game`. Both aid `Game`'s logic flow.
 """
 import random
-import sys
 from collections.abc import Iterator
 from enum import Enum, auto
+from getpass import getpass
 from time import sleep
 from typing import Any
 
-from jchess.action import Action, get_action_lhs, get_action_rhs
+from jchess.action import Action, ExitGame, get_action_lhs, get_action_rhs
 from jchess.board import Board
 from jchess.geometry import V, Vector
 from jchess.pieces import LocPiece, Player, Role
@@ -76,8 +76,8 @@ class Game:
         """Get next action and update the game accordingly."""
 
         if self.status is Status.GAME_OVER:
-            input()
-            sys.exit()
+            getpass()  # used over `input` as it doesn't show what user types.
+            raise ExitGame
 
         action = self.get_action()
         board = self.board

@@ -8,3 +8,6 @@ To play simply install from the `jchess` package from PyPI and run the package a
 module, i.e run `pip install jchess` and `python -m jchess`.
 
 Enjoy!
+
+Python features used: generators, context managers, dataclasses, typing, regexes, OOP
+patterns.

@@ -20,7 +20,7 @@ def _get_width_height_vec(s: str) -> tuple[int, int]:
 # Main 25 x 87 display constants ----------------------------------------------------- #
 MAIN_DISPLAY_TEMPLATE = """\
 +-------------------------------------------------------------------------------------+
-| Welcome to J-Chess! Controls: arrows to navigate, space to select, and 'q' to quit. |
+|                   Welcome to J-Chess! To quit hit the escape key.                   |
 +-------------+---------------------------------------------------------+-------------+
 |             |                                                         |             |
 |             |            +---+---+---+---+---+---+---+---+            |             |
@@ -52,7 +52,13 @@ def _make_start_menu() -> tuple[str, V]:
     mode_strs = [f"(+) {m.value}" for m in Mode]
     initial_w = max(len(s) for s in mode_strs)
 
-    main_lines = [f"{'Pick a game mode:': ^{initial_w}}", "=" * initial_w, *mode_strs]
+    main_lines = [
+        f"{'Pick a game mode:': ^{initial_w}}",
+        "=" * initial_w,
+        *mode_strs,
+        "=" * initial_w,
+        "(hit escape to quit)",
+    ]
     template = "".join(
         ["+-", "-" * initial_w, "-+\n"]
         + [f"| {s: <{initial_w}} |\n" for s in main_lines]
@@ -69,39 +75,36 @@ START_MENU_CLEAR = "".join(" " if c != "\n" else "\n" for c in START_MENU_TEMPLA
 
 # Player column constants ------------------------------------------------------------ #
 HELP_LH = """\
-** HELP: **
+ CONTROLS
 ===========
-Arrows
--> move
+Arrow keys
+ (to move)
 Enter/Space
--> select
-End/Esc
--> forfeit
+(to select)
+    End
+ (forfeit)
 """
 
 HELP_RH = """\
-** HELP: **
+ CONTROLS
 ===========
-W/A/S/D
--> move
-Tab/Space
--> select
-Q/Esc
--> forfeit
+ WASD keys
+ (to move)
+   Enter
+(to select)
+   Q key
+ (forfeit)
 """
 
 HELP_BOT = """\
-** HELP: **
+    BOT
 ===========
 Player {}
-is a 'dumb
-bot' - it
-randomly
+ randomly
 selects its
-next move.
-
-Spam CTRL+C
-to quit.
+next move
+ It is a
+'dumb bot'.
 """
 
 INFO_TEMPLATE = """\

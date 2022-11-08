@@ -4,6 +4,12 @@ from enum import Enum
 
 from jchess.terminal import get_input
 
+ESC = "\x1b"
+
+
+class ExitGame(Exception):
+    """Error to raise when exiting the game."""
+
 
 class Action(Enum):
     """Allowed user inputs."""
@@ -14,7 +20,7 @@ class Action(Enum):
     RIGHT = "→"
     LEFT = "←"
     IGNORE = "~"
-    QUIT = "!"
+    FORFEIT = "!"
 
     def __repr__(self) -> str:
         return self.value
@@ -23,32 +29,29 @@ class Action(Enum):
 def get_action_rhs() -> Action:
     """Get input form the right hand side of keyboard (arrow, enter and end keys)."""
     x = get_input()
+    if x == ESC:
+        raise ExitGame
     return {
-        # Specific to rhs:
         "\r": Action.SELECT,
         "↑": Action.UP,
         "↓": Action.DOWN,
         "→": Action.RIGHT,
         "←": Action.LEFT,
-        "⇲": Action.QUIT,
-        # Should always be available to both players:
-        " ": Action.SELECT,
-        "\x1b": Action.QUIT,
+        "⇲": Action.FORFEIT,
     }.get(x, Action.IGNORE)
 
 
 def get_action_lhs() -> Action:
     """Get input from the left hand side of keyboard (WASD, tab and Q keys)."""
     x = get_input().lower()
+    if x == ESC:
+        raise ExitGame
     return {
-        # Specific to lhs:
-        "\t": Action.SELECT,
+        " ": Action.SELECT,
         "w": Action.UP,
         "s": Action.DOWN,
         "d": Action.RIGHT,
         "a": Action.LEFT,
-        "q": Action.QUIT,
-        # Should always be available to both players:
-        " ": Action.SELECT,
-        "\x1b": Action.QUIT,
+        "q": Action.FORFEIT,
+        "\x1b": Action.FORFEIT,
     }.get(x, Action.IGNORE)

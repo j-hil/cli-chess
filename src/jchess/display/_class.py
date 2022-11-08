@@ -1,8 +1,15 @@
+import os
 from dataclasses import dataclass
+from types import TracebackType
+from typing import Type
+
+import colorama
 
 from jchess import __author__ as author
 from jchess import __version__ as version
+from jchess import terminal
 from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
+from jchess.action import ExitGame
 from jchess.geometry import V
 from jchess.pieces import Player, Role
 from jchess.terminal import ctrlseq
@@ -26,16 +33,45 @@ from ._constants import (
 P_ONE, P_TWO = list(Player)
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass()
 class Display:
+    """Simple context manager to manipulate a terminal display showing a `Game`."""
+
+    game: Game
     pallet: Pallet
     symbol: SymbolDict
 
-    def ctrlseq(self, game: Game) -> str:
+    def __post_init__(self) -> None:
+        self.original_terminal_size = (-1, -1)  # set in __enter__
+
+    def __enter__(self) -> "Display":
+        self.original_terminal_size = os.get_terminal_size()
+        colorama.init()
+        terminal.clear()
+        terminal.resize(87, 25)
+        terminal.reset_cursor()
+        terminal.hide_cursor()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException],
+        exc_val: Type[BaseException],
+        exc_tb: TracebackType,
+    ) -> bool:
+        terminal.clear()
+        terminal.show_cursor()
+        terminal.resize(*self.original_terminal_size)
+        return exc_type is ExitGame
+
+    def refresh(self) -> None:
+        """Update and re-show the display."""
+        game = self.game
         pallet = self.pallet
+
         parts = []
 
-        # adjust for previous status of GameState
+        # adjust for previous status of game
         if game.status is not game.status_prev:
             if game.status_prev is Status.UNINITIALIZED:
                 parts.append(ctrlseq(START_MENU_CLEAR, at=START_MENU_ANCHOR))
@@ -80,9 +116,9 @@ class Display:
             option_str = f"({role.symbol}) {role}"
             parts.append(ctrlseq(option_str, clr=color, at=(3, 14 + game.pcursor)))
 
-        return "".join(parts)
+        print("".join(parts))
 
-    # Helper methods for `Display.ctrlseq` ------------------------------------------- #
+    # Helper methods for `Display.update()` ------------------------------------------ #
 
     def __board_ctrlseq(self, game: Game) -> str:
         pallet = self.pallet
