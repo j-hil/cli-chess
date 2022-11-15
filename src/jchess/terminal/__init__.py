@@ -4,6 +4,7 @@ Designed to abstract away all os/terminal dependencies from the rest of the code
 including the collection of player input.
 """
 import sys
+from signal import CTRL_BREAK_EVENT
 
 from colorama import Style
 
@@ -31,15 +32,30 @@ def reset_cursor() -> None:
     print(f"{CSI}H", end="")
 
 
-def ctrlseq(s: str, *, clr: str = "", at: tuple[int, int] | V) -> str:
+def ctrlseq(
+    s: str, *, clr: str = "", at: tuple[int, int] | V, edge: bool = False
+) -> str:
     """Convert a string to a control sequence."""
+    lines = s.split("\n")
+    w, h = len(lines[0]), len(lines)
     x, y = at
-    return (
-        f"{CSI}{y};{x}H"
-        + clr
-        + f"\n{CSI}{x - 1}C".join(s.split("\n"))  # why is it x - 1...?
-        + Style.RESET_ALL
-    )
+
+    reset_clr = Style.RESET_ALL
+    seq = clr + "".join(f"{CSI}{y+i};{x}H{l}" for i, l in enumerate(lines)) + reset_clr
+
+    if edge:
+        boundary = [
+            ctrlseq("-" * w, at=(x, y - 1)),
+            ctrlseq("-" * w, at=(x, y + h)),
+            ctrlseq("\n".join("|" for _ in range(h)), at=(x - 1, y)),
+            ctrlseq("\n".join("|" for _ in range(h)), at=(x + w, y)),
+            ctrlseq("+", at=(x - 1, y - 1)),
+            ctrlseq("+", at=(x - 1, y + h)),
+            ctrlseq("+", at=(x + w, y - 1)),
+            ctrlseq("+", at=(x + w, y + h)),
+        ]
+        seq += "".join(boundary)
+    return seq
 
 
 if __name__ == "__main__":

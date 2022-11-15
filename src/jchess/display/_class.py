@@ -1,33 +1,34 @@
 import os
 from dataclasses import dataclass
-from types import TracebackType
+from itertools import product
+from textwrap import fill
+from types import TracebackType as TbType
 from typing import Type
 
 import colorama
 
-from jchess import __author__ as author
-from jchess import __version__ as version
-from jchess import terminal
+from jchess import __author__, __version__, terminal
 from jchess.action import ExitGame
-from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Status
+from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
 from jchess.geometry import V
-from jchess.pieces import Player, Role
+from jchess.pieces import Player
 from jchess.terminal import ctrlseq
 
 from ._configs import Pallet, SymbolDict
 from ._constants import (
-    COL_LABELS,
-    HELP_TEMPLATES,
     INFO_TEMPLATE,
-    MAIN_DISPLAY_TEMPLATE,
     MODE_STRINGS,
-    PROMOTION_CLEAR,
     PROMOTION_TEMPLATE,
-    ROW_LABELS,
-    START_MENU_ANCHOR,
-    START_MENU_CLEAR,
-    START_MENU_TEMPLATE,
+    README_TEMPLATES,
+    START_TEMPLATE,
+    H,
+    Loc,
+    W,
 )
+
+TypeExc = Type[BaseException]
+
+UNINITIALIZED, START_MENU, PROMOTING, BOARD_FOCUS, GAME_OVER = list(Status)
 
 
 @dataclass()
@@ -45,17 +46,12 @@ class Display:
         self.original_terminal_size = os.get_terminal_size()
         colorama.init()
         terminal.clear()
-        terminal.resize(87, 25)
+        terminal.resize(W.MAIN + 2, H.MAIN + 2)  # +2 to account for boarder
         terminal.reset_cursor()
         terminal.hide_cursor()
         return self
 
-    def __exit__(
-        self,
-        exc_type: Type[BaseException],
-        exc_val: Type[BaseException],
-        exc_tb: TracebackType,
-    ) -> bool:
+    def __exit__(self, exc_type: TypeExc, exc_val: TypeExc, exc_tb: TbType) -> bool:
         terminal.clear()
         terminal.show_cursor()
         terminal.resize(*self.original_terminal_size)
@@ -63,130 +59,170 @@ class Display:
 
     def refresh(self) -> None:
         """Update and re-show the display."""
-        game = self.game
-        pallet = self.pallet
-
+        status, status_prev = self.game.status, self.game.status_prev
         parts = []
 
         # adjust for previous status of game
-        if game.status is not game.status_prev:
-            if game.status_prev is Status.UNINITIALIZED:
-                parts.append(ctrlseq(START_MENU_CLEAR, at=START_MENU_ANCHOR))
-            elif game.status_prev is Status.START_MENU:
-                parts.append(ctrlseq(MAIN_DISPLAY_TEMPLATE, at=(0, 0)))
-                parts.append(ctrlseq(f"{version: ^11}", at=(3, 24)))
-                parts.append(ctrlseq(f"by {author}", at=(76, 24)))
-                for i, p in enumerate(Player):
-                    parts.append(ctrlseq(ROW_LABELS, at=(30, 18 * i + 4)))
-                    parts.append(ctrlseq(COL_LABELS, at=(36 * i + 26, 6)))
-                    info = INFO_TEMPLATE.format(str(p))
-                    parts.append(ctrlseq(info, clr=pallet.text[p], at=(72 * i + 3, 4)))
-            elif game.status_prev is Status.PROMOTING:
-                parts.append(ctrlseq(PROMOTION_CLEAR, at=(3, 12)))
+        if status is not status_prev:
+            if status_prev is UNINITIALIZED:
+                pass  # should clear start menu, but it's overridden by main board
+            elif status_prev is START_MENU:
+                parts.extend(self.__init_main())
+            elif status_prev is PROMOTING:
+                parts.extend(self.__clear_promotion())
 
-        if game.status is Status.GAME_OVER:
-            parts.append(self.__gutter_msg(game))
-
-        elif game.status is Status.START_MENU:
-            parts.append(ctrlseq(START_MENU_TEMPLATE, at=START_MENU_ANCHOR))
-            mode_str = MODE_STRINGS[game.scursor]
-            coord = START_MENU_ANCHOR + V(2, 3 + game.scursor)
-            parts.append(ctrlseq(mode_str, clr=pallet.cursor, at=coord))
-
-        elif game.status is Status.BOARD_FOCUS:
-
-            parts.append(self.__gutter_msg(game))
-            parts.append(self.__board_ctrlseq(game))
-            for i, p in enumerate(Player):
-                score = f"{game.board.score(p):0>3}"
-                parts.append(ctrlseq(score, clr=pallet.text[p], at=(72 * i + 11, 6)))
-                parts.append(self.__taken_ctrlseq(game, p))
-                assert game.mode, "Mode should be set by this point in the game."
-                parts.append(ctrlseq(HELP_TEMPLATES[p][game.mode], at=(72 * i + 3, 12)))
-
-        elif game.status is Status.PROMOTING:
-            role = PROMOTION_OPTIONS[game.pcursor]
-            color = self.pallet.cursor
-            parts.append(ctrlseq(PROMOTION_TEMPLATE, at=(3, 12)))
-            option_str = f"({role.symbol}) {role}"
-            parts.append(ctrlseq(option_str, clr=color, at=(3, 14 + game.pcursor)))
+        if status is GAME_OVER:
+            parts.extend(self.__init_game_over())
+        elif status is START_MENU:
+            parts.extend(self.__refresh_start())
+        elif status is BOARD_FOCUS:
+            parts.extend(self.__refresh_main())
+        elif status is PROMOTING:
+            parts.extend(self.__refresh_promotion())
 
         print("".join(parts))
 
-    # Helper methods for `Display.update()` ------------------------------------------ #
+    # Helper methods for `Display.refresh` ------------------------------------------- #
 
-    def __board_ctrlseq(self, game: Game) -> str:
+    def __init_main(self) -> list[str]:
+        quit_msg = "spam CTRL+C." if self.game.mode is Mode.TDB else "hit escape."
+        headline = "Welcome to J-Chess! To quit " + quit_msg
+
+        mode = self.game.mode
+        assert mode, "Mode should be set by this point in the game."
+
+        taken_blank = "\n".join([" " * W.SIDE] * H.SIDE_SMALL)
+
+        return [
+            # parts same each run - but __init_main is only run once so not wasteful
+            ctrlseq(__version__.center(W.SIDE), at=Loc.VERSION, edge=True),
+            ctrlseq(__author__.center(W.SIDE), at=Loc.AUTHOR, edge=True),
+            ctrlseq(" " * W.GUTTER, at=Loc.GUTTER, edge=True),
+            *[  # board
+                ctrlseq(
+                    " " * W.TILE,
+                    at=V(*Loc.BOARD) + V((W.TILE + 1) * x, 2 * y),
+                    edge=True,
+                )
+                for x, y in product(range(8), range(8))
+            ],
+            # dynamic parts
+            ctrlseq(headline.center(W.MAIN), at=Loc.HEADLINE, edge=True),
+            ctrlseq(taken_blank, clr=self.pallet.board[1], at=Loc.LH_TAKEN, edge=True),
+            ctrlseq(taken_blank, clr=self.pallet.board[0], at=Loc.RH_TAKEN, edge=True),
+            ctrlseq(README_TEMPLATES[Player.ONE][mode], at=Loc.LH_README, edge=True),
+            ctrlseq(README_TEMPLATES[Player.TWO][mode], at=Loc.RH_README, edge=True),
+        ]
+
+    def __clear_promotion(self) -> list[str]:
+        mode = self.game.mode
+        assert mode, "Mode should be set by this point in the game."
+        return [
+            ctrlseq(README_TEMPLATES[Player.ONE][mode], at=Loc.LH_README, edge=True),
+            ctrlseq(README_TEMPLATES[Player.TWO][mode], at=Loc.RH_README, edge=True),
+        ]
+
+    def __init_game_over(self) -> list[str]:
+        board = self.game.board
+        if board.ply >= MAX_PLY_COUNT:
+            msg = f"Draw: {MAX_PLY_COUNT // 2} turn limit reached."
+        elif not board.can_move() and board.in_check():
+            msg = f"Player {board.active_player} wins by checkmate!"
+        elif not board.can_move() and not board.in_check():
+            msg = "Draw: Stalemate."
+        else:
+            msg = f"Player {~board.active_player} wins by forfeit."
+        msg += " Hit any key to quit."
+        return [ctrlseq(msg.center(W.GUTTER), clr=self.pallet.focus, at=Loc.GUTTER)]
+
+    def __refresh_start(self) -> list[str]:
+        mode_str = MODE_STRINGS[self.game.scursor]
+        coord = (Loc.START[0], Loc.START[1] + 2 + self.game.scursor)
+        return [
+            ctrlseq(START_TEMPLATE, at=Loc.START, edge=True),
+            ctrlseq(mode_str, clr=self.pallet.cursor, at=coord),
+        ]
+
+    def __refresh_main(self) -> list[str]:
         pallet = self.pallet
-        board = game.board
-        cursor = game.bcursor
-        focus = game.board[cursor]
-        attacker = game.attacker
+        board = self.game.board
+
+        s = board.score(Player.ONE), board.score(Player.TWO)
 
         parts = []
+
+        # taken pieces & scores
+        for i, player in enumerate(Player):
+            # scores
+            coord = Loc.LH_SCORE if player is Player.ONE else Loc.RH_SCORE
+            parts.append(
+                ctrlseq(
+                    INFO_TEMPLATE.format(player, s[i]),
+                    clr=pallet.text[player],
+                    at=coord,
+                    edge=True,
+                )
+            )
+            # taken pieces
+            taken_pieces = self.game.board.taken_pieces[player]
+            color = self.pallet.piece[~player] + self.pallet.board[player.value % 2]
+            text = fill(" ".join(self.symbol[role] for role in taken_pieces), W.SIDE)
+            coord = Loc.LH_TAKEN if player is Player.ONE else Loc.RH_TAKEN
+            parts.append(ctrlseq(text, clr=color, at=coord))
+
+        # gutter message
+        msg = f"Turn {board.ply // 2 + 1} of {MAX_PLY_COUNT // 2}. "
+        if s[0] > s[1]:
+            msg += "Player ONE leads by {s[0] - s[1]} point(s)."
+        elif s[1] > s[0]:
+            msg += "Player TWO leads by {s[1] - s[0]} point(s)."
+        else:
+            msg += "Players ONE & TWO are equal in score."
+        parts.append(ctrlseq(msg.center(W.GUTTER), at=Loc.GUTTER))
+
+        # update board:
+        cursor = self.game.bcursor
+        focus = self.game.board[cursor]
+        attacker = self.game.attacker
         for coord, piece in board.items():
-            highlight_potential_targets = (
+            show_targets = (
+                # show *potential* targets
                 not attacker
                 and focus
                 and focus.player is board.active_player
                 and coord in board.targets_of[cursor]
+                # or show *actual* targets
+                or (attacker and coord in board.targets_of[attacker.coord])
             )
-            show_actual_targets = attacker and coord in board.targets_of[attacker.coord]
 
-            if coord == game.bcursor:
-                back = pallet.cursor
-            elif game.attacker and coord == game.attacker.coord:
-                back = pallet.focus
-            elif highlight_potential_targets or show_actual_targets:
-                back = pallet.target
+            color_parts = []
+            if coord == cursor:
+                color_parts.append(pallet.cursor)
+            elif attacker and coord == attacker.coord:
+                color_parts.append(pallet.focus)
+            elif show_targets:
+                color_parts.append(pallet.target)
             else:
-                back = pallet.board[sum(coord) % 2]
+                color_parts.append(pallet.board[sum(coord) % 2])
 
-            fore = pallet.piece[piece.player] if piece else ""
+            color_parts.append(pallet.piece[piece.player] if piece else "")
             square = f" {self.symbol[piece.role]} " if piece else "   "
-            display_location = 29 + 4 * coord.x, 6 + 2 * coord.y
-            parts.append(ctrlseq(square, clr=(back + fore), at=display_location))
-        return "".join(parts)
 
-    def __taken_ctrlseq(self, game: Game, player: Player) -> str:
-        taken_pieces = game.board.taken_pieces[player]
-        symbol = self.symbol
-        color = self.pallet.piece[~player] + self.pallet.board[player.value % 2]
+            display_loc = Loc.BOARD + V((W.TILE + 1) * coord.x, 2 * coord.y)
+            parts.append(ctrlseq(square, clr="".join(color_parts), at=display_loc))
 
-        parts = []
-        for i in range(15):
-            (role,) = taken_pieces[i : i + 1] or [Role.BLANK]
-            s = symbol[role]
+        return parts
 
-            parts.append(f" {s}")
-            if i % 5 == 4:
-                parts.append(" \n")
-
-        return ctrlseq("".join(parts), clr=color, at=(72 * player.value - 69, 8))
-
-    def __gutter_msg(self, game: Game) -> str:
-        board = game.board
-        t, max_t = board.ply // 2 + 1, MAX_PLY_COUNT // 2
-        s1, s2 = board.score(Player.ONE), board.score(Player.TWO)
-
-        if game.status is not Status.GAME_OVER:
-
-            color = ""
-            if s1 > s2:
-                msg = f"Turn {t} of {max_t}. Player ONE leads by {s1 - s2} point(s)."
-            elif s2 > s1:
-                msg = f"Turn {t} of {max_t}. Player TWO leads by {s2 - s1} point(s)."
-            else:
-                msg = f"Turn {t} of {max_t}. Players ONE & TWO are equal in score."
-        else:
-            player = board.active_player
-            color = self.pallet.focus
-            if board.ply >= MAX_PLY_COUNT:
-                msg = f"Draw: {max_t} turn limit reached."
-            elif not board.can_move() and board.in_check():
-                msg = f"Player {player} wins by checkmate!"
-            elif not board.can_move() and not board.in_check():
-                msg = "Draw: Stalemate."
-            else:
-                msg = f"Player {~player} wins by forfeit."
-            msg += " Hit any key to quit."
-        return ctrlseq(f"{msg: ^55}", clr=color, at=(17, 24))
+    def __refresh_promotion(self) -> list[str]:
+        xp, yp = (
+            Loc.LH_PROMOTION
+            if self.game.board.active_player is Player.ONE
+            else Loc.RH_PROMOTION
+        )
+        role = PROMOTION_OPTIONS[self.game.pcursor]
+        color = self.pallet.cursor
+        option_str = f"({role.symbol}) {role}"
+        return [
+            ctrlseq(PROMOTION_TEMPLATE, at=(xp, yp)),
+            ctrlseq(option_str, clr=color, at=(xp, yp + 4 + self.game.pcursor)),
+        ]

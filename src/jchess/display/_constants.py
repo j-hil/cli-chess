@@ -5,142 +5,131 @@
 # Since everything is computed once when the module is first imported, there shouldn't
 # be any significant additional overhead.
 #
-# More should be moved from _class into here, but I'll only do so if it becomes useful.
+# This is honestly such an ugly way to do things and it should be replaced by a better
+# system. See github issues?
+
+from enum import IntEnum
+from textwrap import wrap
+from typing import Literal
 
 from jchess.game import PROMOTION_OPTIONS, Mode
 from jchess.geometry import V
 from jchess.pieces import Player
 
-
-def _get_width_height_vec(s: str) -> tuple[int, int]:
-    parts = s.split("\n")
-    w, h = len(parts[0]), len(parts)
-    return w, h
+# Consts determining location of elements on the terminal screen --------------------- #
 
 
-# Main 25 x 87 display constants ----------------------------------------------------- #
-MAIN_DISPLAY_TEMPLATE = """\
-+-------------------------------------------------------------------------------------+
-|                   Welcome to J-Chess! To quit hit the escape key.                   |
-+-------------+---------------------------------------------------------+-------------+
-|             |                                                         |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-+-------------+            +---+---+---+---+---+---+---+---+            +-------------+
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-+-------------+            +---+---+---+---+---+---+---+---+            +-------------+
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |            |   |   |   |   |   |   |   |   |            |             |
-|             |            +---+---+---+---+---+---+---+---+            |             |
-|             |                                                         |             |
-+-------------+---------------------------------------------------------+-------------+
-|             |                                                         |             |
-+-------------------------------------------------------------------------------------+\
-"""
-MAIN_W, MAIN_H = _get_width_height_vec(MAIN_DISPLAY_TEMPLATE)
-
-# Start menu constants --------------------------------------------------------------- #
-INITIAL_W = len("[esc: quit, space: pick]")
+class H(IntEnum):
+    MAIN = 23
+    SIDE_SMALL = 3
+    SIDE_LARGE = MAIN - 2 * SIDE_SMALL - 6
+    README = 11
+    START = 7
+    PROMOTION = SIDE_LARGE
 
 
-def _make_start_menu() -> tuple[str, V]:
-    main_lines = [
+class W(IntEnum):
+    MAIN = 85
+    SIDE = 11
+    CENTER = MAIN - 2 * (SIDE + 1)
+    TILE = 3
+    START = 24
+    GUTTER = 61
+    PROMOTION = SIDE
+
+
+Y1, Y2, Y3, Y4, Y5, Y6, Y7 = 2, 4, 8, 12, 16, 20, 24
+X1, X2, X3 = 2, W.SIDE + 3, 2 + W.MAIN - W.SIDE
+
+
+class Loc:
+    # really should be Loc(V, Enum) but it just doesn't work... see github issues?
+    HEADLINE = V(X1, Y1)
+    BOARD = V(29, 6)
+
+    LH_README = V(X1, Y2)
+    LH_SCORE = V(X1, Y5)
+    LH_TAKEN = V(X1, Y6)
+    LH_PROMOTION = LH_README
+
+    RH_SCORE = V(X3, Y2)
+    RH_TAKEN = V(X3, Y3)
+    RH_README = V(X3, Y4)
+    RH_PROMOTION = RH_README
+
+    VERSION = V(X1, Y7)
+    AUTHOR = V(X3, Y7)
+    GUTTER = V(X2, Y7)
+
+    START = (V(W.MAIN, H.MAIN) - V(W.START, H.START)) // 2 + V(1, 1)
+
+
+def _make_readme(flag: Literal["rhs", "lhs", "bot"]) -> str:
+    if flag in ["rhs", "lhs"]:
+        msg_parts = [
+            "Arrow keys" if flag == "rhs" else "WASD keys",
+            "(movement)",
+            "Enter" if flag == "rhs" else "Space",
+            "(selection)",
+            "F12" if flag == "rhs" else "F1 ",
+            "(forfeit)",
+        ]
+    else:  # flag is bot
+        text = "This player is a 'dumb bot': it randomly selects each next move."
+        msg_parts = wrap(text, W.SIDE)
+    msg_parts = ["README:", "=" * W.SIDE, *msg_parts]
+    missing_rows = H.SIDE_LARGE - len(msg_parts)
+    msg_parts = (
+        (missing_rows // 2) * [""]
+        + msg_parts
+        + (missing_rows - missing_rows // 2) * [""]
+    )
+    return "\n".join(l.center(W.SIDE) for l in msg_parts)
+
+
+def _make_promotion() -> str:
+    msg_parts = [
+        "Promote to:",
+        "=" * W.SIDE,
+        *[f"({r.symbol}) {r}".ljust(W.SIDE) for r in PROMOTION_OPTIONS],
+    ]
+    missing_rows = H.SIDE_LARGE - len(msg_parts)
+    msg_parts = (
+        (missing_rows // 2) * [""]
+        + msg_parts
+        + (missing_rows - missing_rows // 2) * [""]
+    )
+    return "\n".join(l.center(W.SIDE) for l in msg_parts)
+
+
+def _make_start_menu() -> str:
+    lines = [
         "Pick a game mode:",
-        "=" * INITIAL_W,
+        "=" * W.START,
         *[f"{m.value}" for m in Mode],
-        "=" * INITIAL_W,
+        "=" * W.START,
         "[esc: quit, space: pick]",
     ]
-    template = "".join(
-        ["+-", "-" * INITIAL_W, "-+\n"]
-        + [f"| {s: ^{INITIAL_W}} |\n" for s in main_lines]
-        + ["+-", "-" * INITIAL_W, "-+"]
-    )
+    return "\n".join(l.center(W.START) for l in lines)
 
-    w, h = _get_width_height_vec(template)
-    return template, (V(MAIN_W, MAIN_H) - V(w, h)) // 2 + V(-1, 0)
-
-
-MODE_STRINGS = [f"{m.value: ^{INITIAL_W}}" for m in Mode]
-START_MENU_TEMPLATE, START_MENU_ANCHOR = _make_start_menu()
-START_MENU_CLEAR = "".join(" " if c != "\n" else "\n" for c in START_MENU_TEMPLATE)
-
-
-# Player column constants ------------------------------------------------------------ #
-HELP_RHS = """\
- CONTROLS
-===========
-Arrow keys
- (to move)
-   Enter
-(to select)
-    F12
- (forfeit)
-"""
-
-HELP_LHS = """\
- CONTROLS
-===========
- WASD keys
- (to move)
-   Space
-(to select)
-    F1
- (forfeit)
-"""
-
-HELP_BOT = """\
-    BOT
-===========
-Player {}
- randomly
-selects its
- next move
- It is a
-'dumb bot'.
-"""
-
-HELP_TEMPLATES = {
-    Player.ONE: {
-        Mode.TDB: HELP_BOT.format(Player.ONE),
-        Mode.VDB: HELP_RHS,
-        Mode.LTP: HELP_LHS,
-    },
-    Player.TWO: {
-        Mode.TDB: HELP_BOT.format(Player.TWO),
-        Mode.VDB: HELP_BOT.format(Player.TWO),
-        Mode.LTP: HELP_RHS,
-    },
-}
 
 INFO_TEMPLATE = """\
 Player {}:
 ===========
-SCORE = 000\
+SCORE = {:0>3}\
 """
-
-PROMOTION_TEMPLATE = """\
-Promote to:
-===========
-""" + "\n".join(
-    f"({r.symbol}) {r}" for r in PROMOTION_OPTIONS
-)
-PROMOTION_CLEAR = "".join(" " if c != "\n" else "\n" for c in PROMOTION_TEMPLATE)
-
-INFO_W = len(PROMOTION_TEMPLATE.split("\n", maxsplit=1)[0])
-for t in [HELP_LHS, INFO_TEMPLATE, PROMOTION_TEMPLATE, PROMOTION_CLEAR]:
-    assert INFO_W == len(t.split("\n", maxsplit=2)[1])
-
-
-# Other constants -------------------------------------------------------------------- #
-ROW_LABELS = "8   7   6   5   4   3   2   1"
-COL_LABELS = "a\n \nb\n \nc\n \nd\n \ne\n \nf\n \ng\n \nh"
+START_TEMPLATE = _make_start_menu()
+PROMOTION_TEMPLATE = _make_promotion()
+README_TEMPLATES = {
+    Player.ONE: {
+        Mode.TDB: _make_readme("bot"),
+        Mode.VDB: _make_readme("rhs"),
+        Mode.LTP: _make_readme("lhs"),
+    },
+    Player.TWO: {
+        Mode.TDB: _make_readme("bot"),
+        Mode.VDB: _make_readme("bot"),
+        Mode.LTP: _make_readme("rhs"),
+    },
+}
+MODE_STRINGS = [f"{m.value: ^{W.START}}" for m in Mode]
