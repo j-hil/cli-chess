@@ -7,7 +7,7 @@ from jchess.geometry import Vector
 
 
 class Player(Enum):
-    """Role enum. Contains associated data."""
+    """Role enum - contains associated data."""
 
     ONE = 1
     TWO = 2
@@ -23,7 +23,7 @@ class Player(Enum):
 
 
 class Role(Enum):
-    """Role enum. Contains associated data."""
+    """Role enum - contains associated data."""
 
     KING = ("King", "K", -1)
     QUEEN = ("Queen", "Q", 9)
@@ -64,7 +64,7 @@ class Piece:
 
 @dataclass(slots=True, frozen=True)
 class LocPiece:
-    """A 'Located Piece'; a piece with it's coordinate."""
+    """A 'Located Piece' - a piece with it's coordinate."""
 
     piece: Piece
     coord: Vector
