@@ -43,7 +43,7 @@ def hide_cursor() -> None:
 
 
 def get_input() -> str:
-    """Convert keystroke into a char. Windows-compatible version."""
+    """Convert keystroke into a char - windows-compatible version."""
     # only checked to work with keystrokes represented by 1 char and a few others
 
     user_input = getch()

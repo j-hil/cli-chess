@@ -4,7 +4,6 @@ Designed to abstract away all os/terminal dependencies from the rest of the code
 including the collection of player input.
 """
 import sys
-from signal import CTRL_BREAK_EVENT
 
 from colorama import Style
 

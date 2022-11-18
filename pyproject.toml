@@ -27,14 +27,22 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # testing
+    "pytest>=7.2.0, <8",
+    "coverage[toml]>=6.5.0, < 7",
+    # typing
     "mypy>=0.971, <1",
     "types-colorama>=0.4.15, <1",
+    # autoformatting
     "black>=22.8.0, <23",
+    "isort>=5.10.1, <6",
+    "autoflake>=1.7.7, <2",
+    "pydocstringformatter>=0.7.2, <1",
+    # linting
     "pylint>=2.15.2, <3",
     "pydocstyle[toml]>=6.1.1, <7",
-    "coverage[toml]>=6.5.0, < 7",
-    "isort>=5.10.1, <6",
-    "pytest>=7.2.0, <8",
+    "Flake8-pyproject>=1.2.0, <2",
+    # other
     "ipykernel>=6.17.0, <7",
 ]
 
@@ -118,4 +126,14 @@ exclude_lines = [
     "__debug__",
 ]
 
+
+[tool.flake8]
+# pyproject.toml support from package Flake8-pyproject
+ignore = [
+    # code   # what; why
+    "E741",  # ambiguous variable name 'l'; my font is unambigious
+    "E402",  # module level import not at top of file; handled (better) by pylint
+    "W503",  # line break before binary operator; flake8 is just wrong
+]
+max-line-length = 88
 

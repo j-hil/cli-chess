@@ -33,7 +33,7 @@ def hide_cursor() -> None:
 
 
 def getch() -> str:
-    """Get a single character string from the user. Linux-compatible version."""
+    """Get a single character string from the user - linux-compatible version."""
     # taken from https://stackoverflow.com/questions/71548267/
 
     sys.stdout.flush()
@@ -49,7 +49,7 @@ def getch() -> str:
 
 
 def get_input() -> str:
-    """Convert keystroke into a game action. Linux-compatible version."""
+    """Convert keystroke into a game action - linux-compatible version."""
     # only checked to work with keystrokes repr by 1 char, and the direction arrows
 
     user_input = getch()

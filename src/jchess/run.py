@@ -5,7 +5,7 @@ from jchess.game import Game
 
 
 def run() -> None:
-    """Entry point to begin game. Game state then visuals updated with each input."""
+    """Entry point to begin game - game state then visuals updated with each input."""
 
     game = Game()
     with Display(game, DEFAULT_PALLET, DEFAULT_SYMBOLS) as display:
