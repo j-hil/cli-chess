@@ -4,16 +4,16 @@ import sys
 
 assert sys.platform != "win32"
 
+import os
 from termios import TCSADRAIN, tcgetattr, tcsetattr  # pylint: disable=import-error
 from tty import setraw
 
+ESC = "\x1b"
 CSI = "\x1b["
-
-# TODO: bring back in line with windows version esp get action
 
 
 def clear() -> None:
-    print(CSI + "2J")
+    os.system("clear")
 
 
 def resize(w: int, h: int) -> None:
@@ -56,10 +56,35 @@ def get_input() -> str:
 
     # Direction keys in vscode
     if user_input == "\x00":
-        return {"H": "↑", "P": "↓", "M": "→", "K": "←", "O": "END"}[getch()]
+        return {
+            "H": "UP",
+            "P": "DOWN",
+            "M": "RIGHT",
+            "K": "LEFT",
+        }[getch()]
+
+    if user_input != ESC:
+        return user_input
+
+    next_part = getch()
+
+    # double tapped escape (this is why escape must be hit twice on linux)
+    if next_part == ESC:
+        return ESC
+
+    final_part = getch()
+
+    if user_input + next_part + final_part == ESC + "OP":
+        return "F1"
 
     # Direction keys in usual console
-    if user_input + getch() == CSI:
-        return {"A": "↑", "B": "↓", "C": "→", "D": "←", "?": ""}[getch()]
+    if user_input + next_part == CSI:
+        return {
+            "A": "UP",
+            "B": "DOWN",
+            "C": "RIGHT",
+            "D": "LEFT",
+            "2": "F12",
+        }[final_part]
 
-    return user_input
+    raise RuntimeError(f"Unrecognized input: {user_input + next_part + final_part}")
