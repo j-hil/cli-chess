@@ -63,6 +63,11 @@ class Loc:
 
     START = (V(W.MAIN, H.MAIN) - V(W.START, H.START)) // 2 + V(1, 1)
 
+    COL_LABELS1 = (30, 4)
+    COL_LABELS2 = (30, 22)
+    ROW_LABELS1 = (26, 6)
+    ROW_LABELS2 = (62, 6)
+
 
 def _make_readme(flag: Literal["rhs", "lhs", "bot"]) -> str:
     if flag in ["rhs", "lhs"]:
@@ -113,23 +118,31 @@ def _make_start_menu() -> str:
     return "\n".join(l.center(W.START) for l in lines)
 
 
-INFO_TEMPLATE = """\
-Player {}:
-===========
-SCORE = {:0>3}\
-"""
-START_TEMPLATE = _make_start_menu()
-PROMOTION_TEMPLATE = _make_promotion()
-README_TEMPLATES = {
-    Player.ONE: {
-        Mode.TDB: _make_readme("bot"),
-        Mode.VDB: _make_readme("rhs"),
-        Mode.LTP: _make_readme("lhs"),
-    },
-    Player.TWO: {
-        Mode.TDB: _make_readme("bot"),
-        Mode.VDB: _make_readme("bot"),
-        Mode.LTP: _make_readme("rhs"),
-    },
-}
+class Templates:
+    # just a namespace
+    INFO = "\n".join(
+        [
+            "Player {}:",
+            "===========",
+            "SCORE = {:0>3}",
+        ]
+    )
+    START = _make_start_menu()
+    PROMOTION = _make_promotion()
+    README = {
+        Player.ONE: {
+            Mode.TDB: _make_readme("bot"),
+            Mode.VDB: _make_readme("rhs"),
+            Mode.LTP: _make_readme("lhs"),
+        },
+        Player.TWO: {
+            Mode.TDB: _make_readme("bot"),
+            Mode.VDB: _make_readme("bot"),
+            Mode.LTP: _make_readme("rhs"),
+        },
+    }
+    ROW_LABELS = "\n \n".join(str(s) for s in range(8, 0, -1))
+    COL_LABELS = "   ".join("abcdefgh")
+
+
 MODE_STRINGS = [f"{m.value: ^{W.START}}" for m in Mode]
