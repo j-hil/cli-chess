@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 [project]
 name = "jchess"
 # Version is '0.N' for N = commit count; Simple & allows different versioning later.
-version = "0.94"
+version = "0.99"
 authors = [
     { name="j-hil", email="92876062+j-hil@users.noreply.github.com" },
 ]

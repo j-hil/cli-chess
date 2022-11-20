@@ -15,16 +15,7 @@ from jchess.pieces import Player
 from jchess.terminal import ctrlseq
 
 from ._configs import Pallet, SymbolDict
-from ._constants import (
-    INFO_TEMPLATE,
-    MODE_STRINGS,
-    PROMOTION_TEMPLATE,
-    README_TEMPLATES,
-    START_TEMPLATE,
-    H,
-    Loc,
-    W,
-)
+from ._constants import MODE_STRINGS, H, Loc, Templates, W
 
 TypeExc = Type[BaseException]
 
@@ -71,14 +62,14 @@ class Display:
             elif status_prev is PROMOTING:
                 parts.extend(self.__clear_promotion())
 
-        if status is GAME_OVER:
-            parts.extend(self.__init_game_over())
-        elif status is START_MENU:
+        if status is START_MENU:
             parts.extend(self.__refresh_start())
         elif status is BOARD_FOCUS:
             parts.extend(self.__refresh_main())
         elif status is PROMOTING:
             parts.extend(self.__refresh_promotion())
+        elif status is GAME_OVER:
+            parts.extend(self.__init_game_over())
 
         print("".join(parts))
 
@@ -110,16 +101,20 @@ class Display:
             ctrlseq(headline.center(W.MAIN), at=Loc.HEADLINE, edge=True),
             ctrlseq(taken_blank, clr=self.pallet.board[1], at=Loc.LH_TAKEN, edge=True),
             ctrlseq(taken_blank, clr=self.pallet.board[0], at=Loc.RH_TAKEN, edge=True),
-            ctrlseq(README_TEMPLATES[Player.ONE][mode], at=Loc.LH_README, edge=True),
-            ctrlseq(README_TEMPLATES[Player.TWO][mode], at=Loc.RH_README, edge=True),
+            ctrlseq(Templates.README[Player.ONE][mode], at=Loc.LH_README, edge=True),
+            ctrlseq(Templates.README[Player.TWO][mode], at=Loc.RH_README, edge=True),
+            ctrlseq(Templates.COL_LABELS, at=Loc.COL_LABELS1),
+            ctrlseq(Templates.ROW_LABELS, at=Loc.ROW_LABELS1),
+            ctrlseq(Templates.COL_LABELS, at=Loc.COL_LABELS2),
+            ctrlseq(Templates.ROW_LABELS, at=Loc.ROW_LABELS2),
         ]
 
     def __clear_promotion(self) -> list[str]:
         mode = self.game.mode
         assert mode, "Mode should be set by this point in the game."
         return [
-            ctrlseq(README_TEMPLATES[Player.ONE][mode], at=Loc.LH_README, edge=True),
-            ctrlseq(README_TEMPLATES[Player.TWO][mode], at=Loc.RH_README, edge=True),
+            ctrlseq(Templates.README[Player.ONE][mode], at=Loc.LH_README, edge=True),
+            ctrlseq(Templates.README[Player.TWO][mode], at=Loc.RH_README, edge=True),
         ]
 
     def __init_game_over(self) -> list[str]:
@@ -139,7 +134,7 @@ class Display:
         mode_str = MODE_STRINGS[self.game.scursor]
         coord = (Loc.START[0], Loc.START[1] + 2 + self.game.scursor)
         return [
-            ctrlseq(START_TEMPLATE, at=Loc.START, edge=True),
+            ctrlseq(Templates.START, at=Loc.START, edge=True),
             ctrlseq(mode_str, clr=self.pallet.cursor, at=coord),
         ]
 
@@ -157,7 +152,7 @@ class Display:
             coord = Loc.LH_SCORE if player is Player.ONE else Loc.RH_SCORE
             parts.append(
                 ctrlseq(
-                    INFO_TEMPLATE.format(player, s[i]),
+                    Templates.INFO.format(player, s[i]),
                     clr=pallet.text[player],
                     at=coord,
                     edge=True,
@@ -173,9 +168,9 @@ class Display:
         # gutter message
         msg = f"Turn {board.ply // 2 + 1} of {MAX_PLY_COUNT // 2}. "
         if s[0] > s[1]:
-            msg += "Player ONE leads by {s[0] - s[1]} point(s)."
+            msg += f"Player ONE leads by {s[0] - s[1]} point(s)."
         elif s[1] > s[0]:
-            msg += "Player TWO leads by {s[1] - s[0]} point(s)."
+            msg += f"Player TWO leads by {s[1] - s[0]} point(s)."
         else:
             msg += "Players ONE & TWO are equal in score."
         parts.append(ctrlseq(msg.center(W.GUTTER), at=Loc.GUTTER))
@@ -223,6 +218,6 @@ class Display:
         color = self.pallet.cursor
         option_str = f"({role.symbol}) {role}"
         return [
-            ctrlseq(PROMOTION_TEMPLATE, at=(xp, yp)),
+            ctrlseq(Templates.PROMOTION, at=(xp, yp)),
             ctrlseq(option_str, clr=color, at=(xp, yp + 4 + self.game.pcursor)),
         ]
