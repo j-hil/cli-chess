@@ -1,21 +1,20 @@
 import os
 from dataclasses import dataclass
-from itertools import product
 from textwrap import fill
 from types import TracebackType as TbType
 from typing import Type
 
 import colorama
 
-from jchess import __author__, __version__, terminal
+from jchess import terminal
 from jchess.action import ExitGame
-from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Mode, Status
-from jchess.geometry import V
+from jchess.game import MAX_PLY_COUNT, PROMOTION_OPTIONS, Game, Status
 from jchess.pieces import Player
 from jchess.terminal import ctrlseq
 
 from ._configs import Pallet, SymbolDict
 from ._constants import MODE_STRINGS, H, Loc, Templates, W
+from .elements import Author, Board, Start, Title
 
 TypeExc = Type[BaseException]
 
@@ -32,6 +31,11 @@ class Display:
 
     def __post_init__(self) -> None:
         self.original_terminal_size = (-1, -1)  # set in __enter__
+
+        self.author_element = Author(self)
+        self.title_element = Title(self)
+        self.board_element = Board(self)
+        self.start_element = Start(self)
 
     def __enter__(self) -> "Display":
         self.original_terminal_size = os.get_terminal_size()
@@ -56,15 +60,35 @@ class Display:
         # adjust for previous status of game
         if status is not status_prev:
             if status_prev is UNINITIALIZED:
-                pass  # should clear start menu, but it's overridden by main board
+                parts.extend(
+                    [
+                        self.start_element.init_seq(),
+                    ]
+                )
             elif status_prev is START_MENU:
+                parts.extend(
+                    [
+                        self.author_element.init_seq(),
+                        self.title_element.init_seq(),
+                        self.board_element.init_seq(),
+                    ]
+                )
                 parts.extend(self.__init_main())
             elif status_prev is PROMOTING:
                 parts.extend(self.__clear_promotion())
 
         if status is START_MENU:
-            parts.extend(self.__refresh_start())
+            parts.extend(
+                [
+                    self.start_element.refresh_seq(),
+                ]
+            )
         elif status is BOARD_FOCUS:
+            parts.extend(
+                [
+                    self.board_element.refresh_seq(),
+                ]
+            )
             parts.extend(self.__refresh_main())
         elif status is PROMOTING:
             parts.extend(self.__refresh_promotion())
@@ -76,8 +100,6 @@ class Display:
     # Helper methods for `Display.refresh` ------------------------------------------- #
 
     def __init_main(self) -> list[str]:
-        quit_msg = "spam CTRL+C." if self.game.mode is Mode.TDB else "hit escape."
-        headline = "Welcome to J-Chess! To quit " + quit_msg
 
         mode = self.game.mode
         assert mode, "Mode should be set by this point in the game."
@@ -85,20 +107,8 @@ class Display:
         taken_blank = "\n".join([" " * W.SIDE] * H.SIDE_SMALL)
 
         return [
-            # parts same each run - but __init_main is only run once so not wasteful
-            ctrlseq(__version__.center(W.SIDE), at=Loc.VERSION, edge=True),
-            ctrlseq(__author__.center(W.SIDE), at=Loc.AUTHOR, edge=True),
-            ctrlseq(" " * W.GUTTER, at=Loc.GUTTER, edge=True),
-            *[  # board
-                ctrlseq(
-                    " " * W.TILE,
-                    at=V(*Loc.BOARD) + V((W.TILE + 1) * x, 2 * y),
-                    edge=True,
-                )
-                for x, y in product(range(8), range(8))
-            ],
             # dynamic parts
-            ctrlseq(headline.center(W.MAIN), at=Loc.HEADLINE, edge=True),
+            # ctrlseq(headline.center(W.MAIN), at=Loc.HEADLINE, edge=True),
             ctrlseq(taken_blank, clr=self.pallet.board[1], at=Loc.LH_TAKEN, edge=True),
             ctrlseq(taken_blank, clr=self.pallet.board[0], at=Loc.RH_TAKEN, edge=True),
             ctrlseq(Templates.README[Player.ONE][mode], at=Loc.LH_README, edge=True),
@@ -176,36 +186,6 @@ class Display:
         parts.append(ctrlseq(msg.center(W.GUTTER), at=Loc.GUTTER))
 
         # update board:
-        cursor = self.game.bcursor
-        focus = self.game.board[cursor]
-        attacker = self.game.attacker
-        for coord, piece in board.items():
-            show_targets = (
-                # show *potential* targets
-                not attacker
-                and focus
-                and focus.player is board.active_player
-                and coord in board.targets_of[cursor]
-                # or show *actual* targets
-                or (attacker and coord in board.targets_of[attacker.coord])
-            )
-
-            color_parts = []
-            if coord == cursor:
-                color_parts.append(pallet.cursor)
-            elif attacker and coord == attacker.coord:
-                color_parts.append(pallet.focus)
-            elif show_targets:
-                color_parts.append(pallet.target)
-            else:
-                color_parts.append(pallet.board[sum(coord) % 2])
-
-            color_parts.append(pallet.piece[piece.player] if piece else "")
-            square = f" {self.symbol[piece.role]} " if piece else "   "
-
-            display_loc = Loc.BOARD + V((W.TILE + 1) * coord.x, 2 * coord.y)
-            parts.append(ctrlseq(square, clr="".join(color_parts), at=display_loc))
-
         return parts
 
     def __refresh_promotion(self) -> list[str]:
