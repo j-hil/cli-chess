@@ -44,8 +44,12 @@ I was able to practice using useful tools like `git`, `github` and `wsl` as well
 useful concepts including OOP programming patterns, regular expressions, testing,
 documentation, packaging and managing dependencies.
 
-The python tooling modules I used were `mypy`, `pylint`, `black`, `isort`,
-`pytest`, `pydocstyle` and `coverage`.
+The python tooling modules I used were:
+| Utility          | Modules                                                             |
+| ---------------- | ------------------------------------------------------------------- |
+| Testing          | `pytest`, `coverage`                                                |
+| Typing & linting | `mypy`, `pylint`, `flake8`, `pydocstyle`                            |
+| Auto-formatting  | `black`, `isort`, `autoflake`, `pydocstringformatter`, `pre-commit` |
 
 Python code features I experimented with and used in the final project include
 dataclasses, generators, type annotations and context managers.

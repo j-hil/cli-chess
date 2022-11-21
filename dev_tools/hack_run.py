@@ -38,8 +38,10 @@ def hack() -> None:
         jchess.run.DEFAULT_SYMBOLS = LIGHT_UTF8_SYMBOLS
 
     jchess.game.get_action_lhs = get_action_rhs
-    jchess.display._class.ROW_LABELS = "0   1   2   3   4   5   6   7"
-    jchess.display._class.COL_LABELS = "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
+    jchess.display._class.Templates.ROW_LABELS = "0   1   2   3   4   5   6   7"
+    jchess.display._class.Templates.COL_LABELS = (
+        "0\n \n1\n \n2\n \n3\n \n4\n \n5\n \n6\n \n7"
+    )
     jchess.run.Game = HackedGame
 
 

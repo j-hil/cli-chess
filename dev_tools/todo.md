@@ -5,7 +5,7 @@
   - [X] Test & implement linux functionality
   - [X] Put on PyPI
   - [X] Rename to j-chess or fix readme
-- [ ] Improve dev workflow
+- [X] Improve dev workflow
   - [X] Add automatic versioning using `git` describe or other
   - [X] Should probably add some tests - though might be overkill here
   - [X] Remove the need for constants.py
@@ -18,7 +18,7 @@
   - [ ] Add simple multiplayer - no idea how this would work.
   - [X] Add a simple 1 player mode (based on random moves)
   - [ ] [Look into Algebraic notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
-- [ ] Complete game-play functionality
+- [X] Complete game-play functionality
   - [X] Add check
   - [X] Add checkmate functionality
   - [X] Add castling
