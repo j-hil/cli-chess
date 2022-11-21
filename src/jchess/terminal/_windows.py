@@ -55,7 +55,6 @@ def get_input() -> str:
             b"P": "DOWN",
             b"K": "LEFT",
             b"M": "RIGHT",
-            b"O": "END",
             b";": "F1",
             b"\x86": "F12",
         }[getch()]
